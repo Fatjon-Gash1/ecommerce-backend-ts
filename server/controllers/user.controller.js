@@ -25,8 +25,23 @@ const getUserByID = async (req, res) => {
 
 const createUser = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-        const newUser = await User.create({ username, email, password });
+        const userFields = req.body;
+
+        for (let x in userFields) {
+            if (userFields[x] === '') {
+                res.status(400).json({ message: 'Please fill all fields' });
+                return;
+            }
+        }
+
+        const { firstName, lastName, username, email, password } = userFields;
+        const newUser = await User.create({
+            firstName,
+            lastName,
+            username,
+            email,
+            password,
+        });
         res.status(201).json({ newUser });
     } catch (err) {
         console.error('Error creating user: ', err);
@@ -37,9 +52,9 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const id = req.params.id;
-        const { username, email, password } = req.body;
+        const { firstName, lastName, username, email, password } = req.body;
         const updated = await User.update(
-            { username, email, password },
+            { firstName, lastName, username, email, password },
             { where: { id }, returning: true }
         );
 
@@ -71,10 +86,61 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const checkUsername = async (req, res) => {
+    const { username } = req.query;
+
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+    }
+
+    try {
+        const userExists = await User.findOne({ where: { username } });
+
+        if (userExists) {
+            return res
+                .status(200)
+                .json({ available: false, message: 'Username is taken' });
+        } else {
+            return res
+                .status(200)
+                .json({ available: true, message: 'Username is available' });
+        }
+    } catch (error) {
+        console.error('Error checking username availability:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+const checkEmail = async (req, res) => {
+    const { email } = req.query;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    try {
+        const userExists = await User.findOne({ where: { email } });
+
+        if (userExists) {
+            return res
+                .status(200)
+                .json({ available: false, message: 'Email is taken' });
+        } else {
+            return res
+                .status(200)
+                .json({ available: true, message: 'Email is available' });
+        }
+    } catch (error) {
+        console.error('Error checking email availability:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     getUsers,
     getUserByID,
     createUser,
     updateUser,
     deleteUser,
+    checkUsername,
+    checkEmail,
 };
