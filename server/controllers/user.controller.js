@@ -86,51 +86,36 @@ const deleteUser = async (req, res) => {
     }
 };
 
-const checkUsername = async (req, res) => {
-    const { username } = req.query;
+const checkAvailability = async (req, res) => {
+    const { username, email } = req.query;
 
-    if (!username) {
-        return res.status(400).json({ message: 'Username is required' });
+    // Determine the field to check
+    const field = username ? 'username' : email ? 'email' : null;
+
+    if (!field) {
+        return res
+            .status(400)
+            .json({ message: 'Username or Email is required' });
     }
 
     try {
-        const userExists = await User.findOne({ where: { username } });
+        const userExists = await User.findOne({
+            where: { [field]: req.query[field] },
+        });
 
         if (userExists) {
-            return res
-                .status(200)
-                .json({ available: false, message: 'Username is taken' });
+            return res.status(200).json({
+                available: false,
+                message: `${field.charAt(0).toUpperCase() + field.slice(1)} is taken`,
+            });
         } else {
-            return res
-                .status(200)
-                .json({ available: true, message: 'Username is available' });
+            return res.status(200).json({
+                available: true,
+                message: `${field.charAt(0).toUpperCase() + field.slice(1)} is available`,
+            });
         }
     } catch (error) {
-        console.error('Error checking username availability:', error);
-        return res.status(500).json({ message: 'Server error' });
-    }
-};
-const checkEmail = async (req, res) => {
-    const { email } = req.query;
-
-    if (!email) {
-        return res.status(400).json({ message: 'Email is required' });
-    }
-
-    try {
-        const userExists = await User.findOne({ where: { email } });
-
-        if (userExists) {
-            return res
-                .status(200)
-                .json({ available: false, message: 'Email is taken' });
-        } else {
-            return res
-                .status(200)
-                .json({ available: true, message: 'Email is available' });
-        }
-    } catch (error) {
-        console.error('Error checking email availability:', error);
+        console.error(`Error checking ${field} availability:`, error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
@@ -141,6 +126,5 @@ module.exports = {
     createUser,
     updateUser,
     deleteUser,
-    checkUsername,
-    checkEmail,
+    checkAvailability,
 };
