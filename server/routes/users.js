@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
 
-// Define user routes
+// Additional user routes
+router.get('/check-username', userController.checkUsername);
+router.get('/check-email', userController.checkEmail);
+
+// Define CRUD user routes
 router.get('/', userController.getUsers);
 
 router.get('/:id', userController.getUserByID);
