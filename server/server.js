@@ -1,12 +1,14 @@
 require('dotenv').config(); // Load environment variables from .env
 
 const express = require('express');
+const cors = require('cors');
 const { sequelize, mongoose } = require('./config/db'); // Import database configurations
 const User = require('./models/user.model');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(cors());
 // Middleware to parse JSON
 app.use(express.json());
 
