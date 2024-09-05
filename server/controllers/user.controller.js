@@ -1,6 +1,8 @@
 require('dotenv').config();
 
 const User = require('../models/user.model');
+const bcrypt = require('bcrypt');
+const { validationResult } = require('express-validator');
 
 const getUsers = async (req, res) => {
     try {
@@ -24,24 +26,25 @@ const getUserByID = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
-        const userFields = req.body;
+        const { firstName, lastName, username, email, password } = req.body;
 
-        for (let x in userFields) {
-            if (userFields[x] === '') {
-                res.status(400).json({ message: 'Please fill all fields' });
-                return;
-            }
-        }
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const { firstName, lastName, username, email, password } = userFields;
         const newUser = await User.create({
             firstName,
             lastName,
             username,
             email,
-            password,
+            password: hashedPassword,
         });
+
         res.status(201).json({ newUser });
     } catch (err) {
         console.error('Error creating user: ', err);
