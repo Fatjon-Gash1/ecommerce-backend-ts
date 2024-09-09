@@ -1,12 +1,10 @@
-require('dotenv').config(); // Load environment variables from .env
+import 'dotenv/config'; // Load environment variables from .env
+import express, { Express } from 'express';
+import cors from 'cors';
+import { sequelize, connectToMongoDB } from './config/db'; // Import database configurations
 
-const express = require('express');
-const cors = require('cors');
-const { sequelize, mongoose } = require('./config/db'); // Import database configurations
-const User = require('./models/user.model');
-
-const app = express();
-const port = process.env.PORT || 3000;
+const app: Express = express();
+const port: number = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 // Middleware to parse JSON
@@ -18,12 +16,14 @@ sequelize
     .then(() => {
         console.log('Sequelize models synced with database');
     })
-    .catch((err) => {
+    .catch((err: Error) => {
         console.error('Error syncing Sequelize models:', err);
     });
 
+connectToMongoDB();
+
 // Use the routes defined in the routes directory
-const indexRoutes = require('./routes/index');
+import indexRoutes from './routes/index';
 app.use('/', indexRoutes);
 
 // Start the server
