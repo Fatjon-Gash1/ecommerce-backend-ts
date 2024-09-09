@@ -1,13 +1,21 @@
-const express = require('express');
-const router = express.Router();
+import { Router, Request, Response } from 'express';
+
+const router: Router = Router();
 
 // Default route
-router.get('/', (req, res) => {
-    res.send('Welcome to the API!');
+router.get('/', (_req: Request, res: Response) => {
+    res.send('Default route!');
 });
 
 // Import and use user routes
-const userRoutes = require('./users');
-router.use('/users', userRoutes);
+import customerRoutes from './customers.route';
+router.use('/customers', customerRoutes);
 
-module.exports = router;
+import adminRoutes from './admins.route';
+router.use('/admins', adminRoutes);
+
+// Import and use platform routes
+import platformRoutes from './platform.route';
+router.use('/platform', platformRoutes);
+
+export default router;
