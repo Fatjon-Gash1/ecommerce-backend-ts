@@ -1,20 +1,36 @@
-const express = require('express');
-const router = express.Router();
-const userController = require('../controllers/user.controller');
-const validateUserFields = require('../middlewares/validateUserFields');
+import { Router, Request, Response } from 'express';
+import {
+    checkAvailability,
+    getCustomers,
+    getCustomerByID,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+} from '../controllers/Customer.controller';
+import validateUserFields from '../middlewares/validateUserFields';
 
-// Additional user routes
-router.get('/check-availability', userController.checkAvailability);
+const router: Router = Router();
 
-// Define CRUD user routes
-router.get('/', userController.getUsers);
+// Additional customer routes
+router.get('/check-availability', (req: Request, res: Response) =>
+    checkAvailability(req, res)
+);
 
-router.get('/:id', userController.getUserByID);
+// Define CRUD customer routes
+router.get('/', (req: Request, res: Response) => getCustomers(req, res));
 
-router.post('/', validateUserFields, userController.createUser);
+router.get('/:id', (req: Request, res: Response) => getCustomerByID(req, res));
 
-router.put('/:id', userController.updateUser);
+router.post('/', validateUserFields, (req: Request, res: Response) =>
+    createCustomer(req, res)
+);
 
-router.delete('/:id', userController.deleteUser);
+router.put('/:id', validateUserFields, (req: Request, res: Response) =>
+    updateCustomer(req, res)
+);
 
-module.exports = router;
+router.delete('/:id', (req: Request, res: Response) =>
+    deleteCustomer(req, res)
+);
+
+export default router;
