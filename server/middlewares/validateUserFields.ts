@@ -1,6 +1,6 @@
-const { body } = require('express-validator');
+import { body, ValidationChain } from 'express-validator';
 
-const validateUserFields = [
+const validateUserFields: ValidationChain[] = [
     body('firstName')
         .trim()
         .escape()
@@ -30,4 +30,6 @@ const validateUserFields = [
         .withMessage('Password must be between 8 and 12 characters long'),
 ];
 
-module.exports = validateUserFields;
+// Another function for update field validation goes here
+
+export default validateUserFields;
