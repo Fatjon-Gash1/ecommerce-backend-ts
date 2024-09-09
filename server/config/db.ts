@@ -1,7 +1,4 @@
-const sequelize = require('./mysql'); // Import the Sequelize instance for MySQL
-const mongoose = require('./mongodb'); // Assuming MongoDB setup is in mongodb.js
+import sequelize from './mysql';
+import { mongoose, connectToMongoDB } from './mongodb';
 
-module.exports = {
-    sequelize,
-    mongoose,
-};
+export { sequelize, mongoose, connectToMongoDB };
