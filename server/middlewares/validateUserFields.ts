@@ -30,6 +30,4 @@ const validateUserFields: ValidationChain[] = [
         .withMessage('Password must be between 8 and 12 characters long'),
 ];
 
-// Another function for update field validation goes here
-
 export default validateUserFields;
