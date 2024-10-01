@@ -1,54 +1,60 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../../config/db';
-import { User } from '.';
+import { User } from './User.model';
+import { Cart } from './Cart.model';
 
-// Define Customer attributes interface
 interface CustomerAttributes {
     id?: number;
+    userId?: number;
+    stripeId?: string;
     shippingAddress?: string;
     billingAddress?: string;
-    userId?: number;
-    firstName?: string; // Virtual
-    lastName?: string; // Virtual
-    username?: string; // Virtual
-    email?: string; // Virtual
-    password?: string; // Virtual
+    isActive?: boolean;
+    firstName: string; // Virtual
+    lastName: string; // Virtual
+    username: string; // Virtual
+    email: string; // Virtual
+    password: string; // Virtual
 }
 
-// Define Customer creation attributes
-interface CustomerCreationAttributes
-    extends Optional<CustomerAttributes, 'id' | 'userId'> {}
-
-// Define Customer model that extends Sequelize's Model class
 export class Customer
-    extends Model<CustomerAttributes, CustomerCreationAttributes>
+    extends Model<CustomerAttributes>
     implements CustomerAttributes
 {
-    public id!: number;
-    public shippingAddress?: string;
-    public billingAddress?: string;
-    public userId!: number;
-    public firstName?: string; // Virtual field
-    public lastName?: string; // Virtual field
-    public username?: string; // Virtual field
-    public email?: string; // Virtual field
-    public password?: string; // Virtual field;
+    declare id?: number;
+    declare userId?: number;
+    declare stripeId?: string;
+    declare shippingAddress?: string;
+    declare billingAddress?: string;
+    declare isActive?: boolean;
+    declare firstName: string; // Virtual field
+    declare lastName: string; // Virtual field
+    declare username: string; // Virtual field
+    declare email: string; // Virtual field
+    declare password: string; // Virtual field;
 
-    // Timestamps
-    public readonly createdAt!: Date;
-    public readonly updatedAt!: Date;
+    public async createCartforUser(): Promise<Cart | boolean> {
+        return await Cart.create({ customerId: this.id });
+    }
 }
 
-// Define Customer model schema
 Customer.init(
     {
+        stripeId: {
+            type: DataTypes.STRING,
+        },
         shippingAddress: {
             type: DataTypes.STRING,
-            allowNull: true,
+            defaultValue: 'none',
         },
         billingAddress: {
             type: DataTypes.STRING,
-            allowNull: true,
+            defaultValue: 'none',
+        },
+        isActive: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
         },
         // Virtual fields
         firstName: {
@@ -69,29 +75,14 @@ Customer.init(
     },
     {
         sequelize,
-        timestamps: true,
+        modelName: 'Customer',
         tableName: 'customers',
     }
 );
 
-// Define associations and hooks
-
-// Inherit from User model
-Customer.belongsTo(User, {
-    foreignKey: 'userId',
-    as: 'user',
-    onDelete: 'CASCADE',
-});
-
-// Hook to create User model before Customer is created
-Customer.addHook('beforeCreate', async (customer: Customer) => {
+Customer.beforeCreate(async (customer: Customer) => {
     const { firstName, lastName, username, email, password } = customer;
 
-    if (!firstName || !lastName || !email || !username || !password) {
-        throw new Error('Missing required fields for User');
-    }
-
-    // Create a new User instance before Customer is created
     const user = await User.create({
         firstName,
         lastName,
@@ -100,5 +91,9 @@ Customer.addHook('beforeCreate', async (customer: Customer) => {
         password,
     });
 
-    customer.userId = user.id; // Set the foreign key after the user is created
+    customer.userId = user.id;
+});
+
+Customer.afterCreate(async (customer: Customer) => {
+    customer.createCartforUser();
 });

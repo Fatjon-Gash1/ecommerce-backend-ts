@@ -1,48 +1,45 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../../config/db';
-import { User } from '.';
+import { User } from './User.model';
 
-// Define Admin attributes interface
 interface AdminAttributes {
     id?: number;
-    role: 'super_admin' | 'manager';
     userId?: number;
-    firstName?: string; // Virtual
-    lastName?: string; // Virtual
-    username?: string; // Virtual
-    email?: string; // Virtual
-    password?: string; // Virtual
+    role?: 'super_admin' | 'manager';
+    firstName: string; // Virtual
+    lastName: string; // Virtual
+    username: string; // Virtual
+    email: string; // Virtual
+    password: string; // Virtual
 }
 
-// Define Admin creation attributes interface
-interface AdminCreationAttributes
-    extends Optional<AdminAttributes, 'id' | 'userId'> {}
+export class Admin extends Model<AdminAttributes> implements AdminAttributes {
+    declare id?: number;
+    declare userId?: number;
+    declare role?: 'super_admin' | 'manager';
+    declare firstName: string; // Virtual field
+    declare lastName: string; // Virtual field
+    declare username: string; // Virtual field
+    declare email: string; // Virtual field
+    declare password: string; // Virtual field;
 
-// Define Admin model that extends Sequelize's Model class
-export class Admin
-    extends Model<AdminAttributes, AdminCreationAttributes>
-    implements AdminAttributes
-{
-    public id!: number;
-    public role!: 'super_admin' | 'manager';
-    public userId!: number;
-    public firstName?: string; // Virtual field
-    public lastName?: string; // Virtual field
-    public username?: string; // Virtual field
-    public email?: string; // Virtual field
-    public password?: string; // Virtual field;
+    public async setRole(nr: number): Promise<void> {
+        if (nr === 1) {
+            this.role = 'super_admin';
+        } else if (nr === 2) {
+            this.role = 'manager';
+        } else throw new Error('Invalid role number');
 
-    // Timestamps
-    public readonly createdAt!: Date;
-    public readonly updatedAt!: Date;
+        await this.save();
+    }
 }
 
-// Define Admin model schema
 Admin.init(
     {
         role: {
             type: DataTypes.ENUM('super_admin', 'manager'),
             allowNull: false,
+            defaultValue: 'super_admin',
         },
         // Virtual fields
         firstName: {
@@ -63,29 +60,14 @@ Admin.init(
     },
     {
         sequelize,
-        timestamps: true,
+        modelName: 'Admin',
         tableName: 'admins',
     }
 );
 
-// Define associations and hooks
-
-// Inherit from User model
-Admin.belongsTo(User, {
-    foreignKey: 'userId',
-    as: 'user',
-    onDelete: 'CASCADE',
-});
-
-// Hook to create User model before Admin is created
-Admin.addHook('beforeCreate', async (admin: Admin) => {
+Admin.beforeCreate(async (admin: Admin) => {
     const { firstName, lastName, username, email, password } = admin;
 
-    if (!firstName || !lastName || !email || !username || !password) {
-        throw new Error('Missing required fields for User');
-    }
-
-    // Create a new User instance before Admin is created
     const user = await User.create({
         firstName,
         lastName,
@@ -94,5 +76,5 @@ Admin.addHook('beforeCreate', async (admin: Admin) => {
         password,
     });
 
-    admin.userId = user.id; // Set the foreign key after the user is created
+    admin.userId = user.id;
 });
