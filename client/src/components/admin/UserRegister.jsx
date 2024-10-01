@@ -7,15 +7,11 @@ import {
     checkEmailAvailability,
     resetEmailAvailability,
 } from '../../features/user/userSlice';
+import { getRandomFiveStarUserRating } from '../../features/platform/platformSlice';
 import { debounce } from 'lodash';
-import {
-    TextField,
-    CircularProgress,
-    Typography,
-    FormHelperText,
-} from '@mui/material';
+import { TextField, Typography, FormHelperText } from '@mui/material';
+import CircularProgress from '@mui/joy/CircularProgress';
 import Avatar from '@mui/material/Avatar';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -24,6 +20,11 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Rating from '@mui/material/Rating';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faQuoteLeft, faQuoteRight } from '@fortawesome/free-solid-svg-icons';
+import HashLoader from 'react-spinners/HashLoader';
+import Fade from '@mui/material/Fade';
 
 function UserRegister() {
     const [firstName, setFirstName] = useState('');
@@ -46,6 +47,13 @@ function UserRegister() {
         error,
         userInfo,
     } = useSelector((state) => state.user);
+
+    const { ratingLoading, fullName, profession, rating, review, ratingError } =
+        useSelector((state) => state.platform);
+
+    useEffect(() => {
+        dispatch(getRandomFiveStarUserRating());
+    }, [dispatch]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -177,30 +185,58 @@ function UserRegister() {
             <div className="hidden overflow-scroll bg-sky-600 rounded-l-2xl md:flex flex-col justify-between w-2/6 p-8 pt-10 text-slate-50">
                 <h2 className="font-bold italic text-2xl">edgeTech</h2>
                 <div className="flex flex-col h-2/3">
-                    <div>
-                        <FormatQuoteIcon sx={{ fontSize: 42 }} />
-                        <p className="font-bold text-xl">
-                            askldjfkl fas fasdkf asdf jklasj askldjfkl fas
-                            fasdkf asdf jklasj askldjfkl fas fasdkf asdf jklasj
-                            askldjfkl fas fasdkf asdf jklasj.
-                        </p>
-                        <FormatQuoteIcon
-                            className="float-right"
-                            sx={{ fontSize: 42 }}
-                            fl
-                        />
-                    </div>
-                    <div>
-                        <div className="bg-slate-100 w-fit rounded-full border-slate-100 border-4">
-                            <Avatar
-                                sx={{ bgcolor: 'gray', width: 46, height: 46 }}
-                            >
-                                M
-                            </Avatar>
+                    {ratingLoading && (
+                        <>
+                            <div className="self-center relative top-1/4">
+                                <HashLoader color="#ffffff" />
+                            </div>
+                        </>
+                    )}
+                    <Fade in={!ratingLoading} timeout={1000}>
+                        <div>
+                            <div>
+                                <FontAwesomeIcon
+                                    icon={faQuoteLeft}
+                                    size="2xl"
+                                />
+                                <p className="font-bold text-xl px-9 italic">
+                                    {review}
+                                </p>
+                                <span className="float-right">
+                                    <FontAwesomeIcon
+                                        icon={faQuoteRight}
+                                        size="2xl"
+                                    />
+                                </span>
+                            </div>
+                            <div>
+                                <div className="bg-slate-100 w-fit rounded-full border-slate-100 border-4 mt-8">
+                                    <Avatar
+                                        sx={{
+                                            bgcolor: 'gray',
+                                            width: 46,
+                                            height: 46,
+                                        }}
+                                    >
+                                        {fullName.charAt(0).toUpperCase()}
+                                    </Avatar>
+                                </div>
+                                <h3 className="mt-3 ">
+                                    <b>{fullName}</b>{' '}
+                                    <span className="text-slate-200">
+                                        • {profession}
+                                    </span>
+                                </h3>
+                                <Rating
+                                    sx={{ color: 'white' }}
+                                    size="small"
+                                    name="read-only"
+                                    value={rating}
+                                    readOnly
+                                />
+                            </div>
                         </div>
-                        <h3 className="mt-2 font-bold">John Doe</h3>
-                        <p className="mt-2">Software Engineer</p>
-                    </div>
+                    </Fade>
                 </div>
             </div>
             <div className="max-w-md mx-auto my-12 py-8 px-11 ">
@@ -250,10 +286,9 @@ function UserRegister() {
                             username.trim().length <= 3 && username !== '' ? (
                                 'Username must be at least 4 characters long.'
                             ) : usernameLoading ? (
-                                <span>
+                                <Typography sx={{ fontSize: '14px' }}>
                                     Checking availability...{' '}
-                                    <CircularProgress size={16} />
-                                </span>
+                                </Typography>
                             ) : usernameAvailable === true ? (
                                 <Typography
                                     sx={{ fontSize: '14px' }}
@@ -296,10 +331,9 @@ function UserRegister() {
                             !validateEmail(email) && email !== '' ? (
                                 'Invalid email format'
                             ) : emailLoading ? (
-                                <span>
+                                <Typography sx={{ fontSize: '14px' }}>
                                     Checking availability...{' '}
-                                    <CircularProgress size={16} />
-                                </span>
+                                </Typography>
                             ) : emailAvailable === true ? (
                                 <Typography
                                     sx={{ fontSize: '14px' }}
