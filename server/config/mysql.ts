@@ -1,6 +1,5 @@
 import { Sequelize } from 'sequelize';
 
-// Create a new Sequelize instance for MySQL
 const sequelize = new Sequelize(
     process.env.MYSQL_DATABASE as string,
     process.env.MYSQL_USER as string,
@@ -8,11 +7,10 @@ const sequelize = new Sequelize(
     {
         host: process.env.MYSQL_HOST,
         dialect: 'mysql',
-        logging: false, // Set to true to see SQL logs in the console
+        logging: false,
     }
 );
 
-// Test the connection
 sequelize
     .authenticate()
     .then(() => {
