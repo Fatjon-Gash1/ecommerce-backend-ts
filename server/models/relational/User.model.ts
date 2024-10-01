@@ -1,47 +1,41 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../../config/db'; // Adjust the path based on your project structure
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../../config/db';
+import bcrypt from 'bcrypt';
 
-// Define the attributes for the User model
 interface UserAttributes {
-    id: number;
+    id?: number;
+    profilePictureUrl?: string;
     firstName: string;
     lastName: string;
     username: string;
     email: string;
     password: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-    deletedAt?: Date;
 }
 
-// Define the creation attributes for the User model
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
+export class User extends Model<UserAttributes> implements UserAttributes {
+    declare id?: number;
+    declare profilePictureUrl?: string;
+    declare firstName: string;
+    declare lastName: string;
+    declare username: string;
+    declare email: string;
+    declare password: string;
 
-// Define the User model class
-export class User
-    extends Model<UserAttributes, UserCreationAttributes>
-    implements UserAttributes
-{
-    public id!: number;
-    public firstName!: string;
-    public lastName!: string;
-    public username!: string;
-    public email!: string;
-    public password!: string;
-    public createdAt!: Date;
-    public updatedAt!: Date;
-    public deletedAt!: Date;
+    public async hashAndStorePassword(password: string): Promise<void> {
+        const saltRounds = 10;
+        this.password = await bcrypt.hash(password, saltRounds);
+    }
 
-    // You can add other instance methods here if needed
+    public async validatePassword(password: string): Promise<boolean> {
+        return await bcrypt.compare(password, this.password);
+    }
 }
 
-// Initialize the User model
 User.init(
     {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true,
+        profilePictureUrl: {
+            type: DataTypes.STRING,
+            allowNull: true,
         },
         firstName: {
             type: DataTypes.STRING,
@@ -67,10 +61,13 @@ User.init(
         },
     },
     {
-        sequelize, // Pass the Sequelize instance
+        sequelize,
         modelName: 'User',
         tableName: 'users',
-        timestamps: true,
         paranoid: true,
     }
 );
+
+User.beforeCreate(async (user: User) => {
+    await user.hashAndStorePassword(user.password);
+});
