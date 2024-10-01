@@ -1,18 +1,17 @@
-import 'dotenv/config'; // Load environment variables from .env
+import 'dotenv/config';
 import express, { Express } from 'express';
 import cors from 'cors';
-import { sequelize, connectToMongoDB } from './config/db'; // Import database configurations
+import { sequelize, connectToMongoDB } from './config/db';
+import indexRoutes from './routes';
 
 const app: Express = express();
 const port: number = Number(process.env.PORT) || 3000;
 
 app.use(cors());
-// Middleware to parse JSON
 app.use(express.json());
 
-// Sync the Sequelize models with the database
 sequelize
-    .sync()
+    .sync({ alter: true })
     .then(() => {
         console.log('Sequelize models synced with database');
     })
@@ -22,11 +21,8 @@ sequelize
 
 connectToMongoDB();
 
-// Use the routes defined in the routes directory
-import indexRoutes from './routes/index';
 app.use('/', indexRoutes);
 
-// Start the server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
