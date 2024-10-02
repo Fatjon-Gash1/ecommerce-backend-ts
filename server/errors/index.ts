@@ -28,11 +28,7 @@ import {
     CartItemAdditionError,
 } from './CartErrors';
 import {
-    ShippingLocationCreationError,
     ShippingLocationNotFoundError,
-    ShippingLocationUpdateError,
-    ShippingLocationDeletionError,
-    ShippingRateUpdateError,
     ShippingMethodNotFoundError,
 } from './ShippingErrors';
 import {
@@ -40,11 +36,7 @@ import {
     InvalidPaymentMethodError,
     InsufficientFundsError,
 } from './PaymentErrors';
-import {
-    OrderNotFoundError,
-    OrderCreationError,
-    OrderItemNotFoundError,
-} from './OrderErrors';
+import { OrderNotFoundError } from './OrderErrors';
 import {
     RatingCreationError,
     RatingNotFoundError,
@@ -75,18 +67,12 @@ export {
     CartUpdateError,
     EmptyCartError,
     CartItemAdditionError,
-    ShippingLocationCreationError,
     ShippingLocationNotFoundError,
-    ShippingLocationUpdateError,
-    ShippingLocationDeletionError,
-    ShippingRateUpdateError,
     ShippingMethodNotFoundError,
     PaymentFailedError,
     InvalidPaymentMethodError,
     InsufficientFundsError,
     OrderNotFoundError,
-    OrderCreationError,
-    OrderItemNotFoundError,
     RatingCreationError,
     RatingNotFoundError,
     RatingUpdateError,
