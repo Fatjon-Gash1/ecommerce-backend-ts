@@ -1,7 +1,7 @@
-export class CategoryCreationError extends Error {
-    constructor(message = 'Failed to create category') {
+export class CategoryAlreadyExistsError extends Error {
+    constructor(message = 'Category already exists') {
         super(message);
-        this.name = 'CategoryCreationError';
+        this.name = 'CategoryAlreadyExistsError';
     }
 }
 

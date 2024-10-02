@@ -18,7 +18,7 @@ import {
 import {
     InvalidCategoryError,
     CategoryNotFoundError,
-    CategoryCreationError,
+    CategoryAlreadyExistsError,
 } from './CategoryErrors';
 import {
     CartNotFoundError,
@@ -69,7 +69,7 @@ export {
     ProductAlreadyExistsError,
     InvalidCategoryError,
     CategoryNotFoundError,
-    CategoryCreationError,
+    CategoryAlreadyExistsError,
     CartNotFoundError,
     CartItemNotFoundError,
     CartUpdateError,
