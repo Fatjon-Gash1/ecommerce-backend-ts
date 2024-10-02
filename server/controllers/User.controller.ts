@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services';
-import * as userErrors from '../errors/UserErrors';
+import {
+    UserNotFoundError,
+    UserAlreadyExistsError,
+    InvalidCredentialsError,
+    InvalidUserTypeError,
+    InvalidAdminRoleError,
+} from '../errors';
 
 export class UserController {
     private userService: UserService;
@@ -16,7 +22,7 @@ export class UserController {
             );
             res.status(201).json(newCustomer);
         } catch (err) {
-            if (err instanceof userErrors.UserAlreadyExistsError) {
+            if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering customer:', err);
                 res.status(403).json({ message: 'Customer already exists' });
                 return;
@@ -32,7 +38,7 @@ export class UserController {
             const newAdmin = await this.userService.registerAdmin(req.body);
             res.status(201).json(newAdmin);
         } catch (err) {
-            if (err instanceof userErrors.UserAlreadyExistsError) {
+            if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering admin:', err);
                 res.status(403).json({ message: 'Admin already exists' });
                 return;
@@ -56,7 +62,7 @@ export class UserController {
                 );
             res.status(200).json(customer);
         } catch (err) {
-            if (err instanceof userErrors.UserNotFoundError) {
+            if (err instanceof UserNotFoundError) {
                 console.error(
                     'Error adding shipping details to customer: ',
                     err
@@ -117,7 +123,7 @@ export class UserController {
             const customer = await this.userService.getCustomerById(customerId);
             res.status(200).json(customer);
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving customer by ID: ', error);
                 res.status(401).json({ message: 'Customer not found' });
                 return;
@@ -145,7 +151,7 @@ export class UserController {
             const admin = await this.userService.getAdminById(adminId);
             res.status(200).json(admin);
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving admin by ID: ', error);
                 res.status(401).json({ message: 'admin not found' });
                 return;
@@ -163,7 +169,7 @@ export class UserController {
             const admins = await this.userService.getAdminsByRole(role);
             res.status(200).json(admins);
         } catch (error) {
-            if (error instanceof userErrors.InvalidAdminRoleError) {
+            if (error instanceof InvalidAdminRoleError) {
                 console.error('Error retrieving admins by role: ', error);
                 res.status(400).json({ message: 'Invalid role' });
                 return;
@@ -212,7 +218,7 @@ export class UserController {
             const user = await this.userService.updateUser(userId, details);
             res.status(201).json(user);
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error updating user: ', error);
                 res.status(404).json({ message: 'User not found' });
                 return;
@@ -235,7 +241,7 @@ export class UserController {
             );
             res.status(201).json({ message: 'Password changed successfully' });
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error changing password: ', error);
                 res.status(404).json({ message: 'User not found' });
                 return;
@@ -254,7 +260,7 @@ export class UserController {
             await this.userService.setAdminRole(userId, roleNumber);
             res.status(201).json({ message: 'Admin role set successfully' });
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error setting admin role: ', error);
                 res.status(404).json({ message: 'Admin not found' });
                 return;
@@ -277,7 +283,7 @@ export class UserController {
                 message: 'Shipping details removed successfully',
             });
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error removing shipping details: ', error);
                 res.status(404).json({ message: 'Customer not found' });
                 return;
@@ -295,7 +301,7 @@ export class UserController {
             await this.userService.deleteUser(userId);
             res.status(200).json({ message: 'User deleted successfully' });
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error deleting user: ', error);
                 res.status(404).json({ message: 'User not found' });
                 return;
@@ -318,7 +324,7 @@ export class UserController {
                 accessToken,
             });
         } catch (error) {
-            if (error instanceof userErrors.InvalidUserTypeError) {
+            if (error instanceof InvalidUserTypeError) {
                 console.error('Error signing up user: ', error);
                 res.status(400).json({ message: 'Invalid user type' });
                 return;
@@ -341,13 +347,13 @@ export class UserController {
                 accessToken,
             });
         } catch (error) {
-            if (error instanceof userErrors.UserNotFoundError) {
+            if (error instanceof UserNotFoundError) {
                 console.error('Error logging in user: ', error);
                 res.status(404).json({ message: 'User not found' });
                 return;
             }
 
-            if (error instanceof userErrors.InvalidCredentialsError) {
+            if (error instanceof InvalidCredentialsError) {
                 console.error('Error logging in user: ', error);
                 res.status(400).json({ message: 'Invalid password' });
                 return;
