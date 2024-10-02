@@ -20,7 +20,7 @@ export class UserController {
             const newCustomer = await this.userService.registerCustomer(
                 req.body
             );
-            res.status(201).json(newCustomer);
+            res.status(201).json({ newCustomer });
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering customer:', err);
@@ -36,7 +36,7 @@ export class UserController {
     public async registerAdmin(req: Request, res: Response): Promise<void> {
         try {
             const newAdmin = await this.userService.registerAdmin(req.body);
-            res.status(201).json(newAdmin);
+            res.status(201).json({ newAdmin });
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering admin:', err);
@@ -60,7 +60,7 @@ export class UserController {
                     customerId,
                     details
                 );
-            res.status(200).json(customer);
+            res.status(200).json({ customer });
         } catch (err) {
             if (err instanceof UserNotFoundError) {
                 console.error(
@@ -79,7 +79,7 @@ export class UserController {
     public async getAllCustomers(_req: Request, res: Response): Promise<void> {
         try {
             const customers = this.userService.getAllCustomers();
-            res.status(200).json(customers);
+            res.status(200).json({ customers });
         } catch (error) {
             console.error('Error retrieving customers: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -92,7 +92,7 @@ export class UserController {
     ): Promise<void> {
         try {
             const activeCustomers = this.userService.findActiveCustomers();
-            res.status(200).json(activeCustomers);
+            res.status(200).json({ activeCustomers });
         } catch (error) {
             console.error('Error retrieving customers: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -109,7 +109,7 @@ export class UserController {
                 attribute as string,
                 value as string | number
             );
-            res.status(200).json(customer);
+            res.status(200).json({ customer });
         } catch (error) {
             console.error('Error retrieving customer by attribute: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -121,7 +121,7 @@ export class UserController {
 
         try {
             const customer = await this.userService.getCustomerById(customerId);
-            res.status(200).json(customer);
+            res.status(200).json({ customer });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving customer by ID: ', error);
@@ -137,7 +137,7 @@ export class UserController {
     public async getAllAdmins(_req: Request, res: Response): Promise<void> {
         try {
             const admins = await this.userService.getAllAdmins();
-            res.status(200).json(admins);
+            res.status(200).json({ admins });
         } catch (error) {
             console.error('Error retrieving admins: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -149,7 +149,7 @@ export class UserController {
 
         try {
             const admin = await this.userService.getAdminById(adminId);
-            res.status(200).json(admin);
+            res.status(200).json({ admin });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving admin by ID: ', error);
@@ -167,7 +167,7 @@ export class UserController {
 
         try {
             const admins = await this.userService.getAdminsByRole(role);
-            res.status(200).json(admins);
+            res.status(200).json({ admins });
         } catch (error) {
             if (error instanceof InvalidAdminRoleError) {
                 console.error('Error retrieving admins by role: ', error);
@@ -203,7 +203,7 @@ export class UserController {
                 req.query[field] as string
             );
 
-            res.status(200).json(response);
+            res.status(200).json({ response });
         } catch (error) {
             console.error(`Error checking ${field} availability: `, error);
             res.status(500).json({ message: 'Server error' });
@@ -216,7 +216,7 @@ export class UserController {
 
         try {
             const user = await this.userService.updateUser(userId, details);
-            res.status(201).json(user);
+            res.status(201).json({ user });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error updating user: ', error);
