@@ -5,16 +5,15 @@ import {
     ShippingWeight,
     ShippingMethod,
     CartItem,
+    Cart,
     Product,
 } from '../models/relational';
 import {
-    ShippingLocationCreationError,
     ShippingLocationNotFoundError,
     ShippingLocationUpdateError,
-    ShippingLocationDeletionError,
-    ShippingRateUpdateError,
     ShippingMethodNotFoundError,
     EmptyCartError,
+    CartNotFoundError,
 } from '../errors';
 
 /**
@@ -32,13 +31,7 @@ export class ShippingService {
         name: string,
         rate: number
     ): Promise<ShippingCountry> {
-        const addedCountry = await ShippingCountry.create({ name, rate });
-
-        if (!addedCountry) {
-            throw new ShippingLocationCreationError();
-        }
-
-        return addedCountry;
+        return await ShippingCountry.create({ name, rate });
     }
 
     /**
@@ -60,19 +53,7 @@ export class ShippingService {
             throw new ShippingLocationNotFoundError();
         }
 
-        try {
-            return await ShippingCity.create({ countryId, name, postalCode });
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingLocationUpdateError(
-                    `Failed to update shipping city: ${err.message}`
-                );
-            } else {
-                throw new ShippingLocationUpdateError(
-                    'Failed to update shipping city due to unknown error'
-                );
-            }
-        }
+        return await ShippingCity.create({ countryId, name, postalCode });
     }
 
     /**
@@ -99,18 +80,7 @@ export class ShippingService {
             throw new ShippingLocationNotFoundError();
         }
 
-        try {
-            return ShippingCity.findAll({ where: { countryId } });
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingLocationNotFoundError(
-                    `Failed to retrieve shipping cities: ${err.message}`
-                );
-            }
-            throw new Error(
-                'Unknown error occurred while retrieving shipping cities'
-            );
-        }
+        return ShippingCity.findAll({ where: { countryId } });
     }
 
     /**
@@ -135,19 +105,7 @@ export class ShippingService {
         country.name = name;
         country.rate = rate;
 
-        try {
-            return await country.save();
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingLocationUpdateError(
-                    `Shipping Country update failed: ${err.message}`
-                );
-            } else {
-                throw new ShippingLocationUpdateError(
-                    'Failed to update shipping country due to an unknown error.'
-                );
-            }
-        }
+        return await country.save();
     }
 
     /**
@@ -194,29 +152,15 @@ export class ShippingService {
      * @returns A promise that resolves to a boolean value indicating
      * whether the country was deleted
      */
-    public async deleteShippingCountry(countryId: number): Promise<boolean> {
-        try {
-            const deleted = await ShippingCountry.destroy({
-                where: { id: countryId },
-            });
+    public async deleteShippingCountry(countryId: number): Promise<void> {
+        const deleted = await ShippingCountry.destroy({
+            where: { id: countryId },
+        });
 
-            if (!deleted) {
-                throw new ShippingLocationNotFoundError(
-                    `Country with Id: "${countryId}" not found or already deleted.`
-                );
-            }
-
-            return true;
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingLocationDeletionError(
-                    `Failed to delete shipping country: ${err.message}`
-                );
-            } else {
-                throw new ShippingLocationDeletionError(
-                    'Failed to delete shipping country due to an unknown error.'
-                );
-            }
+        if (deleted === 0) {
+            throw new ShippingLocationNotFoundError(
+                `Country with Id: "${countryId}" not found or already deleted.`
+            );
         }
     }
 
@@ -227,29 +171,15 @@ export class ShippingService {
      * @returns A promise that resolves to a boolean value indicating
      * whether the city was deleted
      */
-    public async deleteShippingCity(cityId: number): Promise<boolean> {
-        try {
-            const deleted = await ShippingCity.destroy({
-                where: { id: cityId },
-            });
+    public async deleteShippingCity(cityId: number): Promise<void> {
+        const deleted = await ShippingCity.destroy({
+            where: { id: cityId },
+        });
 
-            if (!deleted) {
-                throw new ShippingLocationNotFoundError(
-                    `City with Id: "${cityId}" not found or already deleted.`
-                );
-            }
-
-            return true;
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingLocationDeletionError(
-                    `Failed to delete shipping city: ${err.message}`
-                );
-            } else {
-                throw new ShippingLocationDeletionError(
-                    'Failed to delete shipping city due to an unknown error.'
-                );
-            }
+        if (deleted === 0) {
+            throw new ShippingLocationNotFoundError(
+                `City with Id: "${cityId}" not found or already deleted.`
+            );
         }
     }
 
@@ -272,19 +202,7 @@ export class ShippingService {
             where: { [key]: value } as WhereOptions<T>,
         });
 
-        try {
-            return await modelInstance!.update({ rate });
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingRateUpdateError(
-                    `Shipping rate update failed: ${err.message}`
-                );
-            } else {
-                throw new ShippingRateUpdateError(
-                    'Failed to update shipping rate due to an unknown error.'
-                );
-            }
-        }
+        return await modelInstance!.update({ rate });
     }
 
     /**
@@ -383,10 +301,16 @@ export class ShippingService {
         countryName: string,
         shippingMethod: string
     ): Promise<number> {
+        const cart = await Cart.findByPk(cartId);
+
         const [country, method] = await Promise.all([
             ShippingCountry.findOne({ where: { name: countryName } }),
             ShippingMethod.findOne({ where: { shippingMethod } }),
         ]);
+
+        if (!cart) {
+            throw new CartNotFoundError();
+        }
 
         if (!country) {
             throw new ShippingLocationNotFoundError();
@@ -396,23 +320,11 @@ export class ShippingService {
             throw new ShippingMethodNotFoundError();
         }
 
-        try {
-            const weightRange = await this.determineWeightRange(cartId);
-            const weightResult = await ShippingWeight.findOne({
-                where: { weightRange },
-            });
+        const weightRange = await this.determineWeightRange(cartId);
+        const weightResult = await ShippingWeight.findOne({
+            where: { weightRange },
+        });
 
-            return country.rate + method.rate + weightResult!.rate;
-        } catch (err) {
-            if (err instanceof EmptyCartError) {
-                console.error('Error calculating shipping cost: ', err);
-                throw new EmptyCartError();
-            }
-
-            console.error('Error calculating shipping cost: ', err);
-            throw new Error(
-                'Unknown error occurred while calculating shipping cost'
-            );
-        }
+        return country.rate + method.rate + weightResult!.rate;
     }
 }
