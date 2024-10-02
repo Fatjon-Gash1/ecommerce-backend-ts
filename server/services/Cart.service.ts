@@ -1,5 +1,5 @@
 import { Cart, CartItem } from '../models/relational';
-import { CartNotFoundError, CartItemNotFoundError } from '../errors/CartErrors';
+import { CartNotFoundError, CartItemNotFoundError } from '../errors';
 
 /**
  * Service responsible for Customer Cart-related operations.
@@ -18,7 +18,7 @@ export class CartService {
         customerId: number,
         productId: number,
         quantity: number = 1
-    ): Promise<boolean> {
+    ): Promise<CartItem> {
         const cart = await Cart.findOne({ where: { customerId } });
 
         if (!cart) {
@@ -36,11 +36,10 @@ export class CartService {
 
         if (!created) {
             item.quantity += quantity;
-            await item.save();
-            return true;
+            return await item.save();
         }
 
-        return true;
+        return item;
     }
 
     /**
@@ -60,10 +59,6 @@ export class CartService {
             where: { cartId: cart.id },
         });
 
-        if (cartItems.length === 0) {
-            throw new CartItemNotFoundError('Cart items not found');
-        }
-
         return cartItems;
     }
 
@@ -78,7 +73,7 @@ export class CartService {
     public async removeItemFromCart(
         customerId: number,
         productId: number
-    ): Promise<boolean> {
+    ): Promise<void> {
         const cart = await Cart.findOne({ where: { customerId } });
 
         if (!cart) {
@@ -97,11 +92,8 @@ export class CartService {
             item.quantity -= 1;
             await item.save();
         } else {
-            item.destroy();
-            await item.save();
+            await item.destroy();
         }
-
-        return true;
     }
 
     /**
@@ -135,5 +127,3 @@ export class CartService {
         return await cart.getTotalPrice();
     }
 }
-
-export default new CartService();
