@@ -2,7 +2,7 @@ import { Op } from 'sequelize';
 import { Category, SubCategory, Product } from '../models/relational';
 import client from '../config/elasticsearchClient';
 import {
-    CategoryCreationError,
+    CategoryAlreadyExistsError,
     CategoryNotFoundError,
     ProductNotFoundError,
     ProductAlreadyExistsError,
@@ -47,7 +47,7 @@ export class ProductService {
         });
 
         if (created) {
-            throw new CategoryCreationError('Category already exists');
+            throw new CategoryAlreadyExistsError();
         }
 
         return category;
@@ -67,13 +67,19 @@ export class ProductService {
         name: string,
         categoryId: number
     ): Promise<SubCategory> {
+        const category = await Category.findByPk(categoryId);
+
+        if (!category) {
+            throw new CategoryNotFoundError();
+        }
+
         const [subcategory, created] = await SubCategory.findOrCreate({
             where: { name },
             defaults: { name, categoryId },
         });
 
         if (!created) {
-            throw new CategoryCreationError('SubCategory already exists');
+            throw new CategoryAlreadyExistsError('SubCategory already exists');
         }
 
         return subcategory;
@@ -87,46 +93,36 @@ export class ProductService {
      * @subNames - Array of subcategory names
      * @returns An object with the created category and subcategories
      *
-     * @throws {@link CategoryCreationError}
+     * @throws {@link CategoryAlreadyExistsError}
      * Thrown if the category already exists.
-     *
-     * @throws {@link CategoryCreationError}
-     * Thrown if the category creation fails.
      */
     public async createCategoryWithSubcategories(
         name: string,
         description: string,
         subNames: string[]
     ): Promise<{ category: Category; subcategories: SubCategory[] }> {
-        try {
-            const [category, created] = await Category.findOrCreate({
-                where: { name },
-                defaults: {
-                    name,
-                    description,
-                },
-            });
+        const [category, created] = await Category.findOrCreate({
+            where: { name },
+            defaults: {
+                name,
+                description,
+            },
+        });
 
-            if (!created) {
-                throw new CategoryCreationError('Category already exists');
-            }
-
-            const subcategories = await Promise.all(
-                subNames.map(async (subName: string) => {
-                    return await SubCategory.create({
-                        name: subName,
-                        categoryId: category.id,
-                    });
-                })
-            );
-
-            return { category, subcategories };
-        } catch (error) {
-            console.error('Error creating category with subcategories:', error);
-            throw new CategoryCreationError(
-                'Failed to create category with subcategories'
-            );
+        if (!created) {
+            throw new CategoryAlreadyExistsError();
         }
+
+        const subcategories = await Promise.all(
+            subNames.map(async (subName: string) => {
+                return await SubCategory.create({
+                    name: subName,
+                    categoryId: category.id,
+                });
+            })
+        );
+
+        return { category, subcategories };
     }
 
     /**
@@ -167,14 +163,9 @@ export class ProductService {
             throw new ProductNotFoundError();
         }
 
-        try {
-            product.discount = discount;
-            await product.save();
-            return await this.getDiscountedPrice(productId);
-        } catch (err) {
-            console.error('Error setting discount for product:', err);
-            throw new Error('Error setting discount for product');
-        }
+        product.discount = discount;
+        await product.save();
+        return await this.getDiscountedPrice(productId);
     }
 
     /**
@@ -225,13 +216,7 @@ export class ProductService {
      * @returns a promise resolving to an array of Product instances
      */
     public async getAllProducts(): Promise<Product[]> {
-        const products = await Product.findAll();
-
-        if (products.length === 0) {
-            throw new ProductNotFoundError('Products not found');
-        }
-
-        return products;
+        return await Product.findAll();
     }
 
     /**
@@ -285,13 +270,8 @@ export class ProductService {
             throw new ProductNotFoundError();
         }
 
-        try {
-            product.views! += 1;
-            return await product.save();
-        } catch (err) {
-            console.error('Error updating product views: ', err);
-            throw new Error('Error updating product views');
-        }
+        product.views! += 1;
+        return await product.save();
     }
 
     /**
@@ -328,10 +308,6 @@ export class ProductService {
             where: { stockQuantity: { [Op.gt]: 0 } },
         });
 
-        if (products.length === 0) {
-            return { message: 'No products in stock' };
-        }
-
         return products;
     }
 
@@ -346,10 +322,6 @@ export class ProductService {
         const products = await Product.findAll({
             where: { stockQuantity: 0 },
         });
-
-        if (products.length === 0) {
-            return { message: 'No products out of stock' };
-        }
 
         return products;
     }
@@ -395,23 +367,18 @@ export class ProductService {
      * @returns A promise resolving to an array of matched products
      */
     public async searchProducts(query: string): Promise<ProductObject[]> {
-        try {
-            const res = await client.search<ProductObject>({
-                index: 'products',
-                body: {
-                    query: {
-                        multi_match: {
-                            query: query,
-                            fields: ['name', 'description'],
-                        },
+        const res = await client.search<ProductObject>({
+            index: 'products',
+            body: {
+                query: {
+                    multi_match: {
+                        query: query,
+                        fields: ['name', 'description'],
                     },
                 },
-            });
+            },
+        });
 
-            return res.hits.hits.map((hit) => hit._source!);
-        } catch (error) {
-            console.error('Elasticsearch search error:', error);
-            throw error;
-        }
+        return res.hits.hits.map((hit) => hit._source!);
     }
 }
