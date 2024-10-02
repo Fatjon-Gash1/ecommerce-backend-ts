@@ -1,11 +1,7 @@
 import { Op } from 'sequelize';
 import { Order, OrderItem, Customer } from '../models/relational';
 import { UserNotFoundError } from '../errors/UserErrors';
-import {
-    OrderNotFoundError,
-    OrderCreationError,
-    OrderItemNotFoundError,
-} from '../errors';
+import { OrderNotFoundError } from '../errors';
 
 /**
  * Service responsible for Order-related operations.
@@ -21,23 +17,20 @@ export class OrderService {
      */
     public async createOrder(
         customerId: number,
-        items: Map<number, number>,
+        items: { [key: number]: number },
         paymentMethod: string
     ): Promise<Order> {
+        const itemsMap = new Map<number, number>(
+            Object.entries(items).map(([productId, quantity]) => [
+                Number(productId),
+                Number(quantity),
+            ])
+        );
+
         const customer = await Customer.findByPk(customerId);
 
         if (!customer) {
             throw new UserNotFoundError('User of type Customer not found');
-        }
-
-        if (!(items instanceof Map)) {
-            throw new Error(
-                'Items must be provided as a Map of productId to quantity.'
-            );
-        }
-
-        if (items.size === 0) {
-            throw new Error('Cannot create an order with no items.');
         }
 
         const order = await Order.create({
@@ -45,14 +38,12 @@ export class OrderService {
             paymentMethod,
         });
 
-        if (!order) {
-            throw new OrderCreationError();
-        }
-
         await Promise.all(
-            Array.from(items.entries()).map(async ([productId, quantity]) => {
-                await order.addItem(productId, quantity);
-            })
+            Array.from(itemsMap.entries()).map(
+                async ([productId, quantity]) => {
+                    await order.addItem(productId, quantity);
+                }
+            )
         );
 
         return order;
@@ -121,10 +112,6 @@ export class OrderService {
 
         const orderItems = await order.getItems();
 
-        if (orderItems.length === 0) {
-            throw new OrderItemNotFoundError();
-        }
-
         return orderItems;
     }
 
@@ -141,13 +128,7 @@ export class OrderService {
             throw new OrderNotFoundError();
         }
 
-        const totalPrice = await order.getTotalPrice();
-
-        if (!totalPrice) {
-            throw new OrderItemNotFoundError();
-        }
-
-        return totalPrice;
+        return await order.getTotalPrice();
     }
 
     /**
@@ -156,14 +137,10 @@ export class OrderService {
      * @param customerId - The ID of the customer
      * @returns A promise resolving to an array of Order instances
      */
-    public async getdeliveredOrders(customerId: number): Promise<Order[]> {
+    public async getDeliveredOrders(customerId: number): Promise<Order[]> {
         const orders = await Order.findAll({
             where: { customerId, status: 'delivered' },
         });
-
-        if (orders.length === 0) {
-            throw new OrderNotFoundError('No delivered orders found');
-        }
 
         return orders;
     }
@@ -179,10 +156,6 @@ export class OrderService {
             where: { customerId, status: 'pending' },
         });
 
-        if (orders.length === 0) {
-            throw new OrderNotFoundError('No pending orders found');
-        }
-
         return orders;
     }
 
@@ -196,10 +169,6 @@ export class OrderService {
         const orders = await Order.findAll({
             where: { customerId, status: 'cancelled' },
         });
-
-        if (orders.length === 0) {
-            throw new OrderNotFoundError('No cancelled orders found');
-        }
 
         return orders;
     }
@@ -215,12 +184,6 @@ export class OrderService {
             where: { customerId, status: { [Op.not]: 'pending' } },
         });
 
-        if (!orders) {
-            throw new OrderNotFoundError('No orders found in the history');
-        }
-
         return orders;
     }
 }
-
-export default new OrderService();
