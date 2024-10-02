@@ -41,7 +41,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
                 productId,
                 quantity,
             },
-        }); // Check if productId in table is unique
+        });
         if (!created) {
             item.quantity += quantity;
             await item.save();
