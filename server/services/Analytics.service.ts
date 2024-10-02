@@ -729,5 +729,3 @@ export class AnalyticsService {
         doc.end();
     }
 }
-
-export default new AnalyticsService();
