@@ -237,7 +237,7 @@ export class ProductController {
 
         try {
             const product = await this.productService.getProductById(productId);
-            res.status(200).json(product);
+            res.status(200).json({ product });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error getting product: ', error);
@@ -256,7 +256,7 @@ export class ProductController {
         try {
             const product =
                 await this.productService.viewProductById(productId);
-            res.status(200).json(product);
+            res.status(200).json({ product });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error viewing product: ', error);
@@ -278,7 +278,7 @@ export class ProductController {
         try {
             const category =
                 await this.productService.getProductCategory(productId);
-            res.status(200).json(category);
+            res.status(200).json({ category });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error getting product category: ', error);
@@ -303,7 +303,7 @@ export class ProductController {
     ): Promise<void> {
         try {
             const products = await this.productService.getProductsInStock();
-            res.status(200).json(products);
+            res.status(200).json({ products });
         } catch (error) {
             console.error('Error getting products in stock: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -316,7 +316,7 @@ export class ProductController {
     ): Promise<void> {
         try {
             const products = await this.productService.getProductsOutOfStock();
-            res.status(200).json(products);
+            res.status(200).json({ products });
         } catch (error) {
             console.error('Error getting products out of stock: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -332,7 +332,7 @@ export class ProductController {
         try {
             const discountedPrice: number =
                 await this.productService.getDiscountedPrice(productId);
-            res.status(200).json(discountedPrice);
+            res.status(200).json({ discountedPrice });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error getting discounted price: ', error);
@@ -370,7 +370,7 @@ export class ProductController {
             const products = await this.productService.searchProducts(
                 query as string
             );
-            res.status(200).json(products);
+            res.status(200).json({ products });
         } catch (error) {
             console.error('Error searching products: ', error);
             res.status(500).json({ message: 'Server error' });
