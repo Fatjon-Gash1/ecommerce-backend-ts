@@ -83,12 +83,12 @@ export class RatingService {
     }
 
     /**
-     * Retrieves all platform ratings by user id.
+     * Retrieves all platform ratings by customer's user id.
      *
-     * @param userId - The id of the user
-     * @returns A promise that resolves to the user's platform ratings
+     * @param userId - The id of the customer
+     * @returns A promise that resolves to the customer's platform ratings
      */
-    public async getPlatformRatingsByUser(
+    public async getPlatformRatingsByCustomer(
         userId: number
     ): Promise<IPlatformRating[]> {
         const customer = await User.findByPk(userId);
@@ -116,9 +116,7 @@ export class RatingService {
         });
 
         if (!updatedRating) {
-            throw new RatingUpdateError(
-                'Could not update rating. Possibly ratingId is invalid'
-            );
+            throw new RatingNotFoundError();
         }
 
         return updatedRating;
@@ -131,14 +129,12 @@ export class RatingService {
      * @returns A promise that resolves to a boolean indicating
      * if the rating was removed
      */
-    public async deletePlatformRating(ratingId: number): Promise<boolean> {
+    public async deletePlatformRating(ratingId: number): Promise<void> {
         const deleted = await PlatformRating.findByIdAndDelete(ratingId);
 
         if (!deleted) {
             throw new RatingNotFoundError();
         }
-
-        return true;
     }
 
     /**
@@ -150,8 +146,8 @@ export class RatingService {
         details: IProductReview
     ): Promise<IProductReview> {
         const {
-            productId,
             userId,
+            productId,
             firstName,
             lastName,
             userProfession,
@@ -167,32 +163,27 @@ export class RatingService {
             User.findByPk(userId),
         ]);
 
-        if (!product) {
-            throw new ProductNotFoundError();
-        }
-
         if (!customer) {
             throw new UserNotFoundError('Could not find customer');
         }
 
-        try {
-            return await ProductReview.create({
-                productId,
-                userId,
-                username: customer.username,
-                firstName,
-                lastName,
-                userProfession,
-                rating,
-                review,
-                anonymous,
-                productHighlights,
-                alternatives,
-            });
-        } catch (err) {
-            console.error('Error creating product review:', err);
-            throw new RatingCreationError('Error creating product review');
+        if (!product) {
+            throw new ProductNotFoundError();
         }
+
+        return await ProductReview.create({
+            userId,
+            productId,
+            username: customer.username,
+            firstName,
+            lastName,
+            userProfession,
+            rating,
+            review,
+            anonymous,
+            productHighlights,
+            alternatives,
+        });
     }
 
     /**
@@ -232,12 +223,12 @@ export class RatingService {
     }
 
     /**
-     * Retrieves all product reviews by user id.
+     * Retrieves all product reviews by customer's user id.
      *
      * @param userId - The id of the user
      * @returns A promise that resolves to the user's product reviews
      */
-    public async getProductReviewsByUser(
+    public async getProductReviewsByCustomer(
         userId: number
     ): Promise<IProductReview[]> {
         const customer = await User.findByPk(userId);
@@ -265,9 +256,7 @@ export class RatingService {
         });
 
         if (!updatedReview) {
-            throw new RatingUpdateError(
-                'Could not update review. Possibly reviewId is invalid'
-            );
+            throw new RatingNotFoundError();
         }
 
         return updatedReview;
