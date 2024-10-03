@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { UserService } from '../services';
+import {
+    UserService,
+    NotificationService,
+    AdminLogsService,
+} from '../services';
 import {
     UserNotFoundError,
     UserAlreadyExistsError,
@@ -10,17 +14,38 @@ import {
 
 export class UserController {
     private userService: UserService;
+    private notificationService: NotificationService;
+    private adminLogsService: AdminLogsService;
 
-    constructor(userService: UserService) {
+    constructor(
+        userService: UserService,
+        notificationService: NotificationService,
+        AdminLogsService: AdminLogsService
+    ) {
         this.userService = userService;
+        this.notificationService = notificationService;
+        this.adminLogsService = AdminLogsService;
     }
 
     public async registerCustomer(req: Request, res: Response): Promise<void> {
+        const { details } = req.body;
+
         try {
-            const newCustomer = await this.userService.registerCustomer(
-                req.body
-            );
+            const newCustomer =
+                await this.userService.registerCustomer(details);
+
+            await this.notificationService.sendWelcomeEmail(
+                details.firstName,
+                details.email
+            ); // Method call above the response for development purposes
+
             res.status(201).json({ newCustomer });
+
+            await this.adminLogsService.log(
+                details.username,
+                'customer',
+                'create'
+            );
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering customer:', err);
@@ -34,9 +59,17 @@ export class UserController {
     }
 
     public async registerAdmin(req: Request, res: Response): Promise<void> {
+        const { details } = req.body;
+
         try {
-            const newAdmin = await this.userService.registerAdmin(req.body);
+            const newAdmin = await this.userService.registerAdmin(details);
             res.status(201).json({ newAdmin });
+
+            await this.adminLogsService.log(
+                details.username,
+                'admin',
+                'create'
+            );
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering admin:', err);
@@ -254,11 +287,13 @@ export class UserController {
 
     public async setAdminRole(req: Request, res: Response): Promise<void> {
         const userId: number = Number(req.params.id);
-        const { roleNumber } = req.body;
+        const { username, roleNumber } = req.body;
 
         try {
             await this.userService.setAdminRole(userId, roleNumber);
             res.status(201).json({ message: 'Admin role set successfully' });
+
+            await this.adminLogsService.log(username, 'admin', 'update');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error setting admin role: ', error);
@@ -296,10 +331,13 @@ export class UserController {
 
     public async deleteUser(req: Request, res: Response): Promise<void> {
         const userId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.userService.deleteUser(userId);
             res.status(200).json({ message: 'User deleted successfully' });
+
+            await this.adminLogsService.log(username, 'admin', 'delete');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error deleting user: ', error);
@@ -318,6 +356,11 @@ export class UserController {
         try {
             const { refreshToken, accessToken } =
                 await this.userService.signUpUser(userType, details);
+
+            await this.notificationService.sendWelcomeEmail(
+                details.firstName,
+                details.email
+            ); // Method call above the response for development purposes
             res.status(201).json({
                 message: 'User signed up successfully',
                 refreshToken,
