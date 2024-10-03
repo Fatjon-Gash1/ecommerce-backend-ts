@@ -1,4 +1,8 @@
-import { ProductNotFoundError } from '../errors';
+import {
+    CategoryNotFoundError,
+    ProductNotFoundError,
+    InvalidStockStatusError,
+} from '../errors';
 import { Purchase, Product, Category, Sale, Order } from '../models/relational';
 import { Sequelize, Op } from 'sequelize';
 import PDFDocument from 'pdfkit';
@@ -144,7 +148,7 @@ export class AnalyticsService {
      * @returns A promise that resolves to an object containing the category
      * and the count of purchases.
      */
-    public async getCategoryWithMostPurchases(): Promise<TopCategory | null> {
+    public async getCategoryWithMostPurchases(): Promise<TopCategory> {
         const results = await Purchase.findAll({
             include: [
                 {
@@ -175,14 +179,14 @@ export class AnalyticsService {
             limit: 1,
         });
 
-        const result = results[0] as unknown as TopCategory | undefined;
+        const result = results[0] as unknown as TopCategory;
 
-        if (result) {
-            const { categoryName, purchaseCount } = result;
-            return { categoryName, purchaseCount };
+        if (!result) {
+            throw new CategoryNotFoundError();
         }
 
-        return null;
+        const { categoryName, purchaseCount } = result;
+        return { categoryName, purchaseCount };
     }
 
     /**
@@ -237,7 +241,7 @@ export class AnalyticsService {
      */
     public async getCategoryWithMostPurchasesByCustomer(
         customerId: number
-    ): Promise<TopCategory | null> {
+    ): Promise<TopCategory> {
         const results = await Purchase.findAll({
             where: { customerId },
             include: [
@@ -269,14 +273,14 @@ export class AnalyticsService {
             limit: 1,
         });
 
-        const result = results[0] as unknown as TopCategory | undefined;
+        const result = results[0] as unknown as TopCategory;
 
-        if (result) {
-            const { categoryName, purchaseCount } = result;
-            return { categoryName, purchaseCount };
+        if (!result) {
+            throw new CategoryNotFoundError();
         }
 
-        return null;
+        const { categoryName, purchaseCount } = result;
+        return { categoryName, purchaseCount };
     }
 
     /**
@@ -414,7 +418,7 @@ export class AnalyticsService {
                 operator = { [Op.lte]: 0 };
                 break;
             default:
-                throw new Error('Invalid status');
+                throw new InvalidStockStatusError(status);
         }
 
         const { count, rows } = await Product.findAndCountAll({
@@ -430,7 +434,7 @@ export class AnalyticsService {
      * @param status - The stock status of the products (e.g., 'instock', 'outofstock', 'lowstock')
      * @returns A promise resolving to an array of objects containing the category name and stock status
      */
-    public async getStockDataByCategory(
+    public async getStockDataForCategoryByStatus(
         status: string = 'instock'
     ): Promise<{ categoryName: string; total: number }[]> {
         let operator;
@@ -448,7 +452,7 @@ export class AnalyticsService {
                 operator = { [Op.lte]: 0 };
                 break;
             default:
-                throw new Error('Invalid status');
+                throw new InvalidStockStatusError(status);
         }
 
         const stockData = await Product.findAll({
@@ -664,11 +668,12 @@ export class AnalyticsService {
             await this.getProductsByStockStatus('outofstock');
         const lowInStockitems = await this.getProductsByStockStatus('lowstock');
 
-        const categoriesInStock = await this.getStockDataByCategory('instock');
+        const categoriesInStock =
+            await this.getStockDataForCategoryByStatus('instock');
         const categoriesOutOfStock =
-            await this.getStockDataByCategory('outofstock');
+            await this.getStockDataForCategoryByStatus('outofstock');
         const categoriesLowInStock =
-            await this.getStockDataByCategory('lowstock');
+            await this.getStockDataForCategoryByStatus('lowstock');
 
         const doc = new PDFDocument();
         doc.pipe(fs.createWriteStream('reports/stock_report.pdf'));
