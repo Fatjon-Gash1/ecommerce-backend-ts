@@ -2,6 +2,8 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../../config/db';
 import { Category } from './Category.model';
 import client from '../../config/elasticsearchClient';
+import { NotificationService } from '../../services';
+const notificationService = new NotificationService();
 
 interface ProductAttributes {
     id?: number;
@@ -89,6 +91,19 @@ Product.init(
         tableName: 'products',
     }
 );
+
+// Product addition threshold for sending product promotions email
+let productsForPromotion: number = 0; // Will be converted to an array of Products in the future
+const promotionThreshold: number = 10;
+
+Product.afterCreate(async () => {
+    productsForPromotion++;
+
+    if (productsForPromotion === promotionThreshold) {
+        await notificationService.sendNewPromotionsEmail();
+        productsForPromotion = 0;
+    }
+});
 
 const bulkOperations: object[] = [];
 const limit = 5;
