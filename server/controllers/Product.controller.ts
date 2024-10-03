@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ProductService } from '../services';
+import { ProductService, AdminLogsService } from '../services';
 import {
     CategoryAlreadyExistsError,
     CategoryNotFoundError,
@@ -9,13 +9,18 @@ import {
 
 export class ProductController {
     private productService: ProductService;
+    private adminLogsService: AdminLogsService;
 
-    constructor(productService: ProductService) {
+    constructor(
+        productService: ProductService,
+        adminLogsService: AdminLogsService
+    ) {
         this.productService = productService;
+        this.adminLogsService = adminLogsService;
     }
 
     public async addCategory(req: Request, res: Response): Promise<void> {
-        const { name, description } = req.body;
+        const { username, name, description } = req.body;
 
         try {
             const category = await this.productService.addCategory(
@@ -26,6 +31,8 @@ export class ProductController {
                 message: 'Category created successfully',
                 category,
             });
+
+            await this.adminLogsService.log(username, 'category', 'create');
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
                 console.error('Error adding category: ', error);
@@ -40,7 +47,7 @@ export class ProductController {
 
     public async addSubCategory(req: Request, res: Response): Promise<void> {
         const categoryId = Number(req.params.id);
-        const { name } = req.body;
+        const { username, name } = req.body;
 
         try {
             const subCategory = await this.productService.addSubCategory(
@@ -51,6 +58,8 @@ export class ProductController {
                 message: 'Subcategory created successfully',
                 subCategory,
             });
+
+            this.adminLogsService.log(username, 'subcategory', 'create');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 console.error('Error adding subcategory: ', error);
@@ -73,7 +82,7 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void> {
-        const { name, description, subNames } = req.body;
+        const { username, name, description, subNames } = req.body;
 
         try {
             const { category, subcategories } =
@@ -87,6 +96,8 @@ export class ProductController {
                 category,
                 subcategories,
             });
+
+            this.adminLogsService.log(username, 'category', 'create');
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
                 console.error(
@@ -103,7 +114,7 @@ export class ProductController {
     }
 
     public async addProduct(req: Request, res: Response): Promise<void> {
-        const details = req.body;
+        const { username, details } = req.body;
 
         try {
             const product = await this.productService.addProduct(details);
@@ -111,6 +122,8 @@ export class ProductController {
                 message: 'Product added successfully',
                 product,
             });
+
+            this.adminLogsService.log(username, 'product', 'create');
         } catch (error) {
             if (error instanceof ProductAlreadyExistsError) {
                 console.error('Error adding product: ', error);
@@ -127,7 +140,7 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void> {
-        const { productId, discount } = req.body;
+        const { username, productId, discount } = req.body;
 
         try {
             const discountedPrice: number =
@@ -139,6 +152,8 @@ export class ProductController {
                 message: 'Product discount set successfully',
                 discountedPrice,
             });
+
+            this.adminLogsService.log(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error setting discount: ', error);
@@ -153,7 +168,7 @@ export class ProductController {
 
     public async updateProduct(req: Request, res: Response): Promise<void> {
         const productId: number = Number(req.params.id);
-        const details = req.body;
+        const { username, details } = req.body;
 
         try {
             const updatedProduct = await this.productService.updateProduct(
@@ -164,6 +179,8 @@ export class ProductController {
                 message: 'Product updated successfully',
                 updatedProduct,
             });
+
+            this.adminLogsService.log(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error updating product: ', error);
@@ -345,12 +362,63 @@ export class ProductController {
         }
     }
 
+    public async deleteCategoryById(
+        req: Request,
+        res: Response
+    ): Promise<void> {
+        const categoryId: number = Number(req.params.id);
+        const { username } = req.body;
+
+        try {
+            await this.productService.deleteCategoryById(categoryId);
+            res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'category', 'delete');
+        } catch (error) {
+            if (error instanceof CategoryNotFoundError) {
+                console.error('Error deleting category: ', error);
+                res.status(404).json({ message: error.message });
+                return;
+            }
+
+            console.error('Error deleting category: ', error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async deleteSubCategoryById(
+        req: Request,
+        res: Response
+    ): Promise<void> {
+        const categoryId: number = Number(req.params.id);
+        const { username } = req.body;
+
+        try {
+            await this.productService.deleteSubCategoryById(categoryId);
+            res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'subcategory', 'delete');
+        } catch (error) {
+            if (error instanceof CategoryNotFoundError) {
+                console.error('Error deleting subcategory: ', error);
+                res.status(404).json({ message: error.message });
+                return;
+            }
+
+            console.error('Error deleting subcategory: ', error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async deleteProductById(req: Request, res: Response): Promise<void> {
         const productId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.productService.deleteProductById(productId);
             res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'product', 'delete');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error deleting product: ', error);

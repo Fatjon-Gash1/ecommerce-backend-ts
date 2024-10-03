@@ -1,12 +1,17 @@
 import { Request, Response } from 'express';
-import { OrderService } from '../services';
+import { OrderService, AdminLogsService } from '../services';
 import { OrderNotFoundError, UserNotFoundError } from '../errors';
 
 export class OrderController {
     private orderService: OrderService;
+    private adminLogsService: AdminLogsService;
 
-    constructor(orderService: OrderService) {
+    constructor(
+        orderService: OrderService,
+        adminLogsService: AdminLogsService
+    ) {
         this.orderService = orderService;
+        this.adminLogsService = adminLogsService;
     }
 
     public async createOrder(req: Request, res: Response): Promise<void> {
@@ -36,10 +41,13 @@ export class OrderController {
 
     public async markAsDelivered(req: Request, res: Response): Promise<void> {
         const orderId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.orderService.markAsDelivered(orderId);
             res.sendStatus(204);
+
+            this.adminLogsService.log(username, 'order', 'update');
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
                 console.error('Error marking order as delivered: ', error);

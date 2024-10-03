@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ShippingService } from '../services';
+import { ShippingService, AdminLogsService } from '../services';
 import {
     ShippingLocationNotFoundError,
     ShippingMethodNotFoundError,
@@ -8,14 +8,19 @@ import {
 } from '../errors';
 
 export class ShippingController {
-    shippingService: ShippingService;
+    private shippingService: ShippingService;
+    private adminLogsService: AdminLogsService;
 
-    constructor(shippingService: ShippingService) {
+    constructor(
+        shippingService: ShippingService,
+        adminLogsService: AdminLogsService
+    ) {
         this.shippingService = shippingService;
+        this.adminLogsService = adminLogsService;
     }
 
     public async addNewCountry(req: Request, res: Response): Promise<void> {
-        const { name, rate } = req.body;
+        const { username, name, rate } = req.body;
 
         try {
             const country = await this.shippingService.addNewCountry(
@@ -26,6 +31,8 @@ export class ShippingController {
                 message: 'Country added successfully',
                 country,
             });
+
+            await this.adminLogsService.log(username, 'country', 'create');
         } catch (error) {
             console.error('Error adding new country: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -34,7 +41,7 @@ export class ShippingController {
 
     public async addCityToCountry(req: Request, res: Response): Promise<void> {
         const countryId: number = Number(req.params.id);
-        const { name, postalCode } = req.body;
+        const { username, name, postalCode } = req.body;
 
         try {
             const city = await this.shippingService.addCityToCountry(
@@ -43,6 +50,8 @@ export class ShippingController {
                 postalCode
             );
             res.status(200).json({ message: 'City added successfully', city });
+
+            await this.adminLogsService.log(username, 'city', 'create');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error adding city: ', error);
@@ -98,7 +107,7 @@ export class ShippingController {
         res: Response
     ): Promise<void> {
         const countryId: number = Number(req.params.id);
-        const { name, rate } = req.body;
+        const { username, name, rate } = req.body;
 
         try {
             const updatedCountry =
@@ -111,6 +120,8 @@ export class ShippingController {
                 message: 'Country updated successfully',
                 updatedCountry,
             });
+
+            await this.adminLogsService.log(username, 'country', 'update');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error updating country: ', error);
@@ -128,7 +139,7 @@ export class ShippingController {
         res: Response
     ): Promise<void> {
         const cityId: number = Number(req.params.id);
-        const { name, postalCode } = req.body;
+        const { username, name, postalCode } = req.body;
 
         try {
             const updatedCity = await this.shippingService.updateShippingCity(
@@ -140,6 +151,8 @@ export class ShippingController {
                 message: 'City updated successfully',
                 updatedCity,
             });
+
+            await this.adminLogsService.log(username, 'city', 'update');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error updating city: ', error);
@@ -157,10 +170,13 @@ export class ShippingController {
         res: Response
     ): Promise<void> {
         const countryId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.shippingService.deleteShippingCountry(countryId);
             res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'country', 'delete');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error deleting country: ', error);
@@ -178,10 +194,13 @@ export class ShippingController {
         res: Response
     ): Promise<void> {
         const cityId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.shippingService.deleteShippingCity(cityId);
             res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'city', 'delete');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error deleting city: ', error);
@@ -198,7 +217,7 @@ export class ShippingController {
         req: Request,
         res: Response
     ): Promise<void> {
-        const { type, rate } = req.body;
+        const { username, type, rate } = req.body;
 
         try {
             const updatedRate =
@@ -207,6 +226,12 @@ export class ShippingController {
                 message: 'Shipping weight rate updated successfully',
                 updatedRate,
             });
+
+            await this.adminLogsService.log(
+                username,
+                'shipping weight',
+                'update'
+            );
         } catch (error) {
             console.error('Error changing shipping weight rate: ', error);
             res.status(500).json({ message: 'Server error' });
@@ -217,7 +242,7 @@ export class ShippingController {
         req: Request,
         res: Response
     ): Promise<void> {
-        const { type, rate } = req.body;
+        const { username, type, rate } = req.body;
 
         try {
             const updatedRate =
@@ -226,6 +251,12 @@ export class ShippingController {
                 message: 'Shipping method rate updated successfully',
                 updatedRate,
             });
+
+            await this.adminLogsService.log(
+                username,
+                'shipping method',
+                'update'
+            );
         } catch (error) {
             console.error('Error changing shipping method rate: ', error);
             res.status(500).json({ message: 'Server error' });

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { RatingService } from '../services';
+import { RatingService, AdminLogsService } from '../services';
 import {
     UserNotFoundError,
     ProductNotFoundError,
@@ -8,9 +8,14 @@ import {
 
 export class RatingController {
     private ratingService: RatingService;
+    private adminLogsService: AdminLogsService;
 
-    constructor(ratingService: RatingService) {
+    constructor(
+        ratingService: RatingService,
+        adminLogsService: AdminLogsService
+    ) {
         this.ratingService = ratingService;
+        this.adminLogsService = adminLogsService;
     }
 
     public async addPlatformRating(req: Request, res: Response): Promise<void> {
@@ -117,10 +122,15 @@ export class RatingController {
         res: Response
     ): Promise<void> {
         const ratingId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.ratingService.deletePlatformRating(ratingId);
             res.sendStatus(204);
+
+            if (username) {
+                await this.adminLogsService.log(username, 'rating', 'delete');
+            }
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error deleting rating: ', error);
@@ -247,10 +257,15 @@ export class RatingController {
         res: Response
     ): Promise<void> {
         const reviewId: number = Number(req.params.id);
+        const { username } = req.body;
 
         try {
             await this.ratingService.deleteProductReview(reviewId);
             res.sendStatus(204);
+
+            if (username) {
+                await this.adminLogsService.log(username, 'review', 'delete');
+            }
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error deleting review: ', error);
