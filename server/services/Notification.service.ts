@@ -130,39 +130,40 @@ export class NotificationService {
             html: options.html || '',
         };
 
-        try {
-            await this.transporter.sendMail(mailOptions);
-            console.log(`Email sent to: ${options.to}`);
-        } catch (error) {
-            console.error('Error sending email:', error);
-            throw new Error(`Failed to send email to: ${options.to}`);
-        }
+        await this.transporter.sendMail(mailOptions);
+        console.log(`Email sent to: ${options.to}`);
     }
 
     /**
      * Sends an email to all users about new product promotions.
      *
-     * Throws {@link EmailNotificationEmail}
+     * Throws {@link EmailNotificationError}
      * Thrown if it fails to send some emails to the customers.
      */
     public async sendNewPromotionsEmail(): Promise<void> {
         const users = await User.findAll();
+        const failedEmails: string[] = [];
 
-        const emailPromises = users.map((user) => {
-            return this.sendEmail({
-                to: user.email,
-                subject: 'New products have arrived!',
-                text: `Hello, ${user.firstName}. Please check our new products.`,
-            });
+        const emailPromises = users.map(async (user) => {
+            try {
+                await this.sendEmail({
+                    to: user.email,
+                    subject: 'New products have arrived!',
+                    text: `Hello, ${user.firstName}. Please check our new products.`,
+                });
+            } catch (err) {
+                console.error(`Failed to send email to: ${user.email}`, err);
+                failedEmails.push(user.email);
+            }
         });
 
-        try {
-            await Promise.all(emailPromises);
-            console.log('All emails sent successfully!');
-        } catch (err) {
-            console.error('Failed to send some emails: ', err);
+        await Promise.all(emailPromises);
+
+        if (failedEmails.length > 0) {
+            throw new EmailNotificationError(
+                `Failed to send emails to the following addresses: ${failedEmails.join(', ')}`
+            );
         }
-        throw new EmailNotificationError('Failed to send some emails');
     }
 
     /**
@@ -175,15 +176,10 @@ export class NotificationService {
         firstName: string,
         email: string
     ): Promise<void> {
-        try {
-            await this.sendEmail({
-                to: email,
-                subject: `Welcome to EdgeTech, ${firstName}!`,
-                text: `Hello, ${firstName}. We're glad you joined us.`,
-            });
-        } catch (err) {
-            console.error('Failed to send email to users: ', err);
-        }
-        throw new EmailNotificationError('Failed to send welcome email');
+        await this.sendEmail({
+            to: email,
+            subject: `Welcome to EdgeTech, ${firstName}!`,
+            text: `Hello, ${firstName}. We're glad you joined us.`,
+        });
     }
 }
