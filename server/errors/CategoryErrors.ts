@@ -6,8 +6,8 @@ export class CategoryAlreadyExistsError extends Error {
 }
 
 export class CategoryNotFoundError extends Error {
-    constructor() {
-        super('Category not found');
+    constructor(message = 'Category not found') {
+        super(message);
         this.name = 'CategoryNotFoundError';
     }
 }
