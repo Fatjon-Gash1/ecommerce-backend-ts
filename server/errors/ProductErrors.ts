@@ -18,3 +18,10 @@ export class ProductAlreadyExistsError extends Error {
         this.name = 'ProductAlreadyExistsError';
     }
 }
+
+export class InvalidStockStatusError extends Error {
+    constructor(status: string) {
+        super(`Invalid stock status "${status}"`);
+        this.name = 'InvalidStockStatusError';
+    }
+}

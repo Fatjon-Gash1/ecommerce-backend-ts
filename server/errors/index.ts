@@ -14,6 +14,7 @@ import {
     ProductNotFoundError,
     ProductOutOfStockError,
     ProductAlreadyExistsError,
+    InvalidStockStatusError,
 } from './ProductErrors';
 import {
     InvalidCategoryError,
@@ -37,11 +38,7 @@ import {
     InsufficientFundsError,
 } from './PaymentErrors';
 import { OrderNotFoundError } from './OrderErrors';
-import {
-    RatingCreationError,
-    RatingNotFoundError,
-    RatingUpdateError,
-} from './RatingErrors';
+import { RatingNotFoundError } from './RatingErrors';
 import {
     NotificationError,
     EmailNotificationError,
@@ -59,6 +56,7 @@ export {
     ProductNotFoundError,
     ProductOutOfStockError,
     ProductAlreadyExistsError,
+    InvalidStockStatusError,
     InvalidCategoryError,
     CategoryNotFoundError,
     CategoryAlreadyExistsError,
@@ -73,9 +71,7 @@ export {
     InvalidPaymentMethodError,
     InsufficientFundsError,
     OrderNotFoundError,
-    RatingCreationError,
     RatingNotFoundError,
-    RatingUpdateError,
     NotificationError,
     EmailNotificationError,
 };
