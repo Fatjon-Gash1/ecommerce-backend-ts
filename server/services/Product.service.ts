@@ -346,6 +346,35 @@ export class ProductService {
     }
 
     /**
+     * Deletes a category by ID.
+     *
+     * @param categoryId - The ID of the category
+     */
+    public async deleteCategoryById(categoryId: number): Promise<void> {
+        const category = await Category.findByPk(categoryId);
+
+        if (!category) {
+            throw new CategoryNotFoundError();
+        }
+
+        await category.destroy();
+    }
+
+    /** Deletes a subcategory by ID.
+     *
+     * @param subCategoryId - The ID of the subcategory
+     */
+    public async deleteSubCategoryById(subCategoryId: number): Promise<void> {
+        const subCategory = await SubCategory.findByPk(subCategoryId);
+
+        if (!subCategory) {
+            throw new CategoryNotFoundError('Subcategory not found');
+        }
+
+        await subCategory.destroy();
+    }
+
+    /**
      * Deletes a product by ID.
      *
      * @param productId - The ID of the product
