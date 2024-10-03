@@ -1,5 +1,5 @@
-import { AdminLog } from '../models/relational';
-import { AdminLogCreationError, AdminLogInvalidTargetError } from '../errors';
+import { User, AdminLog } from '../models/relational';
+import { AdminLogInvalidTargetError, UserNotFoundError } from '../errors';
 
 /*
  * Service responsible for logging administrative operations.
@@ -21,19 +21,29 @@ export class AdminLogsService {
      * thrown if the log cannot be created
      */
     public async log(
-        userId: number,
         username: string,
         target: string,
         operation: string = 'create'
     ): Promise<void> {
+        const admin = await User.findOne({ where: { username } });
+
+        if (!admin) {
+            throw new UserNotFoundError();
+        }
+
         const categoryMap: { [key: string]: string } = {
-            customer: 'user',
-            admin: 'user',
+            customer: 'customer',
+            admin: 'admin',
             category: 'category',
-            subcategory: 'category',
+            subcategory: 'subcategory',
             product: 'product',
-            review: 'rating',
-            report: 'analytics',
+            country: 'shipping country',
+            city: 'shipping city',
+            'shipping weight': 'shipping weight rate',
+            'shipping method': 'shipping method rate',
+            review: 'review',
+            rating: 'rating',
+            report: 'report',
         };
 
         const category = categoryMap[target];
@@ -49,15 +59,10 @@ export class AdminLogsService {
 
         const op = opMap[operation];
 
-        try {
-            await AdminLog.create({
-                adminId: userId,
-                category,
-                log: `Admin "${username}" ${op} ${target}.`,
-            });
-        } catch (err) {
-            console.error('Error creating admin log:', err);
-            throw new AdminLogCreationError();
-        }
+        await AdminLog.create({
+            adminId: admin.id,
+            category,
+            log: `Admin "${username}" ${op} ${target}.`,
+        });
     }
 }
