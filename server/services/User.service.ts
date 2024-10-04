@@ -112,7 +112,7 @@ export class UserService {
      * @throws {@link Error}
      * Thrown if it fails to save the Customer's shipping details.
      */
-    public async addShippingDetailsToCustomer(
+    public async addShippingDetails(
         customerId: number,
         details: CustomerShippingDetails
     ): Promise<Customer> {
@@ -129,12 +129,7 @@ export class UserService {
 
         customer.shippingAddress = `${streetAndHouseNumber}, ${postalCode} ${city}, ${country}`;
 
-        try {
-            return await customer.save();
-        } catch (err) {
-            console.error('Error saving customer shipping details:', err);
-            throw new Error('Failed to add shipping details to customer');
-        }
+        return await customer.save();
     }
 
     /**
@@ -369,7 +364,7 @@ export class UserService {
      * @param customerId - The ID of the customer
      * @throws UserNotFoundError if the customer is not found
      */
-    public async removeShippingDetails(customerId: number): Promise<boolean> {
+    public async removeShippingDetails(customerId: number): Promise<void> {
         const customer = await Customer.findByPk(customerId);
 
         if (!customer) {
@@ -378,13 +373,7 @@ export class UserService {
 
         customer.shippingAddress = 'none';
 
-        try {
-            await customer.save();
-            return true;
-        } catch (err) {
-            console.error('Error removing shipping details:', err);
-            throw new Error('Error removing customer shipping details');
-        }
+        await customer.save();
     }
 
     /**
