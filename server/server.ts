@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { Express } from 'express';
+import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { sequelize, connectToMongoDB } from './config/db';
 import indexRoutes from './routes';
@@ -22,6 +22,11 @@ sequelize
 connectToMongoDB();
 
 app.use('/', indexRoutes);
+
+app.use((error: Error, _req: Request, res: Response) => {
+    console.error('Unknown error: ', error);
+    res.status(500).json({ message: 'Internal server error' });
+});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
