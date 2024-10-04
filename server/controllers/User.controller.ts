@@ -27,6 +27,62 @@ export class UserController {
         this.adminLogsService = AdminLogsService;
     }
 
+    public async signUpUser(req: Request, res: Response): Promise<void> {
+        const { userType, details } = req.body;
+
+        try {
+            const { refreshToken, accessToken } =
+                await this.userService.signUpUser(userType, details);
+
+            await this.notificationService.sendWelcomeEmail(
+                details.firstName,
+                details.email
+            ); // Method call above the response for development purposes
+            res.status(201).json({
+                message: 'User signed up successfully',
+                refreshToken,
+                accessToken,
+            });
+        } catch (error) {
+            if (error instanceof InvalidUserTypeError) {
+                console.error('Error signing up user: ', error);
+                res.status(400).json({ message: 'Invalid user type' });
+                return;
+            }
+
+            console.error('Error signing up user: ', error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async loginUser(req: Request, res: Response): Promise<void> {
+        const { username, password } = req.body;
+
+        try {
+            const { refreshToken, accessToken } =
+                await this.userService.loginUser(username, password);
+            res.status(200).json({
+                message: 'User logged in successfully',
+                refreshToken,
+                accessToken,
+            });
+        } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                console.error('Error logging in user: ', error);
+                res.status(404).json({ message: 'User not found' });
+                return;
+            }
+
+            if (error instanceof InvalidCredentialsError) {
+                console.error('Error logging in user: ', error);
+                res.status(400).json({ message: 'Invalid password' });
+                return;
+            }
+
+            console.error('Error logging in user: ', error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
     public async registerCustomer(req: Request, res: Response): Promise<void> {
         const { details } = req.body;
 
@@ -49,7 +105,7 @@ export class UserController {
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering customer:', err);
-                res.status(403).json({ message: 'Customer already exists' });
+                res.status(409).json({ message: 'Customer already exists' });
                 return;
             }
 
@@ -73,38 +129,11 @@ export class UserController {
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 console.error('Error registering admin:', err);
-                res.status(403).json({ message: 'Admin already exists' });
+                res.status(409).json({ message: 'Admin already exists' });
                 return;
             }
 
             console.error('Error registering admin:', err);
-            res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async addShippingDetailsToCustomer(
-        req: Request,
-        res: Response
-    ): Promise<void> {
-        const { customerId, details } = req.body;
-        try {
-            const customer =
-                await this.userService.addShippingDetailsToCustomer(
-                    customerId,
-                    details
-                );
-            res.status(200).json({ customer });
-        } catch (err) {
-            if (err instanceof UserNotFoundError) {
-                console.error(
-                    'Error adding shipping details to customer: ',
-                    err
-                );
-                res.status(403).json({ message: 'Customer not found' });
-                return;
-            }
-
-            console.error('Error adding shipping details to customer: ', err);
             res.status(500).json({ message: 'Server error' });
         }
     }
@@ -158,7 +187,7 @@ export class UserController {
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving customer by ID: ', error);
-                res.status(401).json({ message: 'Customer not found' });
+                res.status(404).json({ message: 'Customer not found' });
                 return;
             }
 
@@ -186,7 +215,7 @@ export class UserController {
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving admin by ID: ', error);
-                res.status(401).json({ message: 'admin not found' });
+                res.status(404).json({ message: 'admin not found' });
                 return;
             }
 
@@ -196,10 +225,12 @@ export class UserController {
     }
 
     public async getAdminsByRole(req: Request, res: Response): Promise<void> {
-        const role: string = req.query.role as string;
+        const { role } = req.query;
 
         try {
-            const admins = await this.userService.getAdminsByRole(role);
+            const admins = await this.userService.getAdminsByRole(
+                role! as string
+            );
             res.status(200).json({ admins });
         } catch (error) {
             if (error instanceof InvalidAdminRoleError) {
@@ -306,6 +337,32 @@ export class UserController {
         }
     }
 
+    public async addShippingDetails(
+        req: Request,
+        res: Response
+    ): Promise<void> {
+        const { customerId, details } = req.body;
+        try {
+            const customer = await this.userService.addShippingDetails(
+                customerId,
+                details
+            );
+            res.status(200).json({ customer });
+        } catch (err) {
+            if (err instanceof UserNotFoundError) {
+                console.error(
+                    'Error adding shipping details to customer: ',
+                    err
+                );
+                res.status(404).json({ message: 'Customer not found' });
+                return;
+            }
+
+            console.error('Error adding shipping details to customer: ', err);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async removeShippingDetails(
         req: Request,
         res: Response
@@ -346,63 +403,6 @@ export class UserController {
             }
 
             console.error('Error deleting user: ', error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async signUpUser(req: Request, res: Response): Promise<void> {
-        const { userType, details } = req.body;
-
-        try {
-            const { refreshToken, accessToken } =
-                await this.userService.signUpUser(userType, details);
-
-            await this.notificationService.sendWelcomeEmail(
-                details.firstName,
-                details.email
-            ); // Method call above the response for development purposes
-            res.status(201).json({
-                message: 'User signed up successfully',
-                refreshToken,
-                accessToken,
-            });
-        } catch (error) {
-            if (error instanceof InvalidUserTypeError) {
-                console.error('Error signing up user: ', error);
-                res.status(400).json({ message: 'Invalid user type' });
-                return;
-            }
-
-            console.error('Error signing up user: ', error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async loginUser(req: Request, res: Response): Promise<void> {
-        const { username, password } = req.body;
-
-        try {
-            const { refreshToken, accessToken } =
-                await this.userService.loginUser(username, password);
-            res.status(200).json({
-                message: 'User logged in successfully',
-                refreshToken,
-                accessToken,
-            });
-        } catch (error) {
-            if (error instanceof UserNotFoundError) {
-                console.error('Error logging in user: ', error);
-                res.status(404).json({ message: 'User not found' });
-                return;
-            }
-
-            if (error instanceof InvalidCredentialsError) {
-                console.error('Error logging in user: ', error);
-                res.status(400).json({ message: 'Invalid password' });
-                return;
-            }
-
-            console.error('Error logging in user: ', error);
             res.status(500).json({ message: 'Server error' });
         }
     }
