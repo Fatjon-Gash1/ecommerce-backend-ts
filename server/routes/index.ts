@@ -1,22 +1,32 @@
 import { Router, Request, Response } from 'express';
-import customerRoutes from './customers.route';
-//import adminRoutes from './admins.route';
-//import platformRoutes from './platform.route';
-//import paymentsRoutes from './payments.route';
-
+import userRoutes from './users.route';
+import productRoutes from './products.route';
+import cartRoutes from './carts.route';
+import orderRoutes from './orders.route';
+import shippingRoutes from './shipping.route';
+import paymentRoutes from './payments.route';
+import analyticRoutes from './analytics.route';
+import ratingRoutes from './ratings.route';
 const router: Router = Router();
 
-// Main route
-router.get('/', (_req: Request, res: Response) => {
-    res.send('Main route!');
+router.use('/users', userRoutes);
+
+router.use('/products', productRoutes);
+
+router.use('/carts', cartRoutes);
+
+router.use('/orders', orderRoutes);
+
+router.use('/shipping', shippingRoutes);
+
+router.use('/payments', paymentRoutes);
+
+router.use('/analytics', analyticRoutes);
+
+router.use('/ratings', ratingRoutes);
+
+router.use((_req: Request, res: Response) => {
+    res.status(404).json({ message: 'Route not found' });
 });
-
-router.use('/customers', customerRoutes);
-
-//router.use('/admins', adminRoutes);
-
-//router.use('/platform', platformRoutes);
-
-//router.use('/payments', paymentsRoutes);
 
 export default router;
