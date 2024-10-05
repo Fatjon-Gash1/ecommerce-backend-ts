@@ -19,10 +19,15 @@ router.post('/auth/signup', userController.signUpUser.bind(userController));
 router.post('/auth/login', userController.loginUser.bind(userController));
 
 router.post(
-    '/admin/customer',
+    '/admin/customers',
     userController.registerCustomer.bind(userController)
 );
-router.post('/admin/admin', userController.registerAdmin.bind(userController));
+router.post('/admin/admins', userController.registerAdmin.bind(userController));
+
+router.get(
+    '/availability',
+    userController.checkUserAvailability.bind(userController)
+);
 
 router.get(
     '/customers/:id',
@@ -45,28 +50,20 @@ router.get(
 );
 router.get('/admins', userController.getAllAdmins.bind(userController));
 
-// User type independent route
-router.get(
-    '/availability',
-    userController.checkUserAvailability.bind(userController)
+router.patch(
+    '/:id/password',
+    userController.changePassword.bind(userController)
 );
-
-router.put('/:id/password', userController.changePassword.bind(userController));
 router.put('/:id/', userController.updateUser.bind(userController));
 
-router.put(
+router.patch(
+    '/customers/:id/shipping-details',
+    userController.updateShippingDetails.bind(userController)
+);
+
+router.patch(
     '/admins/:id/role',
     userController.setAdminRole.bind(userController)
-);
-
-router.put(
-    '/customers/:id/shipping-details',
-    userController.addShippingDetails.bind(userController)
-);
-
-router.put(
-    '/customers/:id/clear-shipping-details',
-    userController.removeShippingDetails.bind(userController)
 );
 
 router.delete('/:id', userController.deleteUser.bind(userController));
