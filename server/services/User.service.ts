@@ -63,7 +63,7 @@ export class UserService {
      * @throws {@link UserAlreadyExistsError}
      * Thrown if the user already exists.
      */
-    public async registerUser<T extends Model>(
+    private async registerUser<T extends Model>(
         userType: ModelStatic<T>,
         details: UserCreationDetails
     ): Promise<T> {
@@ -75,187 +75,6 @@ export class UserService {
         } else {
             return await userType.create(details as T['_creationAttributes']);
         }
-    }
-
-    /**
-     * Registers a user as an Admin.
-     *
-     * @param details - The details of the user to register
-     * @returns A promise resolving to an Admin user instance
-     */
-    public async registerAdmin(details: UserCreationDetails): Promise<Admin> {
-        return this.registerUser(Admin, details);
-    }
-
-    /**
-     * Registers a user as a Customer.
-     *
-     * @param details - The details of the user to register
-     * @returns A promise resolving to a Customer user instance
-     */
-    public async registerCustomer(
-        details: UserCreationDetails
-    ): Promise<Customer> {
-        return this.registerUser(Customer, details);
-    }
-
-    /**
-     * Adds/changes shipping details to a Customer.
-     *
-     * @param customerId - The ID of the Customer
-     * @param details - The shipping details
-     * @returns A promise resolving to the updated Customer
-     *
-     * @throws {@link UserNotFoundError}
-     * Thrown if the Customer is not found.
-     *
-     * @throws {@link Error}
-     * Thrown if it fails to save the Customer's shipping details.
-     */
-    public async addShippingDetails(
-        customerId: number,
-        details: CustomerShippingDetails
-    ): Promise<Customer> {
-        const { streetAndHouseNumber, postalCode, city, country } = details;
-        if (!/\d$/.test(streetAndHouseNumber)) {
-            throw new Error('Street and house number must end with a number');
-        }
-
-        const customer = await Customer.findByPk(customerId);
-
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
-        }
-
-        customer.shippingAddress = `${streetAndHouseNumber}, ${postalCode} ${city}, ${country}`;
-
-        return await customer.save();
-    }
-
-    /**
-     * Retrieves all Customers in the database.
-     *
-     * @returns A promise resolving to an array of Customer instances
-     */
-    public async getAllCustomers(): Promise<Customer[]> {
-        const users = await Customer.findAll({ include: User });
-
-        return users;
-    }
-
-    /**
-     * Retrieves active Customers from the database.
-     *
-     * @returns A promise resolving to an array of active Customer instances
-     */
-    public async findActiveCustomers(): Promise<Customer[]> {
-        const activeCustomers = await Customer.findAll({
-            where: { isActive: true },
-            include: User,
-        });
-
-        return activeCustomers;
-    }
-
-    /**
-     * Retrieves a specific Customer from the provided attribute.
-     *
-     * @param attribute - The attribute to search for
-     * @param attributeValue - The value of the attribute
-     * @returns A promise resolving to a Customer instance
-     */
-    public async findCustomerByAttribute(
-        attribute: string,
-        attributeValue: string | number
-    ): Promise<Customer> {
-        const whereCondition: { [key: string]: string | number } = {};
-
-        if (attribute && attributeValue) {
-            whereCondition[attribute] = attributeValue;
-        }
-
-        const customer = await Customer.findOne({
-            include: {
-                model: User,
-                as: 'User',
-                where: whereCondition,
-            },
-        });
-
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
-        }
-
-        return customer;
-    }
-
-    /**
-     * Retrieves Customer by ID.
-     *
-     * @param customerId - The ID of the Customer
-     * @returns A promise resolving to a Customer instance
-     */
-    public async getCustomerById(customerId: number): Promise<Customer> {
-        const customer = await Customer.findByPk(customerId, { include: User });
-
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
-        }
-
-        return customer;
-    }
-
-    /**
-     * Retrieves all Admins in the database.
-     *
-     * @returns A promise resolving to an array of Admin instances
-     */
-    public async getAllAdmins(): Promise<Admin[]> {
-        const users = await Admin.findAll({ include: User });
-
-        return users;
-    }
-
-    /**
-     * Retrieves Admin by ID.
-     *
-     * @param adminId - The ID of the Admin
-     * @returns A promise resolving to a Admin instance
-     */
-    public async getAdminById(adminId: number): Promise<Admin> {
-        const admin = await Admin.findByPk(adminId, { include: User });
-
-        if (!admin) {
-            throw new UserNotFoundError('User of type Admin not found');
-        }
-
-        return admin;
-    }
-
-    /**
-     * Retrieves Admins by role.
-     *
-     * @param role - The role of the Admins
-     * @returns A promise resolving to an Admin instance array
-     */
-    public async getAdminsByRole(role: string): Promise<Admin[]> {
-        role = role.toLowerCase();
-
-        const validRoles: Record<string, string> = {
-            'super admin': AdminRoles.SUPER_ADMIN,
-            manager: AdminRoles.MANAGER,
-        };
-
-        if (!validRoles[role]) {
-            throw new InvalidAdminRoleError();
-        }
-
-        const admins = await Admin.findAll({
-            where: { role: validRoles[role] },
-            include: User,
-        });
-
-        return admins;
     }
 
     /**
@@ -282,114 +101,6 @@ export class UserService {
             available: true,
             message: `${userField.charAt(0).toUpperCase() + userField.slice(1)} is available`,
         };
-    }
-
-    /**
-     * Updates a user in the database.
-     *
-     * @param userId - The ID of the user to update
-     * @param details - The details of the user to update
-     * @returns A promise resolving to the updated user
-     * @throws UserNotFoundError if the user is not found
-     */
-    public async updateUser(
-        userId: number,
-        details: UserDetails
-    ): Promise<User> {
-        const user = await User.findByPk(userId);
-
-        if (!user) {
-            throw new UserNotFoundError();
-        }
-
-        return await user.update(details);
-    }
-
-    /**
-     * Changes a user's password.
-     *
-     * @param userId - The ID of the user to update
-     * @param oldPassword - The old password
-     * @param newPassword - The new password
-     * @throws UserNotFoundError if the user is not found
-     */
-    public async changePassword(
-        userId: number,
-        oldPassword: string,
-        newPassword: string
-    ): Promise<void> {
-        const user = await User.findByPk(userId);
-
-        if (!user) {
-            throw new UserNotFoundError();
-        }
-
-        const valid = await user.validatePassword(oldPassword);
-
-        if (valid) {
-            await user.hashAndStorePassword(newPassword);
-            await user.save();
-        } else {
-            throw new InvalidCredentialsError();
-        }
-    }
-
-    // A forgot password method should be implemented here.
-
-    /**
-     * Sets admin user role from the provided role number.
-     *
-     * @param userId - The ID of the user
-     * @param roleNumber - The role number of the user
-     * @throws UserNotFoundError if the user is not found
-     */
-    public async setAdminRole(
-        userId: number,
-        roleNumber: number
-    ): Promise<void> {
-        const admin = await Admin.findOne({ where: { userId } });
-
-        if (!admin) {
-            throw new UserNotFoundError(
-                'No admin found with user id: ' + userId
-            );
-        }
-
-        await admin.setRole(roleNumber);
-    }
-
-    /**
-     * Removes the customer's shipping details.
-     *
-     * @param customerId - The ID of the customer
-     * @throws UserNotFoundError if the customer is not found
-     */
-    public async removeShippingDetails(customerId: number): Promise<void> {
-        const customer = await Customer.findByPk(customerId);
-
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
-        }
-
-        customer.shippingAddress = 'none';
-
-        await customer.save();
-    }
-
-    /**
-     * Deletes a user from the database.
-     *
-     * @param userId - The ID of the user to delete
-     * @throws UserNotFoundError if the user is not found
-     */
-    public async deleteUser(userId: number): Promise<void> {
-        const user = await User.findByPk(userId);
-
-        if (!user) {
-            throw new UserNotFoundError();
-        }
-
-        await user.destroy();
     }
 
     /**
@@ -473,4 +184,270 @@ export class UserService {
 
         return { refreshToken, accessToken };
     }
+
+    /**
+     * Registers a user as a Customer.
+     *
+     * @param details - The details of the user to register
+     * @returns A promise resolving to a Customer user instance
+     */
+    public async registerCustomer(
+        details: UserCreationDetails
+    ): Promise<Customer> {
+        return this.registerUser(Customer, details);
+    }
+
+    /**
+     * Registers a user as an Admin.
+     *
+     * @param details - The details of the user to register
+     * @returns A promise resolving to an Admin user instance
+     */
+    public async registerAdmin(details: UserCreationDetails): Promise<Admin> {
+        return this.registerUser(Admin, details);
+    }
+
+    /**
+     * Retrieves Customer by ID.
+     *
+     * @param customerId - The ID of the Customer
+     * @returns A promise resolving to a Customer instance
+     */
+    public async getCustomerById(customerId: number): Promise<Customer> {
+        const customer = await Customer.findByPk(customerId, { include: User });
+
+        if (!customer) {
+            throw new UserNotFoundError('User of type Customer not found');
+        }
+
+        return customer;
+    }
+
+    /**
+     * Retrieves active Customers from the database.
+     *
+     * @returns A promise resolving to an array of active Customer instances
+     */
+    public async findActiveCustomers(): Promise<Customer[]> {
+        const activeCustomers = await Customer.findAll({
+            where: { isActive: true },
+            include: User,
+        });
+
+        return activeCustomers;
+    }
+
+    /**
+     * Retrieves a specific Customer from the provided attribute.
+     *
+     * @param attribute - The attribute to search for
+     * @param attributeValue - The value of the attribute
+     * @returns A promise resolving to a Customer instance
+     */
+    public async findCustomerByAttribute(
+        attribute: string,
+        attributeValue: string | number
+    ): Promise<Customer> {
+        const whereCondition: { [key: string]: string | number } = {};
+
+        if (attribute && attributeValue) {
+            whereCondition[attribute] = attributeValue;
+        }
+
+        const customer = await Customer.findOne({
+            include: {
+                model: User,
+                as: 'User',
+                where: whereCondition,
+            },
+        });
+
+        if (!customer) {
+            throw new UserNotFoundError('User of type Customer not found');
+        }
+
+        return customer;
+    }
+
+    /**
+     * Retrieves all Customers in the database.
+     *
+     * @returns A promise resolving to an array of Customer instances
+     */
+    public async getAllCustomers(): Promise<Customer[]> {
+        const users = await Customer.findAll({ include: User });
+
+        return users;
+    }
+
+    /**
+     * Retrieves Admin by ID.
+     *
+     * @param adminId - The ID of the Admin
+     * @returns A promise resolving to a Admin instance
+     */
+    public async getAdminById(adminId: number): Promise<Admin> {
+        const admin = await Admin.findByPk(adminId, { include: User });
+
+        if (!admin) {
+            throw new UserNotFoundError('User of type Admin not found');
+        }
+
+        return admin;
+    }
+
+    /**
+     * Retrieves Admins by role.
+     *
+     * @param role - The role of the Admins
+     * @returns A promise resolving to an Admin instance array
+     */
+    public async getAdminsByRole(role: string): Promise<Admin[]> {
+        role = role.toLowerCase();
+
+        const validRoles: Record<string, string> = {
+            'super admin': AdminRoles.SUPER_ADMIN,
+            manager: AdminRoles.MANAGER,
+        };
+
+        if (!validRoles[role]) {
+            throw new InvalidAdminRoleError();
+        }
+
+        const admins = await Admin.findAll({
+            where: { role: validRoles[role] },
+            include: User,
+        });
+
+        return admins;
+    }
+
+    /**
+     * Retrieves all Admins in the database.
+     *
+     * @returns A promise resolving to an array of Admin instances
+     */
+    public async getAllAdmins(): Promise<Admin[]> {
+        const users = await Admin.findAll({ include: User });
+
+        return users;
+    }
+
+    /**
+     * Changes a user's password.
+     *
+     * @param userId - The ID of the user to update
+     * @param oldPassword - The old password
+     * @param newPassword - The new password
+     * @throws UserNotFoundError if the user is not found
+     */
+    public async changePassword(
+        userId: number,
+        oldPassword: string,
+        newPassword: string
+    ): Promise<void> {
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            throw new UserNotFoundError();
+        }
+
+        const valid = await user.validatePassword(oldPassword);
+
+        if (valid) {
+            await user.hashAndStorePassword(newPassword);
+        } else {
+            throw new InvalidCredentialsError();
+        }
+    }
+
+    /**
+     * Updates a user in the database.
+     *
+     * @param userId - The ID of the user to update
+     * @param details - The details of the user to update
+     * @returns A promise resolving to the updated user
+     * @throws UserNotFoundError if the user is not found
+     */
+    public async updateUser(
+        userId: number,
+        details: UserDetails
+    ): Promise<User> {
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            throw new UserNotFoundError();
+        }
+
+        return await user.update(details);
+    }
+
+    /**
+     * Updates shipping details to a Customer.
+     *
+     * @param customerId - The ID of the Customer
+     * @param details - The shipping details
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the Customer is not found.
+     */
+    public async updateShippingDetails(
+        customerId: number,
+        details: CustomerShippingDetails
+    ): Promise<Customer> {
+        const customer = await Customer.findByPk(customerId);
+
+        if (!customer) {
+            throw new UserNotFoundError('User of type Customer not found');
+        }
+
+        if (!details) {
+            customer.shippingAddress = 'none';
+            return await customer.save();
+        }
+
+        const { streetAndHouseNumber, postalCode, city, country } = details;
+
+        customer.shippingAddress = `${streetAndHouseNumber}, ${postalCode} ${city}, ${country}`;
+        return await customer.save();
+    }
+
+    /**
+     * Sets admin user role from the provided role number.
+     *
+     * @param userId - The ID of the user
+     * @param roleNumber - The role number of the user
+     * @throws UserNotFoundError if the user is not found
+     */
+    public async setAdminRole(
+        userId: number,
+        roleNumber: number
+    ): Promise<void> {
+        const admin = await Admin.findOne({ where: { userId } });
+
+        if (!admin) {
+            throw new UserNotFoundError(
+                'No admin found with user id: ' + userId
+            );
+        }
+
+        await admin.setRole(roleNumber);
+    }
+
+    /**
+     * Deletes a user from the database.
+     *
+     * @param userId - The ID of the user to delete
+     * @throws UserNotFoundError if the user is not found
+     */
+    public async deleteUser(userId: number): Promise<void> {
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            throw new UserNotFoundError();
+        }
+
+        await user.destroy();
+    }
 }
+// A forgot password method should be implemented.
