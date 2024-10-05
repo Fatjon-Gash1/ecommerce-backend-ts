@@ -24,6 +24,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     public async hashAndStorePassword(password: string): Promise<void> {
         const saltRounds = 10;
         this.password = await bcrypt.hash(password, saltRounds);
+        await this.save();
     }
 
     public async validatePassword(password: string): Promise<boolean> {
