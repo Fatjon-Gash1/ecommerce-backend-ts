@@ -27,6 +27,36 @@ export class UserController {
         this.adminLogsService = AdminLogsService;
     }
 
+    public async checkUserAvailability(
+        req: Request,
+        res: Response
+    ): Promise<void> {
+        const { username, email } = req.query;
+
+        const field: string | null = username
+            ? 'username'
+            : email
+              ? 'email'
+              : null;
+
+        if (!field) {
+            res.status(400).json({ message: 'Username or Email is required' });
+            return;
+        }
+
+        try {
+            const response = await this.userService.checkUserAvailability(
+                field,
+                req.query[field] as string
+            );
+
+            res.status(200).json({ response });
+        } catch (error) {
+            console.error(`Error checking ${field} availability: `, error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async signUpUser(req: Request, res: Response): Promise<void> {
         const { userType, details } = req.body;
 
@@ -138,12 +168,20 @@ export class UserController {
         }
     }
 
-    public async getAllCustomers(_req: Request, res: Response): Promise<void> {
+    public async getCustomerById(req: Request, res: Response): Promise<void> {
+        const customerId = Number(req.params.id);
+
         try {
-            const customers = this.userService.getAllCustomers();
-            res.status(200).json({ customers });
+            const customer = await this.userService.getCustomerById(customerId);
+            res.status(200).json({ customer });
         } catch (error) {
-            console.error('Error retrieving customers: ', error);
+            if (error instanceof UserNotFoundError) {
+                console.error('Error retrieving customer by ID: ', error);
+                res.status(404).json({ message: 'Customer not found' });
+                return;
+            }
+
+            console.error('Error retrieving customer by ID: ', error);
             res.status(500).json({ message: 'Server error' });
         }
     }
@@ -178,30 +216,12 @@ export class UserController {
         }
     }
 
-    public async getCustomerById(req: Request, res: Response): Promise<void> {
-        const customerId = Number(req.params.id);
-
+    public async getAllCustomers(_req: Request, res: Response): Promise<void> {
         try {
-            const customer = await this.userService.getCustomerById(customerId);
-            res.status(200).json({ customer });
+            const customers = this.userService.getAllCustomers();
+            res.status(200).json({ customers });
         } catch (error) {
-            if (error instanceof UserNotFoundError) {
-                console.error('Error retrieving customer by ID: ', error);
-                res.status(404).json({ message: 'Customer not found' });
-                return;
-            }
-
-            console.error('Error retrieving customer by ID: ', error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async getAllAdmins(_req: Request, res: Response): Promise<void> {
-        try {
-            const admins = await this.userService.getAllAdmins();
-            res.status(200).json({ admins });
-        } catch (error) {
-            console.error('Error retrieving admins: ', error);
+            console.error('Error retrieving customers: ', error);
             res.status(500).json({ message: 'Server error' });
         }
     }
@@ -244,51 +264,12 @@ export class UserController {
         }
     }
 
-    public async checkUserAvailability(
-        req: Request,
-        res: Response
-    ): Promise<void> {
-        const { username, email } = req.query;
-
-        const field: string | null = username
-            ? 'username'
-            : email
-              ? 'email'
-              : null;
-
-        if (!field) {
-            res.status(400).json({ message: 'Username or Email is required' });
-            return;
-        }
-
+    public async getAllAdmins(_req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.userService.checkUserAvailability(
-                field,
-                req.query[field] as string
-            );
-
-            res.status(200).json({ response });
+            const admins = await this.userService.getAllAdmins();
+            res.status(200).json({ admins });
         } catch (error) {
-            console.error(`Error checking ${field} availability: `, error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async updateUser(req: Request, res: Response): Promise<void> {
-        const userId: number = Number(req.params.id);
-        const details = req.body;
-
-        try {
-            const user = await this.userService.updateUser(userId, details);
-            res.status(201).json({ user });
-        } catch (error) {
-            if (error instanceof UserNotFoundError) {
-                console.error('Error updating user: ', error);
-                res.status(404).json({ message: 'User not found' });
-                return;
-            }
-
-            console.error('Error updating user: ', error);
+            console.error('Error retrieving admins: ', error);
             res.status(500).json({ message: 'Server error' });
         }
     }
@@ -316,34 +297,32 @@ export class UserController {
         }
     }
 
-    public async setAdminRole(req: Request, res: Response): Promise<void> {
+    public async updateUser(req: Request, res: Response): Promise<void> {
         const userId: number = Number(req.params.id);
-        const { username, roleNumber } = req.body;
+        const details = req.body;
 
         try {
-            await this.userService.setAdminRole(userId, roleNumber);
-            res.status(201).json({ message: 'Admin role set successfully' });
-
-            await this.adminLogsService.log(username, 'admin', 'update');
+            const user = await this.userService.updateUser(userId, details);
+            res.status(201).json({ user });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error setting admin role: ', error);
-                res.status(404).json({ message: 'Admin not found' });
+                console.error('Error updating user: ', error);
+                res.status(404).json({ message: 'User not found' });
                 return;
             }
 
-            console.error('Error setting admin role: ', error);
+            console.error('Error updating user: ', error);
             res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async addShippingDetails(
+    public async updateShippingDetails(
         req: Request,
         res: Response
     ): Promise<void> {
         const { customerId, details } = req.body;
         try {
-            const customer = await this.userService.addShippingDetails(
+            const customer = await this.userService.updateShippingDetails(
                 customerId,
                 details
             );
@@ -363,25 +342,23 @@ export class UserController {
         }
     }
 
-    public async removeShippingDetails(
-        req: Request,
-        res: Response
-    ): Promise<void> {
-        const customerId: number = Number(req.params.id);
+    public async setAdminRole(req: Request, res: Response): Promise<void> {
+        const userId: number = Number(req.params.id);
+        const { username, roleNumber } = req.body;
 
         try {
-            await this.userService.removeShippingDetails(customerId);
-            res.status(200).json({
-                message: 'Shipping details removed successfully',
-            });
+            await this.userService.setAdminRole(userId, roleNumber);
+            res.status(201).json({ message: 'Admin role set successfully' });
+
+            await this.adminLogsService.log(username, 'admin', 'update');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error removing shipping details: ', error);
-                res.status(404).json({ message: 'Customer not found' });
+                console.error('Error setting admin role: ', error);
+                res.status(404).json({ message: 'Admin not found' });
                 return;
             }
 
-            console.error('Error removing shipping details: ', error);
+            console.error('Error setting admin role: ', error);
             res.status(500).json({ message: 'Server error' });
         }
     }
