@@ -8,3 +8,4 @@ export { ProductService } from './Product.service';
 export { RatingService } from './Rating.service';
 export { ShippingService } from './Shipping.service';
 export { UserService } from './User.service';
+export { AdminService } from './Admin.service';
