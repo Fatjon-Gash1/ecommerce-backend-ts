@@ -8,7 +8,10 @@ export class PaymentController {
         this.paymentService = paymentService;
     }
 
-    public async createPaymentIntent(req: Request, res: Response) {
+    public async createPaymentIntent(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const { amount, currency, description } = req.body;
 
         try {
@@ -18,7 +21,7 @@ export class PaymentController {
                 description
             );
 
-            res.status(201).json({
+            return res.status(201).json({
                 success: true,
                 clientSecret: paymentIntent.client_secret,
                 paymentIntentId: paymentIntent.id,
@@ -26,23 +29,30 @@ export class PaymentController {
         } catch (err) {
             if (err instanceof Error) {
                 console.error('Error creating payment intent:', err);
-                res.status(500).json({ success: false, message: err.message });
+                return res
+                    .status(500)
+                    .json({ success: false, message: err.message });
             }
         }
     }
 
-    public async getPaymentIntent(req: Request, res: Response) {
+    public async getPaymentIntent(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const { id } = req.params;
 
         try {
             const paymentIntent =
                 await this.paymentService.retrievePaymentIntent(id);
 
-            res.status(200).json({ success: true, paymentIntent });
+            return res.status(200).json({ success: true, paymentIntent });
         } catch (err) {
             if (err instanceof Error) {
                 console.error('Error retrieving payment intent:', err);
-                res.status(500).json({ success: false, message: err.message });
+                return res
+                    .status(500)
+                    .json({ success: false, message: err.message });
             }
         }
     }

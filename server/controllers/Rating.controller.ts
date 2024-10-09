@@ -18,84 +18,87 @@ export class RatingController {
         this.adminLogsService = adminLogsService;
     }
 
-    public async addPlatformRating(req: Request, res: Response): Promise<void> {
+    public async addPlatformRating(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const { details } = req.body;
 
         try {
             const rating = await this.ratingService.addPlatformRating(details);
-            res.status(201).json({
+            return res.status(201).json({
                 message: 'Rating added successfully',
                 rating,
             });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error adding rating: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error adding rating: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async getPlatformRatings(
         _req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         try {
             const ratings = await this.ratingService.getPlatformRatings();
-            res.status(200).json({ ratings });
+            return res.status(200).json({ ratings });
         } catch (error) {
             console.error('Error getting platform ratings: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async getPlatformRating(req: Request, res: Response): Promise<void> {
+    public async getPlatformRating(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const ratingId: number = Number(req.params.id);
 
         try {
             const rating = await this.ratingService.getPlatformRating(ratingId);
-            res.status(200).json({ rating });
+            return res.status(200).json({ rating });
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error getting rating: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error getting rating: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async getPlatformRatingsByCustomer(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const userId: number = Number(req.params.id);
 
         try {
             const customerRatings =
                 await this.ratingService.getPlatformRatingsByCustomer(userId);
-            res.status(200).json({ customerRatings });
+            return res.status(200).json({ customerRatings });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error getting customer ratings: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error getting customer ratings: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async updatePlatformRating(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const ratingId: number = Number(req.params.id);
         const { details } = req.body;
 
@@ -104,23 +107,22 @@ export class RatingController {
                 ratingId,
                 details
             );
-            res.status(200).json({ updatedRating });
+            return res.status(200).json({ updatedRating });
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error updating rating: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error updating rating: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async deletePlatformRating(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const ratingId: number = Number(req.params.id);
         const { username } = req.body;
 
@@ -134,103 +136,106 @@ export class RatingController {
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error deleting rating: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error deleting rating: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async addProductReview(req: Request, res: Response): Promise<void> {
+    public async addProductReview(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const { details } = req.body;
 
         try {
             const review = await this.ratingService.addProductReview(details);
-            res.status(201).json({ review });
+            return res.status(201).json({ review });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error adding review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof ProductNotFoundError) {
                 console.error('Error adding review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error adding review: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async getProductReviews(req: Request, res: Response): Promise<void> {
+    public async getProductReviews(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const productId: number = Number(req.params.id);
 
         try {
             const productReviews =
                 await this.ratingService.getProductReviews(productId);
-            res.status(200).json({ productReviews });
+            return res.status(200).json({ productReviews });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error getting review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error getting review: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async getProductReview(req: Request, res: Response): Promise<void> {
+    public async getProductReview(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const reviewId: number = Number(req.params.id);
 
         try {
             const productReview =
                 await this.ratingService.getProductReview(reviewId);
-            res.status(200).json({ productReview });
+            return res.status(200).json({ productReview });
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error getting review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error getting review: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async getProductReviewsByCustomer(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const userId: number = Number(req.params.id);
 
         try {
             const productReview =
                 await this.ratingService.getProductReviewsByCustomer(userId);
-            res.status(200).json({ productReview });
+            return res.status(200).json({ productReview });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error getting review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error getting review: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async updateProductReview(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const reviewId: number = Number(req.params.id);
         const { details } = req.body;
 
@@ -239,23 +244,22 @@ export class RatingController {
                 reviewId,
                 details
             );
-            res.status(200).json({ updatedReview });
+            return res.status(200).json({ updatedReview });
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error updating review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error updating review: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async deleteProductReview(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const reviewId: number = Number(req.params.id);
         const { username } = req.body;
 
@@ -269,12 +273,11 @@ export class RatingController {
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 console.error('Error deleting review: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error deleting review: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 }

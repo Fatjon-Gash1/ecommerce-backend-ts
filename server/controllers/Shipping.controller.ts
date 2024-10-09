@@ -19,7 +19,10 @@ export class ShippingController {
         this.adminLogsService = adminLogsService;
     }
 
-    public async addNewCountry(req: Request, res: Response): Promise<void> {
+    public async addNewCountry(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const { username, name, rate } = req.body;
 
         try {
@@ -35,11 +38,14 @@ export class ShippingController {
             await this.adminLogsService.log(username, 'country', 'create');
         } catch (error) {
             console.error('Error adding new country: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async addCityToCountry(req: Request, res: Response): Promise<void> {
+    public async addCityToCountry(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
         const countryId: number = Number(req.params.id);
         const { username, name, postalCode } = req.body;
 
@@ -49,39 +55,39 @@ export class ShippingController {
                 name,
                 postalCode
             );
+
             res.status(200).json({ message: 'City added successfully', city });
 
             await this.adminLogsService.log(username, 'city', 'create');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error adding city: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error adding city: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async getShippingCountries(
         _req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         try {
             const shippingCountries =
                 await this.shippingService.getShippingCountries();
-            res.status(200).json({ shippingCountries });
+            return res.status(200).json({ shippingCountries });
         } catch (error) {
             console.error('Error getting shipping countries: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async getShippingCitiesByCountry(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const countryId: number = Number(req.params.id);
 
         try {
@@ -89,23 +95,22 @@ export class ShippingController {
                 await this.shippingService.getShippingCitiesByCountry(
                     countryId
                 );
-            res.status(200).json({ shippingCities });
+            return res.status(200).json({ shippingCities });
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error getting shipping cities: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error getting shipping cities: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async updateShippingCountry(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const countryId: number = Number(req.params.id);
         const { username, name, rate } = req.body;
 
@@ -116,6 +121,7 @@ export class ShippingController {
                     name,
                     rate
                 );
+
             res.status(200).json({
                 message: 'Country updated successfully',
                 updatedCountry,
@@ -125,19 +131,18 @@ export class ShippingController {
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error updating country: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error updating country: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async updateShippingCity(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const cityId: number = Number(req.params.id);
         const { username, name, postalCode } = req.body;
 
@@ -147,6 +152,7 @@ export class ShippingController {
                 name,
                 postalCode
             );
+
             res.status(200).json({
                 message: 'City updated successfully',
                 updatedCity,
@@ -156,72 +162,72 @@ export class ShippingController {
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error updating city: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error updating city: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async deleteShippingCountry(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const countryId: number = Number(req.params.id);
         const { username } = req.body;
 
         try {
             await this.shippingService.deleteShippingCountry(countryId);
+
             res.sendStatus(204);
 
             await this.adminLogsService.log(username, 'country', 'delete');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error deleting country: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error deleting country: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async deleteShippingCity(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const cityId: number = Number(req.params.id);
         const { username } = req.body;
 
         try {
             await this.shippingService.deleteShippingCity(cityId);
+
             res.sendStatus(204);
 
             await this.adminLogsService.log(username, 'city', 'delete');
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error deleting city: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error deleting city: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async changeShippingWeightRate(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const { username, type, rate } = req.body;
 
         try {
             const updatedRate =
                 await this.shippingService.changeShippingWeightRate(type, rate);
+
             res.status(200).json({
                 message: 'Shipping weight rate updated successfully',
                 updatedRate,
@@ -234,19 +240,20 @@ export class ShippingController {
             );
         } catch (error) {
             console.error('Error changing shipping weight rate: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async changeShippingMethodRate(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const { username, type, rate } = req.body;
 
         try {
             const updatedRate =
                 await this.shippingService.changeShippingMethodRate(type, rate);
+
             res.status(200).json({
                 message: 'Shipping method rate updated successfully',
                 updatedRate,
@@ -259,36 +266,35 @@ export class ShippingController {
             );
         } catch (error) {
             console.error('Error changing shipping method rate: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async determineWeightRange(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const cartId: number = Number(req.params.id);
 
         try {
             const weight =
                 await this.shippingService.determineWeightRange(cartId);
-            res.status(200).json({ weight });
+            return res.status(200).json({ weight });
         } catch (error) {
             if (error instanceof EmptyCartError) {
                 console.error('Error determining weight range: ', error);
-                res.status(400).json({ message: error.message });
-                return;
+                return res.status(400).json({ message: error.message });
             }
 
             console.error('Error determining weight range: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
     public async calculateShippingCost(
         req: Request,
         res: Response
-    ): Promise<void> {
+    ): Promise<void | Response> {
         const cartId: number = Number(req.params.id);
         const { countryName, shippingMethod } = req.body;
 
@@ -299,28 +305,25 @@ export class ShippingController {
                     countryName,
                     shippingMethod
                 );
-            res.status(200).json({ shippingCost });
+            return res.status(200).json({ shippingCost });
         } catch (error) {
             if (error instanceof CartNotFoundError) {
                 console.error('Error calculating shipping cost: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error determining weight range: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof ShippingMethodNotFoundError) {
                 console.error('Error determining weight range: ', error);
-                res.status(404).json({ message: error.message });
-                return;
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error determining weight range: ', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 }
