@@ -1,11 +1,6 @@
 import { UserService, UserCreationDetails } from './User.service';
 import { User, Customer, Admin } from '../models/relational';
-import { UserNotFoundError, InvalidAdminRoleError } from '../errors';
-
-enum AdminRoles {
-    SUPER_ADMIN = 'super_admin',
-    MANAGER = 'manager',
-}
+import { UserNotFoundError } from '../errors';
 
 /**
  * Service responsible for Admin-related operations.
@@ -113,19 +108,8 @@ export class AdminService extends UserService {
      * @returns A promise resolving to an Admin instance array
      */
     public async getAdminsByRole(role: string): Promise<Admin[]> {
-        role = role.toLowerCase();
-
-        const validRoles: Record<string, string> = {
-            'super admin': AdminRoles.SUPER_ADMIN,
-            manager: AdminRoles.MANAGER,
-        };
-
-        if (!validRoles[role]) {
-            throw new InvalidAdminRoleError();
-        }
-
         const admins = await Admin.findAll({
-            where: { role: validRoles[role] },
+            where: { role },
             include: User,
         });
 
