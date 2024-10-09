@@ -19,16 +19,16 @@ interface UserDetails {
     firstName: string;
     lastName: string;
     username: string;
-    email: string;
+    role?: string;
 }
 
 export interface UserCreationDetails extends UserDetails {
     password: string;
 }
 
-interface CustomerDetails extends UserDetails {
-    shippingAddress?: string;
-    billingAddress?: string;
+interface CustomerDetails {
+    shippingAddress: string;
+    billingAddress: string;
 }
 
 interface AuthTokens {
