@@ -26,13 +26,6 @@ export class InvalidUserTypeError extends Error {
     }
 }
 
-export class InvalidAdminRoleError extends Error {
-    constructor() {
-        super('Invalid admin role');
-        this.name = 'InvalidAdminRoleError';
-    }
-}
-
 export class UnauthorizedAccessError extends Error {
     constructor() {
         super('Unauthorized access');

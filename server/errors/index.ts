@@ -3,13 +3,9 @@ import {
     UserAlreadyExistsError,
     InvalidCredentialsError,
     InvalidUserTypeError,
-    InvalidAdminRoleError,
     UnauthorizedAccessError,
 } from './UserErrors';
-import {
-    AdminLogCreationError,
-    AdminLogInvalidTargetError,
-} from './AdminLogErrors';
+import { AdminLogInvalidTargetError } from './AdminLogErrors';
 import {
     ProductNotFoundError,
     ProductOutOfStockError,
@@ -49,9 +45,7 @@ export {
     UserAlreadyExistsError,
     InvalidCredentialsError,
     InvalidUserTypeError,
-    InvalidAdminRoleError,
     UnauthorizedAccessError,
-    AdminLogCreationError,
     AdminLogInvalidTargetError,
     ProductNotFoundError,
     ProductOutOfStockError,
