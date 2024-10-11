@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import { ProductService, AdminLogsService } from '../services';
 import {
     CategoryAlreadyExistsError,
@@ -9,11 +10,11 @@ import {
 
 export class ProductController {
     private productService: ProductService;
-    private adminLogsService: AdminLogsService;
+    private adminLogsService: AdminLogsService | null;
 
     constructor(
         productService: ProductService,
-        adminLogsService: AdminLogsService
+        adminLogsService: AdminLogsService | null = null
     ) {
         this.productService = productService;
         this.adminLogsService = adminLogsService;
@@ -23,7 +24,8 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { username, name, description } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { name, description } = req.body;
 
         try {
             const category = await this.productService.addCategory(
@@ -35,7 +37,7 @@ export class ProductController {
                 category,
             });
 
-            await this.adminLogsService.log(username, 'category', 'create');
+            await this.adminLogsService!.log(username, 'category', 'create');
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
                 console.error('Error adding category: ', error);
@@ -52,7 +54,8 @@ export class ProductController {
         res: Response
     ): Promise<void | Response> {
         const categoryId = Number(req.params.id);
-        const { username, name } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { name } = req.body;
 
         try {
             const subCategory = await this.productService.addSubCategory(
@@ -64,7 +67,7 @@ export class ProductController {
                 subCategory,
             });
 
-            this.adminLogsService.log(username, 'subcategory', 'create');
+            this.adminLogsService!.log(username, 'subcategory', 'create');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 console.error('Error adding subcategory: ', error);
@@ -81,15 +84,16 @@ export class ProductController {
         }
     }
 
-    public async createCategoryWithSubcategories(
+    public async createCategoryWithSubCategories(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { username, name, description, subNames } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { name, description, subNames } = req.body;
 
         try {
             const { category, subcategories } =
-                await this.productService.createCategoryWithSubcategories(
+                await this.productService.createCategoryWithSubCategories(
                     name,
                     description,
                     subNames
@@ -100,7 +104,7 @@ export class ProductController {
                 subcategories,
             });
 
-            this.adminLogsService.log(username, 'category', 'create');
+            this.adminLogsService!.log(username, 'category', 'create');
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
                 console.error(
@@ -119,7 +123,8 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { username, details } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { details } = req.body;
 
         try {
             const product = await this.productService.addProduct(details);
@@ -128,7 +133,7 @@ export class ProductController {
                 product,
             });
 
-            this.adminLogsService.log(username, 'product', 'create');
+            this.adminLogsService!.log(username, 'product', 'create');
         } catch (error) {
             if (error instanceof ProductAlreadyExistsError) {
                 console.error('Error adding product: ', error);
@@ -140,65 +145,21 @@ export class ProductController {
         }
     }
 
-    public async setDiscountForProduct(
-        req: Request,
+    public async getAllCategories(
+        _req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { username, productId, discount } = req.body;
-
         try {
-            const discountedPrice: number =
-                await this.productService.setDiscountForProduct(
-                    productId,
-                    discount
-                );
-            res.status(200).json({
-                message: 'Product discount set successfully',
-                discountedPrice,
-            });
-
-            this.adminLogsService.log(username, 'product', 'update');
+            const { count, rows } =
+                await this.productService.getAllCategories();
+            return res.status(200).json({ total: count, categories: rows });
         } catch (error) {
-            if (error instanceof ProductNotFoundError) {
-                console.error('Error setting discount: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            console.error('Error setting discount: ', error);
+            console.error('Error getting categories: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async updateProduct(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const productId: number = Number(req.params.id);
-        const { username, details } = req.body;
-
-        try {
-            const updatedProduct = await this.productService.updateProduct(
-                productId,
-                details
-            );
-            res.status(200).json({
-                message: 'Product updated successfully',
-                updatedProduct,
-            });
-
-            this.adminLogsService.log(username, 'product', 'update');
-        } catch (error) {
-            if (error instanceof ProductNotFoundError) {
-                console.error('Error updating product: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            console.error('Error updating product: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async getSubcategoriesForCategory(
+    public async getSubCategoriesForCategory(
         req: Request,
         res: Response
     ): Promise<void | Response> {
@@ -206,10 +167,10 @@ export class ProductController {
 
         try {
             const { count, rows } =
-                await this.productService.getSubcategoriesForCategory(
+                await this.productService.getSubCategoriesForCategory(
                     categoryId
                 );
-            return res.status(200).json({ total: count, rows });
+            return res.status(200).json({ total: count, subcategories: rows });
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 console.error('Error getting subcategories: ', error);
@@ -369,18 +330,126 @@ export class ProductController {
         }
     }
 
+    public async updateCategoryById(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const categoryId: number = Number(req.params.id);
+        const { name, description } = req.body;
+
+        try {
+            const category = await this.productService.updateCategoryById(
+                categoryId,
+                name,
+                description
+            );
+            return res.status(200).json({ category });
+        } catch (error) {
+            if (error instanceof CategoryNotFoundError) {
+                console.error('Error updating category: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            console.error('Error updating category: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async updateSubCategoryById(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const subcategoryId: number = Number(req.params.id);
+        const { name } = req.body;
+
+        try {
+            const subcategory = await this.productService.updateSubCategoryById(
+                subcategoryId,
+                name
+            );
+            return res.status(200).json({ subcategory });
+        } catch (error) {
+            if (error instanceof CategoryNotFoundError) {
+                console.error('Error updating subcategory: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            console.error('Error updating subcategory: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async setDiscountForProduct(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const productId: number = Number(req.params.id);
+        const { username } = req.user as JwtPayload;
+        const { discount } = req.body;
+
+        try {
+            const discountedPrice: number =
+                await this.productService.setDiscountForProduct(
+                    productId,
+                    discount
+                );
+            res.status(200).json({
+                message: 'Product discount set successfully',
+                discountedPrice,
+            });
+
+            this.adminLogsService!.log(username, 'product', 'update');
+        } catch (error) {
+            if (error instanceof ProductNotFoundError) {
+                console.error('Error setting discount: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            console.error('Error setting discount: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async updateProduct(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const productId: number = Number(req.params.id);
+        const { username } = req.user as JwtPayload;
+        const { details } = req.body;
+
+        try {
+            const updatedProduct = await this.productService.updateProduct(
+                productId,
+                details
+            );
+            res.status(200).json({
+                message: 'Product updated successfully',
+                updatedProduct,
+            });
+
+            this.adminLogsService!.log(username, 'product', 'update');
+        } catch (error) {
+            if (error instanceof ProductNotFoundError) {
+                console.error('Error updating product: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            console.error('Error updating product: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async deleteCategoryById(
         req: Request,
         res: Response
     ): Promise<void | Response> {
         const categoryId: number = Number(req.params.id);
-        const { username } = req.body;
+        const { username } = req.user as JwtPayload;
 
         try {
             await this.productService.deleteCategoryById(categoryId);
             res.sendStatus(204);
 
-            await this.adminLogsService.log(username, 'category', 'delete');
+            await this.adminLogsService!.log(username, 'category', 'delete');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 console.error('Error deleting category: ', error);
@@ -397,13 +466,13 @@ export class ProductController {
         res: Response
     ): Promise<void | Response> {
         const categoryId: number = Number(req.params.id);
-        const { username } = req.body;
+        const { username } = req.user as JwtPayload;
 
         try {
             await this.productService.deleteSubCategoryById(categoryId);
             res.sendStatus(204);
 
-            await this.adminLogsService.log(username, 'subcategory', 'delete');
+            await this.adminLogsService!.log(username, 'subcategory', 'delete');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 console.error('Error deleting subcategory: ', error);
@@ -420,13 +489,13 @@ export class ProductController {
         res: Response
     ): Promise<void | Response> {
         const productId: number = Number(req.params.id);
-        const { username } = req.body;
+        const { username } = req.user as JwtPayload;
 
         try {
             await this.productService.deleteProductById(productId);
             res.sendStatus(204);
 
-            await this.adminLogsService.log(username, 'product', 'delete');
+            await this.adminLogsService!.log(username, 'product', 'delete');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error deleting product: ', error);
