@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import {
     AdminService,
     NotificationService,
@@ -25,7 +26,8 @@ export class AdminController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { username, details } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { details } = req.body;
 
         try {
             const newCustomer =
@@ -56,7 +58,8 @@ export class AdminController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { username, details } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { details } = req.body;
 
         try {
             const newAdmin = await this.adminService.registerAdmin(details);
@@ -195,7 +198,8 @@ export class AdminController {
         res: Response
     ): Promise<void | Response> {
         const userId: number = Number(req.params.id);
-        const { username, roleNumber } = req.body;
+        const { username } = req.user as JwtPayload;
+        const { roleNumber } = req.body;
 
         try {
             await this.adminService.setAdminRole(userId, roleNumber);
@@ -218,7 +222,7 @@ export class AdminController {
         res: Response
     ): Promise<void | Response> {
         const userId: number = Number(req.params.id);
-        const { username } = req.body;
+        const { username } = req.user as JwtPayload;
 
         try {
             await this.adminService.deleteUser(userId);

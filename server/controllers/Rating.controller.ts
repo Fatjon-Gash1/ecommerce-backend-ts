@@ -8,11 +8,11 @@ import {
 
 export class RatingController {
     private ratingService: RatingService;
-    private adminLogsService: AdminLogsService;
+    private adminLogsService: AdminLogsService | null;
 
     constructor(
         ratingService: RatingService,
-        adminLogsService: AdminLogsService
+        adminLogsService: AdminLogsService | null = null
     ) {
         this.ratingService = ratingService;
         this.adminLogsService = adminLogsService;
@@ -131,7 +131,7 @@ export class RatingController {
             res.sendStatus(204);
 
             if (username) {
-                await this.adminLogsService.log(username, 'rating', 'delete');
+                await this.adminLogsService!.log(username, 'rating', 'delete');
             }
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
@@ -268,7 +268,7 @@ export class RatingController {
             res.sendStatus(204);
 
             if (username) {
-                await this.adminLogsService.log(username, 'review', 'delete');
+                await this.adminLogsService!.log(username, 'review', 'delete');
             }
         } catch (error) {
             if (error instanceof RatingNotFoundError) {

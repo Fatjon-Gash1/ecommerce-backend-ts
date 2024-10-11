@@ -171,7 +171,7 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId = Number((req.user as JwtPayload).id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             const customer = await this.userService.getCustomerById(customerId);
@@ -218,7 +218,7 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId = Number((req.user as JwtPayload).id);
+        const customerId: number = Number((req.user as JwtPayload).id);
         const { details } = req.body;
 
         try {
