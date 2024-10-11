@@ -8,11 +8,20 @@ export {
 } from './userValidations';
 
 export {
-    validateId,
     validateAttribute,
     validateAdminRole,
     validateAdminRoleSet,
-    validateAdminUsername,
 } from './adminValidations';
+
+export {
+    validateCategory,
+    validateSubCategory,
+    validateCategoryWithSubCategories,
+    validateProduct,
+    validateDiscount,
+    validateProductUpdate,
+} from './productValidations';
+
+export { validateId, validateQuery } from './commonValidations';
 
 export { validationErrors } from './validationErrors';
