@@ -21,7 +21,6 @@ export const loginRateLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    //skip: (req) => req.ip === '192.168.0.28',
 });
 
 export const passwordChangeRateLimiter = rateLimit({
@@ -34,7 +33,6 @@ export const passwordChangeRateLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true,
-    //skip: (req) => req.ip === '192.168.0.28',
 });
 
 export const tokenRateLimiter = rateLimit({
@@ -46,7 +44,6 @@ export const tokenRateLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    //skip: (req) => req.ip === '192.168.0.28',
 });
 
 export const updateRateLimiter = rateLimit({
@@ -58,5 +55,4 @@ export const updateRateLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    //skip: (req) => req.ip === '192.168.0.28',
 });
