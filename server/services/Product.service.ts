@@ -96,7 +96,7 @@ export class ProductService {
      * @throws {@link CategoryAlreadyExistsError}
      * Thrown if the category already exists.
      */
-    public async createCategoryWithSubcategories(
+    public async createCategoryWithSubCategories(
         name: string,
         description: string,
         subNames: string[]
@@ -147,54 +147,26 @@ export class ProductService {
     }
 
     /**
-     * Sets the discount for a product.
+     * Retrieves all categories.
      *
-     * @param productId - The ID of the product
-     * @param discount - The discount to set
-     * @returns A promise resolving to the updated product
+     * @returns A promise resolving to an array of Category instances
      */
-    public async setDiscountForProduct(
-        productId: number,
-        discount: number
-    ): Promise<number> {
-        const product = await Product.findByPk(productId);
+    public async getAllCategories(): Promise<{
+        count: number;
+        rows: Category[];
+    }> {
+        const { count, rows } = await Category.findAndCountAll();
 
-        if (!product) {
-            throw new ProductNotFoundError();
-        }
-
-        product.discount = discount;
-        await product.save();
-        return await this.getDiscountedPrice(productId);
+        return { count, rows };
     }
 
     /**
-     * Updates an existing product in the database.
-     * @param productId - The id of the product to update
-     * @param details - The product update details
-     * @returns The updated product
-     * @throws ProductNotFoundError if the product doesn't exist
-     */
-    public async updateProduct(
-        productId: number,
-        details: ProductDetails
-    ): Promise<Product> {
-        const product = await Product.findByPk(productId);
-
-        if (!product) {
-            throw new ProductNotFoundError();
-        }
-
-        return await product.update(details);
-    }
-
-    /**
-     * Retrieves all subcategories for a category.
+     * Retrieves all subCategories for a category.
      *
      * @param categoryId - The ID of the category
      * @returns A promise resolving to an object containing the count and rows
      */
-    public async getSubcategoriesForCategory(
+    public async getSubCategoriesForCategory(
         categoryId: number
     ): Promise<{ count: number; rows: SubCategory[] }> {
         const foundCategory = await Category.findByPk(categoryId);
@@ -343,6 +315,97 @@ export class ProductService {
             return product.price;
         }
         return product.getPriceWithDiscount();
+    }
+
+    /**
+     * Updates an existing category
+     *
+     * @param categoryId - The id of the category to update
+     * @param name - The new name of the category
+     * @param description - The new description of the category
+     * @returns A promise that resolves to the updated category
+     *
+     * @throws {@link CategoryNotFoundError}
+     * Thrown if the category doesn't exist
+     */
+    public async updateCategoryById(
+        categoryId: number,
+        name: string,
+        description: string
+    ): Promise<Category> {
+        const category = await Category.findByPk(categoryId);
+
+        if (!category) {
+            throw new CategoryNotFoundError();
+        }
+
+        return await category.update({ name, description });
+    }
+
+    /**
+     * Updates a category's subcategory
+     *
+     * @param subcategoryId - The id of the subcategory to update
+     * @param name - The new name of the subcategory
+     * @returns A promise that resolves to the updated subcategory
+     *
+     * @throws {@link CategoryNotFoundError}
+     * Thrown if the subcategory doesn't exist
+     */
+    public async updateSubCategoryById(
+        subcategoryId: number,
+        name: string
+    ): Promise<SubCategory> {
+        const subcategory = await SubCategory.findByPk(subcategoryId);
+
+        if (!subcategory) {
+            throw new CategoryNotFoundError('Subcategory not found');
+        }
+
+        subcategory.name = name;
+        return await subcategory.save();
+    }
+
+    /**
+     * Sets the discount for a product.
+     *
+     * @param productId - The ID of the product
+     * @param discount - The discount to set
+     * @returns A promise resolving to the updated product
+     */
+    public async setDiscountForProduct(
+        productId: number,
+        discount: number
+    ): Promise<number> {
+        const product = await Product.findByPk(productId);
+
+        if (!product) {
+            throw new ProductNotFoundError();
+        }
+
+        product.discount = discount;
+        await product.save();
+        return await this.getDiscountedPrice(productId);
+    }
+
+    /**
+     * Updates an existing product in the database.
+     * @param productId - The id of the product to update
+     * @param details - The product update details
+     * @returns The updated product
+     * @throws ProductNotFoundError if the product doesn't exist
+     */
+    public async updateProduct(
+        productId: number,
+        details: ProductDetails
+    ): Promise<Product> {
+        const product = await Product.findByPk(productId);
+
+        if (!product) {
+            throw new ProductNotFoundError();
+        }
+
+        return await product.update(details);
     }
 
     /**
