@@ -6,6 +6,8 @@ export {
     passwordChangeRateLimiter,
 } from './userRateLimiters';
 
+export { ratingUpdateRateLimiter } from './ratingRateLimiters';
+
 export {
     registerRateLimiter,
     userDeletionRateLimiter,
@@ -19,3 +21,5 @@ export {
     categoryDeletionRateLimiter,
     productDeletionRateLimiter,
 } from './admin/adminProductRateLimiters';
+
+export { ratingDeletionRateLimiter } from './admin/adminRatingRateLimiters';
