@@ -1,16 +1,14 @@
 import {
     PlatformRating,
     IPlatformRating,
-    ProductReview,
-    IProductReview,
+    ProductRating,
+    IProductRating,
 } from '../models/document';
 import { User, Product } from '../models/relational';
 import {
     UserNotFoundError,
     ProductNotFoundError,
     RatingNotFoundError,
-    RatingUpdateError,
-    RatingCreationError,
 } from '../errors';
 
 /**
@@ -72,7 +70,9 @@ export class RatingService {
      * @param ratingId - The id of the platform rating
      * @returns A promise that resolves to the platform rating
      */
-    public async getPlatformRating(ratingId: number): Promise<IPlatformRating> {
+    public async getPlatformRatingById(
+        ratingId: number
+    ): Promise<IPlatformRating> {
         const rating = await PlatformRating.findById(ratingId);
 
         if (!rating) {
@@ -129,7 +129,7 @@ export class RatingService {
      * @returns A promise that resolves to a boolean indicating
      * if the rating was removed
      */
-    public async deletePlatformRating(ratingId: number): Promise<void> {
+    public async deletePlatformRatingById(ratingId: number): Promise<void> {
         const deleted = await PlatformRating.findByIdAndDelete(ratingId);
 
         if (!deleted) {
@@ -138,13 +138,13 @@ export class RatingService {
     }
 
     /**
-     * Adds a review to a product.
+     * Adds a rating & review to a product.
      *
-     * @param details - Review details
+     * @param details - Rating details
      */
-    public async addProductReview(
-        details: IProductReview
-    ): Promise<IProductReview> {
+    public async addProductRating(
+        details: IProductRating
+    ): Promise<IProductRating> {
         const {
             userId,
             productId,
@@ -171,7 +171,7 @@ export class RatingService {
             throw new ProductNotFoundError();
         }
 
-        return await ProductReview.create({
+        return await ProductRating.create({
             userId,
             productId,
             username: customer.username,
@@ -187,93 +187,95 @@ export class RatingService {
     }
 
     /**
-     * Retrieves all product reviews.
+     * Retrieves all product ratings & reviews.
      *
      * @param productId - The ID of the product
-     * @returns A promise that resolves to all product reviews
+     * @returns A promise that resolves to all product ratings
      */
-    public async getProductReviews(
+    public async getProductRatings(
         productId: number
-    ): Promise<IProductReview[]> {
+    ): Promise<IProductRating[]> {
         const product = await Product.findByPk(productId);
 
         if (!product) {
             throw new ProductNotFoundError();
         }
 
-        return await ProductReview.find({ productId });
+        return await ProductRating.find({ productId });
     }
 
     /**
-     * Retrieves a product review by id.
+     * Retrieves a product rating & review by id.
      *
-     * @param reviewId - The id of the product review
-     * @returns A promise that resolves to the product review
+     * @param reviewId - The id of the product rating
+     * @returns A promise that resolves to the product rating
      */
-    public async getProductReview(reviewId: number): Promise<IProductReview> {
-        const review = await ProductReview.findById(reviewId);
+    public async getProductRatingById(
+        ratingId: number
+    ): Promise<IProductRating> {
+        const rating = await ProductRating.findById(ratingId);
 
-        if (!review) {
+        if (!rating) {
             throw new RatingNotFoundError(
-                `Product review with id: ${reviewId} not found`
+                `Product rating with id: ${ratingId} not found`
             );
         }
 
-        return review;
+        return rating;
     }
 
     /**
-     * Retrieves all product reviews by customer's user id.
+     * Retrieves all product ratings & reviews by customer's user id.
      *
      * @param userId - The id of the user
-     * @returns A promise that resolves to the user's product reviews
+     * @returns A promise that resolves to the user's product ratings
      */
-    public async getProductReviewsByCustomer(
+    public async getProductRatingsByCustomer(
         userId: number
-    ): Promise<IProductReview[]> {
+    ): Promise<IProductRating[]> {
         const customer = await User.findByPk(userId);
 
         if (!customer) {
             throw new UserNotFoundError('Could not find customer');
         }
 
-        return await ProductReview.find({ userId });
+        return await ProductRating.find({ userId });
     }
 
     /**
-     * Updates an existing product review.
+     * Updates an existing product rating & review.
      *
-     * @param reviewId - The id of the product review
-     * @param details - Review details
-     * @returns A promise that resolves to the updated product review
+     * @param ratingId - The id of the product rating
+     * @param details - Rating details
+     * @returns A promise that resolves to the updated product rating
      */
-    public async updateProductReview(
-        reviewId: number,
-        details: IProductReview
-    ): Promise<IProductReview> {
-        const updatedReview = await ProductReview.findByIdAndUpdate(reviewId, {
+    public async updateProductRating(
+        ratingId: number,
+        details: IProductRating
+    ): Promise<IProductRating> {
+        const updatedRating = await ProductRating.findByIdAndUpdate(ratingId, {
             details,
         });
 
-        if (!updatedReview) {
+        if (!updatedRating) {
             throw new RatingNotFoundError();
         }
 
-        return updatedReview;
+        return updatedRating;
     }
 
     /**
-     * Removes a product review by id.
+     * Removes a product rating & review by id.
      *
-     * @param reviewId - The id of the product review
+     * @param ratingId - The id of the product rating
      * @returns A promise that resolves to a boolean indicating
-     * if the review was removed
+     * if the rating was removed
      */
-    public async deleteProductReview(reviewId: number): Promise<boolean> {
-        const deleted = await ProductReview.findByIdAndDelete(reviewId);
+    public async deleteProductRating(ratingId: number): Promise<boolean> {
+        const deleted = await ProductRating.findByIdAndDelete(ratingId);
 
         if (!deleted) {
-            throw new RatingNotFoundError('Product review not found');
+            throw new RatingNotFoundError('Product rating not found');
         }
 
         return true;
