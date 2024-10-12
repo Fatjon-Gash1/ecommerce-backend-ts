@@ -18,7 +18,7 @@ import {
     validateAdminRoleSet,
     validationErrors,
 } from '../../../middlewares/validation';
-import adminProducts from './adminProducts.route';
+import adminProducts from './products.route';
 
 const router: Router = Router();
 const adminController = new AdminController(
@@ -61,7 +61,6 @@ router.get(
     adminController.findCustomerByAttribute.bind(adminController)
 );
 router.get('/customers', adminController.getAllCustomers.bind(adminController));
-
 router.get(
     '/admins/:id',
     authorize(['admin']),
