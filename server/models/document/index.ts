@@ -1,6 +1,6 @@
 import Rating, { IRating } from './Rating.model';
 import PlatformRating, { IPlatformRating } from './PlatformRating.model';
-import ProductReview, { IProductReview } from './ProductReview.model';
+import ProductRating, { IProductRating } from './ProductRating.model';
 import ProductAnalytic from './ProductAnalytic.model';
 
 export {
@@ -8,7 +8,7 @@ export {
     IRating,
     PlatformRating,
     IPlatformRating,
-    ProductReview,
-    IProductReview,
+    ProductRating,
+    IProductRating,
     ProductAnalytic,
 };

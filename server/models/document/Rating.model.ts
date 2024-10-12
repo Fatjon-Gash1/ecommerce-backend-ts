@@ -9,7 +9,7 @@ export interface IRating extends Document {
     userProfession?: string;
     rating: number;
     review: string;
-    anonymous: boolean;
+    anonymous?: boolean;
 }
 
 const ratingSchema = new Schema<IRating>(
