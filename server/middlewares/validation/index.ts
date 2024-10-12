@@ -22,6 +22,13 @@ export {
     validateProductUpdate,
 } from './productValidations';
 
+export {
+    validatePlatformRating,
+    validateProductRating,
+    validatePlatformRatingUpdate,
+    validateProductRatingUpdate,
+} from './ratingValidations';
+
 export { validateId, validateQuery } from './commonValidations';
 
 export { validationErrors } from './validationErrors';

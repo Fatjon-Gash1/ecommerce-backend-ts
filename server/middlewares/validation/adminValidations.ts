@@ -1,4 +1,4 @@
-import { query, body, param, ValidationChain } from 'express-validator';
+import { query, body, ValidationChain } from 'express-validator';
 
 export const validateAdminRole = (): ValidationChain[] => [
     query('role')
