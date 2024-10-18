@@ -17,9 +17,11 @@ import {
     validatePasswords,
     validateCustomerDetails,
     validateUserUpdateDetails,
+    validateId,
     validationErrors,
 } from '../../middlewares/validation';
 import authorize from '../../middlewares/authorization/authorize';
+import cartRoutes from './carts.route';
 import adminRoutes from './private/admins.route';
 
 const router: Router = Router();
@@ -96,6 +98,15 @@ router.delete(
     '/',
     authenticateAccessToken,
     userController.deleteAccount.bind(userController)
+);
+
+router.use(
+    '/customers/:id/cart',
+    authenticateAccessToken,
+    authorize(['customer']),
+    validateId(),
+    validationErrors,
+    cartRoutes
 );
 
 router.use(
