@@ -271,7 +271,7 @@ export class RatingService {
      * @returns A promise that resolves to a boolean indicating
      * if the rating was removed
      */
-    public async deleteProductRating(ratingId: number): Promise<boolean> {
+    public async deleteProductRatingById(ratingId: number): Promise<boolean> {
         const deleted = await ProductRating.findByIdAndDelete(ratingId);
 
         if (!deleted) {
