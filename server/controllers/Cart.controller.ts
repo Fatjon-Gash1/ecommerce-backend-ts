@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { CartService } from '../services';
 import { CartNotFoundError, CartItemNotFoundError } from '../errors';
+import { JwtPayload } from 'jsonwebtoken';
 
 export class CartController {
     private cartService: CartService;
@@ -13,7 +14,7 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
         const { productId, quantity } = req.body;
 
         try {
@@ -38,7 +39,7 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             const cartItems = await this.cartService.getCartItems(customerId);
@@ -54,12 +55,32 @@ export class CartController {
         }
     }
 
+    public async cartCheckout(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const customerId: number = Number((req.user as JwtPayload).id);
+
+        try {
+            const totalPrice = await this.cartService.cartCheckout(customerId);
+            return res.status(200).json({ totalPrice });
+        } catch (error) {
+            if (error instanceof CartNotFoundError) {
+                console.error('Error checking out: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            console.error('Error checking out: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async removeItemFromCart(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
-        const { productId } = req.body;
+        const customerId: number = Number((req.user as JwtPayload).id);
+        const productId: number = Number(req.params.id);
 
         try {
             await this.cartService.removeItemFromCart(customerId, productId);
@@ -84,7 +105,7 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             await this.cartService.clearCart(customerId);
@@ -96,26 +117,6 @@ export class CartController {
             }
 
             console.error('Error clearing cart: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async cartCheckout(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
-
-        try {
-            const totalPrice = await this.cartService.cartCheckout(customerId);
-            return res.status(200).json({ totalPrice });
-        } catch (error) {
-            if (error instanceof CartNotFoundError) {
-                console.error('Error checking out: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            console.error('Error checking out: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
