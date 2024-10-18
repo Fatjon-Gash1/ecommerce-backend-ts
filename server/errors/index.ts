@@ -19,6 +19,7 @@ import {
 } from './CategoryErrors';
 import {
     CartNotFoundError,
+    CartItemLimitError,
     CartItemNotFoundError,
     CartUpdateError,
     EmptyCartError,
@@ -55,6 +56,7 @@ export {
     CategoryNotFoundError,
     CategoryAlreadyExistsError,
     CartNotFoundError,
+    CartItemLimitError,
     CartItemNotFoundError,
     CartUpdateError,
     EmptyCartError,
