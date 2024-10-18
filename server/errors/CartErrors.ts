@@ -5,6 +5,13 @@ export class CartNotFoundError extends Error {
     }
 }
 
+export class CartItemLimitError extends Error {
+    constructor(message: string = 'Cart item limit reached') {
+        super(message);
+        this.name = 'CartItemLimitError';
+    }
+}
+
 export class CartItemNotFoundError extends Error {
     constructor(message: string = 'Cart item not found') {
         super(message);
