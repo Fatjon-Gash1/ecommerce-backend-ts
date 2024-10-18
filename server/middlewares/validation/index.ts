@@ -29,6 +29,8 @@ export {
     validateProductRatingUpdate,
 } from './ratingValidations';
 
+export { validateCartItemDetails } from './cartValidations';
+
 export { validateId, validateQuery } from './commonValidations';
 
 export { validationErrors } from './validationErrors';
