@@ -1,5 +1,11 @@
 import { Cart, CartItem } from '../models/relational';
-import { CartNotFoundError, CartItemNotFoundError } from '../errors';
+import {
+    CartNotFoundError,
+    CartItemLimitError,
+    CartItemNotFoundError,
+} from '../errors';
+
+const CART_ITEM_LIMIT = 100;
 
 /**
  * Service responsible for Customer Cart-related operations.
@@ -25,8 +31,18 @@ export class CartService {
             throw new CartNotFoundError();
         }
 
+        const totalCartItems = await CartItem.count({
+            where: { cartId: cart.id },
+        });
+
+        if (totalCartItems >= CART_ITEM_LIMIT) {
+            throw new CartItemLimitError(
+                `Cart item limit reached. You cannot add more than "${CART_ITEM_LIMIT}" items.`
+            );
+        }
+
         const [item, created] = await CartItem.findOrCreate({
-            where: { productId },
+            where: { cartId: cart.id, productId },
             defaults: {
                 cartId: cart.id,
                 productId,
@@ -60,6 +76,22 @@ export class CartService {
         });
 
         return cartItems;
+    }
+
+    /**
+     * Retrieves the total cart items amount.
+     *
+     * @param customerId - The customer ID
+     * @returns A promise resolving to a number
+     */
+    public async cartCheckout(customerId: number): Promise<number> {
+        const cart = await Cart.findOne({ where: { customerId } });
+
+        if (!cart) {
+            throw new CartNotFoundError();
+        }
+
+        return await cart.getTotalPrice();
     }
 
     /**
@@ -97,7 +129,7 @@ export class CartService {
     }
 
     /**
-     * Clears the custoemr's cart.
+     * Clears the customer's cart.
      *
      * @param customerId - The customer ID
      */
@@ -109,21 +141,5 @@ export class CartService {
         }
 
         await CartItem.destroy({ where: { cartId: cart.id } });
-    }
-
-    /**
-     * Retrieves the total cart items amount.
-     *
-     * @param customerId - The customer ID
-     * @returns A promise resolving to a number
-     */
-    public async cartCheckout(customerId: number): Promise<number> {
-        const cart = await Cart.findOne({ where: { customerId } });
-
-        if (!cart) {
-            throw new CartNotFoundError();
-        }
-
-        return await cart.getTotalPrice();
     }
 }
