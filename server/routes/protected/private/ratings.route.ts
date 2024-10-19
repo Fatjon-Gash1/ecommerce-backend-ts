@@ -3,6 +3,7 @@ import { RatingController } from '../../../controllers/Rating.controller';
 import { RatingService, AdminLogsService } from '../../../services';
 import { validateId, validationErrors } from '../../../middlewares/validation';
 import { ratingDeletionRateLimiter } from '../../../middlewares/rateLimiting';
+import authorize from '../../../middlewares/authorization/authorize';
 
 const router: Router = Router();
 const ratingController = new RatingController(
@@ -25,6 +26,7 @@ router.get(
 
 router.delete(
     '/platform/:id',
+    authorize(['admin']),
     ratingDeletionRateLimiter,
     validateId(),
     validationErrors,
@@ -32,6 +34,7 @@ router.delete(
 );
 router.delete(
     '/products/:id',
+    authorize(['admin']),
     ratingDeletionRateLimiter,
     validateId(),
     validationErrors,
