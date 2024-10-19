@@ -6,7 +6,7 @@ interface OrderAttributes {
     id?: number;
     customerId?: number;
     paymentMethod: string;
-    status?: 'pending' | 'delivered' | 'cancelled';
+    status?: 'pending' | 'delivered' | 'canceled';
     trackingNumber?: number;
 }
 
@@ -27,7 +27,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     declare id?: number;
     declare customerId?: number;
     declare paymentMethod: string;
-    declare status?: 'pending' | 'delivered' | 'cancelled';
+    declare status?: 'pending' | 'delivered' | 'canceled';
     declare trackingNumber?: number;
 
     public async addItem(
@@ -85,7 +85,7 @@ Order.init(
             allowNull: false,
         },
         status: {
-            type: DataTypes.ENUM('pending', 'delivered', 'cancelled'),
+            type: DataTypes.ENUM('pending', 'delivered', 'canceled'),
             allowNull: false,
             defaultValue: 'pending',
         },

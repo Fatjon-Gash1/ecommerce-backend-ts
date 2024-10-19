@@ -50,38 +50,6 @@ export class OrderService {
     }
 
     /**
-     * Marks customer's order as delivered.
-     *
-     * @params orderId - The ID of the order
-     */
-    public async markAsDelivered(orderId: number): Promise<void> {
-        const order = await Order.findByPk(orderId);
-
-        if (!order) {
-            throw new OrderNotFoundError();
-        }
-
-        order.status = 'delivered';
-        await order.save();
-    }
-
-    /**
-     * Cancels a customer's order.
-     *
-     * @params orderId - The ID of the order
-     */
-    public async cancelOrder(orderId: number): Promise<void> {
-        const order = await Order.findByPk(orderId);
-
-        if (!order) {
-            throw new OrderNotFoundError();
-        }
-
-        order.status = 'cancelled';
-        await order.save();
-    }
-
-    /**
      * Retrieves a specific order by ID.
      *
      * @param orderId - The ID of the order
@@ -103,7 +71,7 @@ export class OrderService {
      * @param orderId - The ID of the order
      * @returns A promise resolving to an array of OrderItem instances
      */
-    public async getOrderItems(orderId: number): Promise<OrderItem[]> {
+    public async getOrderItemsByOrderId(orderId: number): Promise<OrderItem[]> {
         const order = await Order.findByPk(orderId);
 
         if (!order) {
@@ -160,14 +128,14 @@ export class OrderService {
     }
 
     /**
-     * Retrieves all cancelled orders for a customer.
+     * Retrieves all canceled orders for a customer.
      *
      * @param customerId - The ID of the customer
      * @returns A promise resolving to an array of Order instances
      */
-    public async getCancelledOrders(customerId: number): Promise<Order[]> {
+    public async getCanceledOrders(customerId: number): Promise<Order[]> {
         const orders = await Order.findAll({
-            where: { customerId, status: 'cancelled' },
+            where: { customerId, status: 'canceled' },
         });
 
         return orders;
@@ -185,5 +153,46 @@ export class OrderService {
         });
 
         return orders;
+    }
+
+    /**
+     * Retrieves all orders in the database.
+     *
+     * @returns A promise resolving to an array of Order instances
+     */
+    public async getAllOrders(): Promise<Order[]> {
+        return await Order.findAll();
+    }
+
+    /**
+     * Marks customer's order as delivered.
+     *
+     * @params orderId - The ID of the order
+     */
+    public async markAsDelivered(orderId: number): Promise<void> {
+        const order = await Order.findByPk(orderId);
+
+        if (!order) {
+            throw new OrderNotFoundError();
+        }
+
+        order.status = 'delivered';
+        await order.save();
+    }
+
+    /**
+     * Cancels a customer's order.
+     *
+     * @params orderId - The ID of the order
+     */
+    public async cancelOrder(orderId: number): Promise<void> {
+        const order = await Order.findByPk(orderId);
+
+        if (!order) {
+            throw new OrderNotFoundError();
+        }
+
+        order.status = 'canceled';
+        await order.save();
     }
 }
