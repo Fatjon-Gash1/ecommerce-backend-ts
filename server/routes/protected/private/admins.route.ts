@@ -19,6 +19,8 @@ import {
     validationErrors,
 } from '../../../middlewares/validation';
 import adminProducts from './products.route';
+import adminOrders from './orders.route';
+import adminRatings from './ratings.route';
 
 const router: Router = Router();
 const adminController = new AdminController(
@@ -99,5 +101,7 @@ router.delete(
 );
 
 router.use('/products', adminProducts);
+router.use('/orders', adminOrders);
+router.use('/ratings', adminRatings);
 
 export default router;
