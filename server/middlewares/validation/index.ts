@@ -31,6 +31,8 @@ export {
 
 export { validateCartItemDetails } from './cartValidations';
 
+export { validateOrderCreation } from './orderValidations';
+
 export { validateId, validateQuery } from './commonValidations';
 
 export { validationErrors } from './validationErrors';
