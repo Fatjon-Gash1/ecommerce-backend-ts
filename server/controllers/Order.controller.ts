@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import { OrderService, AdminLogsService } from '../services';
+import { JwtPayload } from 'jsonwebtoken';
 import { OrderNotFoundError, UserNotFoundError } from '../errors';
 
 export class OrderController {
     private orderService: OrderService;
-    private adminLogsService: AdminLogsService;
+    private adminLogsService: AdminLogsService | null;
 
     constructor(
         orderService: OrderService,
-        adminLogsService: AdminLogsService
+        adminLogsService: AdminLogsService | null = null
     ) {
         this.orderService = orderService;
         this.adminLogsService = adminLogsService;
@@ -42,49 +43,6 @@ export class OrderController {
         }
     }
 
-    public async markAsDelivered(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const orderId: number = Number(req.params.id);
-        const { username } = req.body;
-
-        try {
-            await this.orderService.markAsDelivered(orderId);
-            res.sendStatus(204);
-
-            this.adminLogsService.log(username, 'order', 'update');
-        } catch (error) {
-            if (error instanceof OrderNotFoundError) {
-                console.error('Error marking order as delivered: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            console.error('Error marking order as delivered: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async cancelOrder(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const orderId: number = Number(req.params.id);
-
-        try {
-            await this.orderService.cancelOrder(orderId);
-            return res.sendStatus(204);
-        } catch (error) {
-            if (error instanceof OrderNotFoundError) {
-                console.error('Error cancelling order: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            console.error('Error cancelling order: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
     public async getOrderById(
         req: Request,
         res: Response
@@ -105,14 +63,15 @@ export class OrderController {
         }
     }
 
-    public async getOrderItems(
+    public async getOrderItemsByOrderId(
         req: Request,
         res: Response
     ): Promise<void | Response> {
         const orderId: number = Number(req.params.id);
 
         try {
-            const orderItems = await this.orderService.getOrderItems(orderId);
+            const orderItems =
+                await this.orderService.getOrderItemsByOrderId(orderId);
             return res.status(200).json({ orderItems });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
@@ -153,7 +112,7 @@ export class OrderController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             const orders =
@@ -169,7 +128,7 @@ export class OrderController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             const orders = await this.orderService.getPendingOrders(customerId);
@@ -180,18 +139,18 @@ export class OrderController {
         }
     }
 
-    public async getCancelledOrders(
+    public async getCanceledOrders(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             const orders =
-                await this.orderService.getCancelledOrders(customerId);
+                await this.orderService.getCanceledOrders(customerId);
             return res.status(200).json({ orders });
         } catch (error) {
-            console.error('Error getting cancelled orders: ', error);
+            console.error('Error getting canceled orders: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -200,13 +159,69 @@ export class OrderController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const customerId: number = Number((req.user as JwtPayload).id);
 
         try {
             const orders = await this.orderService.getOrderHistory(customerId);
             return res.status(200).json({ orders });
         } catch (error) {
             console.error('Error getting order history: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getAllOrders(
+        _req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        try {
+            const orders = await this.orderService.getAllOrders();
+            return res.status(200).json({ orders });
+        } catch (error) {
+            console.error('Error getting all orders: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async cancelOrder(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const orderId: number = Number(req.params.id);
+
+        try {
+            await this.orderService.cancelOrder(orderId);
+            return res.sendStatus(204);
+        } catch (error) {
+            if (error instanceof OrderNotFoundError) {
+                console.error('Error cancelling order: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            console.error('Error cancelling order: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async markAsDelivered(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const orderId: number = Number(req.params.id);
+        const { username } = req.user as JwtPayload;
+
+        try {
+            await this.orderService.markAsDelivered(orderId);
+            res.sendStatus(204);
+
+            this.adminLogsService!.log(username, 'order', 'update');
+        } catch (error) {
+            if (error instanceof OrderNotFoundError) {
+                console.error('Error marking order as delivered: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            console.error('Error marking order as delivered: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
