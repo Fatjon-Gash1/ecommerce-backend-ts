@@ -22,6 +22,7 @@ import {
 } from '../../middlewares/validation';
 import authorize from '../../middlewares/authorization/authorize';
 import cartRoutes from './carts.route';
+import orderRoutes from './orders.route';
 import adminRoutes from './private/admins.route';
 
 const router: Router = Router();
@@ -108,6 +109,8 @@ router.use(
     validationErrors,
     cartRoutes
 );
+
+router.use('/orders', authenticateAccessToken, orderRoutes);
 
 router.use(
     '/admin',
