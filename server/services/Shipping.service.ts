@@ -1,4 +1,5 @@
 import type { Model, ModelStatic, WhereOptions } from 'sequelize';
+import { Op } from 'sequelize';
 import {
     ShippingCountry,
     ShippingCity,
@@ -10,7 +11,6 @@ import {
 } from '../models/relational';
 import {
     ShippingLocationNotFoundError,
-    ShippingLocationUpdateError,
     ShippingMethodNotFoundError,
     EmptyCartError,
     CartNotFoundError,
@@ -21,13 +21,13 @@ import {
  */
 export class ShippingService {
     /**
-     * Adds a country to the Shiping Countries.
+     * Adds a country to the Shipping Countries.
      *
      * @param name - Country name
      * @param rate - Shipping rate
      * @returns A promise that resolves to the created country
      */
-    public async addNewCountry(
+    public async addShippingCountry(
         name: string,
         rate: number
     ): Promise<ShippingCountry> {
@@ -71,7 +71,7 @@ export class ShippingService {
      * @param countryId - Country ID
      * @returns A promise that resolves to an array of shipping cities
      */
-    public async getShippingCitiesByCountry(
+    public async getShippingCitiesByCountryId(
         countryId: number
     ): Promise<ShippingCity[]> {
         const country = await ShippingCountry.findByPk(countryId);
@@ -111,17 +111,23 @@ export class ShippingService {
     /**
      * Updates a shipping city.
      *
+     * @param countryId - Country ID
      * @param cityId - City ID
      * @param name - City name
      * @param postalCode - Postal code
      * @returns A promise that resolves to the updated city
      */
     public async updateShippingCity(
+        countryId: number,
         cityId: number,
         name: string,
         postalCode: number
     ): Promise<ShippingCity> {
-        const city = await ShippingCity.findByPk(cityId);
+        const city = await ShippingCity.findOne({
+            where: {
+                [Op.and]: [{ id: cityId }, { countryId }],
+            },
+        });
 
         if (!city) {
             throw new ShippingLocationNotFoundError('Shipping City not found');
@@ -130,19 +136,7 @@ export class ShippingService {
         city.name = name;
         city.postalCode = postalCode;
 
-        try {
-            return await city.save();
-        } catch (err) {
-            if (err instanceof Error) {
-                throw new ShippingLocationUpdateError(
-                    `Shipping City update failed: ${err.message}`
-                );
-            } else {
-                throw new ShippingLocationUpdateError(
-                    'Failed to update shipping city due to an unknown error.'
-                );
-            }
-        }
+        return await city.save();
     }
 
     /**
@@ -167,13 +161,17 @@ export class ShippingService {
     /**
      * Deletes a shipping city.
      *
+     * @param countryId - Country ID
      * @param cityId - City ID
      * @returns A promise that resolves to a boolean value indicating
      * whether the city was deleted
      */
-    public async deleteShippingCity(cityId: number): Promise<void> {
+    public async deleteShippingCity(
+        countryId: number,
+        cityId: number
+    ): Promise<void> {
         const deleted = await ShippingCity.destroy({
-            where: { id: cityId },
+            where: { [Op.and]: [{ id: cityId }, { countryId }] },
         });
 
         if (deleted === 0) {
@@ -254,7 +252,7 @@ export class ShippingService {
      * @throws {@link EmptyCartError}
      * Thrown is the provided cart has no items.
      */
-    public async determineWeightRange(cartId: number): Promise<string> {
+    public async determineWeightRangeByCartId(cartId: number): Promise<string> {
         const items = await CartItem.findAll({ where: { cartId } });
 
         if (items.length === 0) {
@@ -320,7 +318,7 @@ export class ShippingService {
             throw new ShippingMethodNotFoundError();
         }
 
-        const weightRange = await this.determineWeightRange(cartId);
+        const weightRange = await this.determineWeightRangeByCartId(cartId);
         const weightResult = await ShippingWeight.findOne({
             where: { weightRange },
         });
