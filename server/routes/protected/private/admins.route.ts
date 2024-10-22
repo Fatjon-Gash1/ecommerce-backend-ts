@@ -20,6 +20,7 @@ import {
 } from '../../../middlewares/validation';
 import adminProducts from './products.route';
 import adminOrders from './orders.route';
+import adminShippings from './shippings.route';
 import adminRatings from './ratings.route';
 
 const router: Router = Router();
@@ -102,6 +103,7 @@ router.delete(
 
 router.use('/products', adminProducts);
 router.use('/orders', adminOrders);
+router.use('/shippings', adminShippings);
 router.use('/ratings', adminRatings);
 
 export default router;
