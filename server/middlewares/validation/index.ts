@@ -33,6 +33,22 @@ export { validateCartItemDetails } from './cartValidations';
 
 export { validateOrderCreation } from './orderValidations';
 
+export {
+    validateShippingCostDetails,
+    validateShippingCountry,
+    validateShippingCity,
+    validateShippingRate,
+    validateCountryId,
+} from './shippingValidations';
+
+export {
+    validatePagination,
+    validateProductStatus,
+    validateOrderStatus,
+    validateReportName,
+    validateReportType,
+} from './analyticsValidations';
+
 export { validateId, validateQuery } from './commonValidations';
 
 export { validationErrors } from './validationErrors';

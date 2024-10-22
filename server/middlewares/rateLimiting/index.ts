@@ -23,3 +23,5 @@ export {
 } from './admin/adminProductRateLimiters';
 
 export { ratingDeletionRateLimiter } from './admin/adminRatingRateLimiters';
+
+export { shippingUpdateRateLimiter } from './admin/adminShippingRateLimiters';

@@ -40,6 +40,7 @@ import {
     NotificationError,
     EmailNotificationError,
 } from './NotificationErrors';
+import { ReportNotFoundError } from './AnalyticsErrors';
 
 export {
     UserNotFoundError,
@@ -70,4 +71,5 @@ export {
     RatingNotFoundError,
     NotificationError,
     EmailNotificationError,
+    ReportNotFoundError,
 };
