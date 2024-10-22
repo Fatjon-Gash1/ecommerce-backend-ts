@@ -10,6 +10,18 @@ const orderController = new OrderController(
 );
 
 router.get('/', orderController.getAllOrders.bind(orderController));
+router.get(
+    '/:id/items',
+    validateId(),
+    validationErrors,
+    orderController.getOrderItemsByOrderId.bind(orderController)
+);
+router.get(
+    '/:id',
+    validateId(),
+    validationErrors,
+    orderController.getOrderById.bind(orderController)
+);
 
 router.patch(
     '/mark-as-delivered',
