@@ -1,16 +1,61 @@
 import { Request, Response } from 'express';
-import { AnalyticsService } from '../services';
+import { AnalyticsService, AdminLogsService } from '../services';
 import {
     CategoryNotFoundError,
     ProductNotFoundError,
     InvalidStockStatusError,
+    ReportNotFoundError,
 } from '../errors';
+import { JwtPayload } from 'jsonwebtoken';
 
 export class AnalyticsController {
     analyticsService: AnalyticsService;
+    adminLogsService: AdminLogsService;
 
-    constructor(analyticsService: AnalyticsService) {
+    constructor(
+        analyticsService: AnalyticsService,
+        adminLogsService: AdminLogsService
+    ) {
         this.analyticsService = analyticsService;
+        this.adminLogsService = adminLogsService;
+    }
+
+    public async generateSalesReport(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { username } = req.user as JwtPayload;
+
+        try {
+            await this.analyticsService.generateSalesReport(username);
+            res.status(201).json({
+                message: 'Sales report generated successfully',
+            });
+
+            await this.adminLogsService.log(username, 'report', 'create');
+        } catch (error) {
+            console.error('Error generating sales report: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async generateStockReport(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { username } = req.user as JwtPayload;
+
+        try {
+            await this.analyticsService.generateStockReport(username);
+            res.status(201).json({
+                message: 'Stock report generated successfully',
+            });
+
+            await this.adminLogsService.log(username, 'report', 'create');
+        } catch (error) {
+            console.error('Error generating stock report: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
     }
 
     public async getTotalProductPurchases(
@@ -200,7 +245,7 @@ export class AnalyticsController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const status: string = req.params.status;
+        const status: string = String(req.query.status);
 
         try {
             const { total, rows } =
@@ -218,7 +263,7 @@ export class AnalyticsController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const status: string = req.params.status;
+        const status: string = String(req.query.status);
 
         try {
             const stockData =
@@ -247,7 +292,7 @@ export class AnalyticsController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const status: string = req.params.status;
+        const status: string = String(req.query.status);
 
         try {
             const { total, rows } =
@@ -259,36 +304,46 @@ export class AnalyticsController {
         }
     }
 
-    public async generateSalesReport(
+    public async deleteReport(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { user } = req.body;
+        const { username } = req.user as JwtPayload;
+        const name: string = String(req.query.name);
 
         try {
-            await this.analyticsService.generateSalesReport(user);
-            return res.status(201).json({
-                message: 'Sales report generated successfully',
-            });
+            await this.analyticsService.deleteReport(name);
+            res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'report', 'delete');
         } catch (error) {
-            console.error('Error generating sales report: ', error);
+            if (error instanceof ReportNotFoundError) {
+                console.error('Error getting report by name: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            console.error('Error deleting report by name: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async generateStockReport(
+    public async deleteAllReportsByType(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { user } = req.body;
+        const { username } = req.user as JwtPayload;
+        const type: string = String(req.query.type);
 
         try {
-            await this.analyticsService.generateStockReport(user);
-            return res.status(201).json({
-                message: 'Stock report generated successfully',
-            });
+            await this.analyticsService.deleteAllReportsByType(type);
+            res.sendStatus(204);
+
+            await this.adminLogsService.log(username, 'report', 'delete');
         } catch (error) {
-            console.error('Error generating stock report: ', error);
+            if (error instanceof ReportNotFoundError) {
+                console.error('Error getting report by name: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            console.error('Error deleting report by name: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
