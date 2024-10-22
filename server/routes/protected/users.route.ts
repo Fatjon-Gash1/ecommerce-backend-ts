@@ -3,6 +3,7 @@ import { UserController } from '../../controllers/User.controller';
 import { UserService, NotificationService } from '../../services';
 import authenticateRefreshToken from '../../middlewares/authentication/refreshToken';
 import authenticateAccessToken from '../../middlewares/authentication/accessToken';
+import authorize from '../../middlewares/authorization/authorize';
 import {
     signupRateLimiter,
     loginRateLimiter,
@@ -17,12 +18,11 @@ import {
     validatePasswords,
     validateCustomerDetails,
     validateUserUpdateDetails,
-    validateId,
     validationErrors,
 } from '../../middlewares/validation';
-import authorize from '../../middlewares/authorization/authorize';
 import cartRoutes from './carts.route';
 import orderRoutes from './orders.route';
+import shippingRoutes from './shippings.route';
 import adminRoutes from './private/admins.route';
 
 const router: Router = Router();
@@ -102,15 +102,20 @@ router.delete(
 );
 
 router.use(
-    '/customers/:id/cart',
+    '/customers/cart',
     authenticateAccessToken,
     authorize(['customer']),
-    validateId(),
-    validationErrors,
     cartRoutes
 );
 
-router.use('/orders', authenticateAccessToken, orderRoutes);
+router.use(
+    '/customers/orders',
+    authenticateAccessToken,
+    authorize(['customer']),
+    orderRoutes
+);
+
+router.use('/shippings', authenticateAccessToken, shippingRoutes);
 
 router.use(
     '/admin',
