@@ -1,5 +1,6 @@
+import { sequelize } from '../config/db';
 import { Op } from 'sequelize';
-import { Category, SubCategory, Product } from '../models/relational';
+import { Category, Product } from '../models/relational';
 import client from '../config/elasticsearchClient';
 import {
     CategoryAlreadyExistsError,
@@ -39,11 +40,12 @@ export class ProductService {
      */
     public async addCategory(
         name: string,
-        description: string
+        description: string,
+        parentId: number | null
     ): Promise<Category> {
         const [category, created] = await Category.findOrCreate({
             where: { name },
-            defaults: { name, description },
+            defaults: { name, description, parentId },
         });
 
         if (created) {
@@ -54,87 +56,36 @@ export class ProductService {
     }
 
     /**
-     * Creates a new subcategory in the database.
+     * Creates a new product in the database.
      *
-     * @param name - The name of the subcategory
-     * @param categoryId - The ID of the parent category
-     * @returns The created subcategory
-     *
-     * @throws {@link CategoryAlreadyExistsError}
-     * Thrown if the subcategory already exists.
+     * @param categoryId - The ID of the category
+     * @param details - The product creation details
+     * @returns The created product
+     * @throws ProductAlreadyExistsError if the product already exists
      */
-    public async addSubCategory(
-        name: string,
-        categoryId: number
-    ): Promise<SubCategory> {
+    public async addProductByCategoryId(
+        categoryId: number,
+        details: ProductDetails
+    ): Promise<Product> {
         const category = await Category.findByPk(categoryId);
 
         if (!category) {
             throw new CategoryNotFoundError();
         }
 
-        const [subcategory, created] = await SubCategory.findOrCreate({
-            where: { name },
-            defaults: { name, categoryId },
-        });
-
-        if (!created) {
-            throw new CategoryAlreadyExistsError('SubCategory already exists');
-        }
-
-        return subcategory;
-    }
-
-    /**
-     * Creates a new category with subcategories in the database.
-     *
-     * @param name - The name of the category
-     * @description - Category description
-     * @subNames - Array of subcategory names
-     * @returns An object with the created category and subcategories
-     *
-     * @throws {@link CategoryAlreadyExistsError}
-     * Thrown if the category already exists.
-     */
-    public async createCategoryWithSubCategories(
-        name: string,
-        description: string,
-        subNames: string[]
-    ): Promise<{ category: Category; subcategories: SubCategory[] }> {
-        const [category, created] = await Category.findOrCreate({
-            where: { name },
-            defaults: {
-                name,
-                description,
-            },
-        });
-
-        if (!created) {
-            throw new CategoryAlreadyExistsError();
-        }
-
-        const subcategories = await Promise.all(
-            subNames.map(async (subName: string) => {
-                return await SubCategory.create({
-                    name: subName,
-                    categoryId: category.id,
-                });
-            })
-        );
-
-        return { category, subcategories };
-    }
-
-    /**
-     * Creates a new product in the database.
-     * @param details - The product creation details
-     * @returns The created product
-     * @throws ProductAlreadyExistsError if the product already exists
-     */
-    public async addProduct(details: ProductDetails): Promise<Product> {
         const [product, created] = await Product.findOrCreate({
             where: { name: details.name },
-            defaults: details,
+            defaults: {
+                categoryId,
+                name: details.name,
+                description: details.description,
+                price: details.price,
+                discount: details.discount,
+                imageUrl: details.imageUrl,
+                stockQuantity: details.stockQuantity,
+                weight: details.weight,
+                views: details.views,
+            },
         });
 
         if (!created) {
@@ -144,6 +95,35 @@ export class ProductService {
         }
 
         return product;
+    }
+    /*// Product addition threshold for sending product promotions email
+            let productsForPromotion: number = 0; // Will be converted to an array of Products in the future
+        const promotionThreshold: number = 10;
+
+    Product.afterCreate(async () => {
+        productsForPromotion++;
+
+        if (productsForPromotion === promotionThreshold) {
+            await notificationService.sendNewPromotionsEmail();
+            productsForPromotion = 0;
+        }
+    });
+    */
+
+    /**
+     * Retrieves all top level categories.
+     *
+     * @returns A promise resolving to an array of top level Category instances
+     */
+    public async getAllTopLevelCategories(): Promise<{
+        count: number;
+        rows: Category[];
+    }> {
+        const { count, rows } = await Category.findAndCountAll({
+            where: { parentId: null },
+        });
+
+        return { count, rows };
     }
 
     /**
@@ -168,15 +148,15 @@ export class ProductService {
      */
     public async getSubCategoriesForCategory(
         categoryId: number
-    ): Promise<{ count: number; rows: SubCategory[] }> {
+    ): Promise<{ count: number; rows: Category[] }> {
         const foundCategory = await Category.findByPk(categoryId);
 
         if (!foundCategory) {
             throw new CategoryNotFoundError();
         }
 
-        const { count, rows } = await SubCategory.findAndCountAll({
-            where: { categoryId },
+        const { count, rows } = await Category.findAndCountAll({
+            where: { parentId: categoryId },
         });
 
         return { count, rows };
@@ -187,8 +167,13 @@ export class ProductService {
      *
      * @returns a promise resolving to an array of Product instances
      */
-    public async getAllProducts(): Promise<Product[]> {
-        return await Product.findAll();
+    public async getAllProducts(): Promise<{
+        count: number;
+        rows: Product[];
+    }> {
+        const { count, rows } = await Product.findAndCountAll();
+
+        return { count, rows };
     }
 
     /**
@@ -234,6 +219,9 @@ export class ProductService {
      *
      * @param productId - The ID of the product
      * @returns a promise resolving to a Product instance
+     *
+     * @throws {@link ProductNotFoundError}
+     * Thrown if the product is not found
      */
     public async viewProductById(productId: number): Promise<Product> {
         const product = await Product.findByPk(productId);
@@ -303,6 +291,9 @@ export class ProductService {
      *
      * @param productId - The ID of the product
      * @returns A promise resolving to the discounted price
+     *
+     * @throws {@link ProductNotFoundError}
+     * Thrown if the product is not found.
      */
     public async getDiscountedPrice(productId: number): Promise<number> {
         const product = await Product.findByPk(productId);
@@ -340,30 +331,6 @@ export class ProductService {
         }
 
         return await category.update({ name, description });
-    }
-
-    /**
-     * Updates a category's subcategory
-     *
-     * @param subcategoryId - The id of the subcategory to update
-     * @param name - The new name of the subcategory
-     * @returns A promise that resolves to the updated subcategory
-     *
-     * @throws {@link CategoryNotFoundError}
-     * Thrown if the subcategory doesn't exist
-     */
-    public async updateSubCategoryById(
-        subcategoryId: number,
-        name: string
-    ): Promise<SubCategory> {
-        const subcategory = await SubCategory.findByPk(subcategoryId);
-
-        if (!subcategory) {
-            throw new CategoryNotFoundError('Subcategory not found');
-        }
-
-        subcategory.name = name;
-        return await subcategory.save();
     }
 
     /**
@@ -414,27 +381,23 @@ export class ProductService {
      * @param categoryId - The ID of the category
      */
     public async deleteCategoryById(categoryId: number): Promise<void> {
-        const category = await Category.findByPk(categoryId);
+        const transaction = await sequelize.transaction();
 
-        if (!category) {
-            throw new CategoryNotFoundError();
+        try {
+            const category = await Category.findByPk(categoryId, {
+                transaction,
+            });
+
+            if (!category) {
+                throw new CategoryNotFoundError();
+            }
+
+            await category.destroy({ transaction });
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
         }
-
-        await category.destroy();
-    }
-
-    /** Deletes a subcategory by ID.
-     *
-     * @param subCategoryId - The ID of the subcategory
-     */
-    public async deleteSubCategoryById(subCategoryId: number): Promise<void> {
-        const subCategory = await SubCategory.findByPk(subCategoryId);
-
-        if (!subCategory) {
-            throw new CategoryNotFoundError('Subcategory not found');
-        }
-
-        await subCategory.destroy();
     }
 
     /**
