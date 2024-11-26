@@ -11,15 +11,14 @@ export default function authenticateRefreshToken(
     req: Request,
     res: Response,
     next: NextFunction
-): void {
+): void | Response {
     const refreshToken = req.cookies.refreshToken as string;
-    console.log('Refresh token:', refreshToken);
+    console.log('Retrieved Refresh token:', refreshToken);
 
     if (!refreshToken) {
-        res.status(401).json({
+        return res.status(401).json({
             message: 'Access denied. Refresh token missing',
         });
-        return;
     }
 
     jwt.verify(
@@ -28,18 +27,22 @@ export default function authenticateRefreshToken(
         (
             err: jwt.VerifyErrors | null,
             decoded: string | JwtPayload | undefined
-        ): void => {
+        ): void | Response => {
             if (err) {
                 if (err instanceof jwt.TokenExpiredError) {
-                    res.status(401).json({
+                    console.log(
+                        `Expired refresh token (expired at: ${err.expiredAt}): `,
+                        refreshToken
+                    );
+                    return res.status(401).json({
                         message: `Refresh token expired at: ${err.expiredAt}`,
                     });
-                    return;
                 }
                 if (err instanceof jwt.JsonWebTokenError) {
                     console.log('Denied refresh token: ', refreshToken);
-                    res.status(403).json({ message: 'Permission denied' });
-                    return;
+                    return res
+                        .status(403)
+                        .json({ message: 'Permission denied' });
                 }
             }
 
@@ -47,7 +50,9 @@ export default function authenticateRefreshToken(
                 req.user = decoded;
                 next();
             } else {
-                res.status(400).json({ message: 'Invalid refresh token' });
+                return res
+                    .status(400)
+                    .json({ message: 'Invalid refresh token' });
             }
         }
     );

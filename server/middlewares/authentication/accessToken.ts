@@ -5,16 +5,15 @@ export default function authenticateAccessToken(
     req: Request,
     res: Response,
     next: NextFunction
-): void {
+): void | Response {
     const authorizationHeader = req.header('Authorization');
     const accessToken = authorizationHeader?.split(' ')[1];
     console.log('Access token:', accessToken);
 
     if (!accessToken) {
-        res.status(401).json({
+        return res.status(401).json({
             message: 'Access denied. Access token missing',
         });
-        return;
     }
 
     jwt.verify(
@@ -23,18 +22,18 @@ export default function authenticateAccessToken(
         (
             err: jwt.VerifyErrors | null,
             decoded: string | JwtPayload | undefined
-        ): void => {
+        ): void | Response => {
             if (err) {
                 if (err instanceof jwt.TokenExpiredError) {
-                    res.status(401).json({
+                    return res.status(401).json({
                         message: `Access token expired at: ${err.expiredAt}`,
                     });
-                    return;
                 }
                 if (err instanceof jwt.JsonWebTokenError) {
                     console.log('Denied access token: ', accessToken);
-                    res.status(403).json({ message: 'Permission denied' });
-                    return;
+                    return res
+                        .status(403)
+                        .json({ message: 'Permission denied' });
                 }
             }
 
@@ -42,7 +41,9 @@ export default function authenticateAccessToken(
                 req.user = decoded;
                 next();
             } else {
-                res.status(400).json({ message: 'Invalid access token' });
+                return res
+                    .status(400)
+                    .json({ message: 'Invalid access token' });
             }
         }
     );
