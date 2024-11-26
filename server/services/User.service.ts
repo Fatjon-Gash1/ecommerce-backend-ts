@@ -1,11 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { User, Customer, Admin } from '../models/relational';
-import type { ModelStatic, Model } from 'sequelize';
+import { type ModelStatic, type Model, Op } from 'sequelize';
 import {
     UserNotFoundError,
     UserAlreadyExistsError,
     InvalidCredentialsError,
-    InvalidUserTypeError,
 } from '../errors';
 const {
     ACCESS_TOKEN_KEY,
@@ -19,6 +18,7 @@ interface UserDetails {
     firstName: string;
     lastName: string;
     username: string;
+    email: string;
     role?: string;
 }
 
@@ -58,8 +58,14 @@ export class UserService {
         details: UserCreationDetails
     ): Promise<T> {
         const user = await User.findOne({
-            where: { username: details.username },
+            where: {
+                [Op.or]: [
+                    { username: details.username },
+                    { email: details.email },
+                ],
+            },
         });
+
         if (user) {
             throw new UserAlreadyExistsError();
         } else {
@@ -68,35 +74,19 @@ export class UserService {
     }
 
     /**
-     * Signs-Up a new user of given type in the platform.
+     * Signs-Up a new customer user type in the platform.
      *
-     * @param details - The details of the user to sign-up
+     * @param details - The details of the customer to sign-up
      * @returns A promise resolving to an object containing access and refresh tokens
-     * @throws {@link UserAlreadyExistsError}
-     * Thrown if the user already exists.
      */
-    public async signUpUser(
-        userType: string = 'customer',
+    public async signUpCustomer(
         details: UserCreationDetails
     ): Promise<AuthTokens> {
-        const type = userType.toLowerCase();
-        let registeredUser = null;
-        let role = null;
-
-        if (type === 'admin') {
-            registeredUser = await this.registerUser(Admin, details);
-            role = 'admin';
-        } else if (type === 'customer') {
-            registeredUser = await this.registerUser(Customer, details);
-            role = 'customer';
-        } else {
-            throw new InvalidUserTypeError();
-        }
+        const registeredCustomer = await this.registerUser(Customer, details);
 
         return this.generateTokens(
-            registeredUser.userId!,
-            registeredUser.username,
-            role
+            registeredCustomer.userId!,
+            registeredCustomer.username
         );
     }
 
@@ -148,7 +138,7 @@ export class UserService {
     public generateTokens(
         userId: number,
         username: string,
-        role: string
+        role: string = 'customer'
     ): AuthTokens {
         const refreshToken = jwt.sign(
             { userId, username, role },
@@ -196,19 +186,26 @@ export class UserService {
     }
 
     /**
-     * Retrieves Customer by ID.
+     * Retrieves Customer by user ID.
      *
-     * @param customerId - The ID of the Customer
+     * @param userId - The user ID of the Customer
      * @returns A promise resolving to a Customer instance
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the Customer is not found
      */
-    public async getCustomerById(customerId: number): Promise<Customer> {
-        const customer = await Customer.findByPk(customerId, { include: User });
+    public async getCustomerById(userId: number): Promise<Customer> {
+        const customer = await Customer.findOne({
+            where: { userId },
+            include: User,
+        });
 
         if (!customer) {
             throw new UserNotFoundError('User of type Customer not found');
         }
 
         return customer;
+        // return customer.get({ plain: true });
     }
 
     /**
@@ -217,7 +214,11 @@ export class UserService {
      * @param userId - The ID of the user to update
      * @param oldPassword - The old password
      * @param newPassword - The new password
-     * @throws UserNotFoundError if the user is not found
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found.
+     * @throws {@link InvalidCredentialsError}
+     * Thrown if the old password is invalid.
      */
     public async changePassword(
         userId: number,
@@ -233,7 +234,8 @@ export class UserService {
         const valid = await user.validatePassword(oldPassword);
 
         if (valid) {
-            await user.hashAndStorePassword(newPassword);
+            await user.hashPassword(newPassword);
+            await user.save();
         } else {
             throw new InvalidCredentialsError();
         }
@@ -242,17 +244,17 @@ export class UserService {
     /**
      * Updates customer's shipping and billing details.
      *
-     * @param customerId - The ID of the Customer
+     * @param userId - The user ID of the Customer
      * @param details - The shipping and billing details
      *
      * @throws {@link UserNotFoundError}
      * Thrown if the Customer is not found.
      */
     public async updateCustomerDetails(
-        customerId: number,
+        userId: number,
         details: CustomerDetails
     ): Promise<Customer> {
-        const customer = await Customer.findByPk(customerId);
+        const customer = await Customer.findOne({ where: { userId } });
 
         if (!customer) {
             throw new UserNotFoundError('User of type Customer not found');
@@ -267,7 +269,9 @@ export class UserService {
      * @param userId - The ID of the user to update
      * @param details - The details of the user to update
      * @returns A promise resolving to the updated user
-     * @throws UserNotFoundError if the user is not found
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found
      */
     public async updateUser(
         userId: number,
@@ -286,7 +290,9 @@ export class UserService {
      * Deletes a user from the database.
      *
      * @param userId - The ID of the user to delete
-     * @throws UserNotFoundError if the user is not found
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found
      */
     public async deleteUser(userId: number): Promise<void> {
         const user = await User.findByPk(userId);
