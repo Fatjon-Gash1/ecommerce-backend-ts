@@ -2,7 +2,6 @@ import {
     UserNotFoundError,
     UserAlreadyExistsError,
     InvalidCredentialsError,
-    InvalidUserTypeError,
     UnauthorizedAccessError,
 } from './UserErrors';
 import { AdminLogInvalidTargetError } from './AdminLogErrors';
@@ -27,14 +26,14 @@ import {
 } from './CartErrors';
 import {
     ShippingLocationNotFoundError,
-    ShippingMethodNotFoundError,
+    ShippingOptionNotFoundError,
 } from './ShippingErrors';
 import {
     PaymentFailedError,
     InvalidPaymentMethodError,
     InsufficientFundsError,
 } from './PaymentErrors';
-import { OrderNotFoundError } from './OrderErrors';
+import { OrderNotFoundError, InvalidOrderStatusError } from './OrderErrors';
 import { RatingNotFoundError } from './RatingErrors';
 import {
     NotificationError,
@@ -46,7 +45,6 @@ export {
     UserNotFoundError,
     UserAlreadyExistsError,
     InvalidCredentialsError,
-    InvalidUserTypeError,
     UnauthorizedAccessError,
     AdminLogInvalidTargetError,
     ProductNotFoundError,
@@ -63,11 +61,12 @@ export {
     EmptyCartError,
     CartItemAdditionError,
     ShippingLocationNotFoundError,
-    ShippingMethodNotFoundError,
+    ShippingOptionNotFoundError,
     PaymentFailedError,
     InvalidPaymentMethodError,
     InsufficientFundsError,
     OrderNotFoundError,
+    InvalidOrderStatusError,
     RatingNotFoundError,
     NotificationError,
     EmailNotificationError,

@@ -4,3 +4,10 @@ export class OrderNotFoundError extends Error {
         this.name = 'OrderNotFoundError';
     }
 }
+
+export class InvalidOrderStatusError extends Error {
+    constructor(message: string = 'Invalid order status') {
+        super(message);
+        this.name = 'InvalidOrderStatusError';
+    }
+}

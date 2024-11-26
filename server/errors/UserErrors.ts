@@ -19,13 +19,6 @@ export class InvalidCredentialsError extends Error {
     }
 }
 
-export class InvalidUserTypeError extends Error {
-    constructor(message: string = 'Invalid user type') {
-        super(message);
-        this.name = 'InvalidUserTypeError';
-    }
-}
-
 export class UnauthorizedAccessError extends Error {
     constructor() {
         super('Unauthorized access');

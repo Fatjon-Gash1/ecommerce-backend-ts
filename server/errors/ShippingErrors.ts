@@ -5,9 +5,9 @@ export class ShippingLocationNotFoundError extends Error {
     }
 }
 
-export class ShippingMethodNotFoundError extends Error {
-    constructor() {
-        super('Shipping method not found');
+export class ShippingOptionNotFoundError extends Error {
+    constructor(message = 'Shipping option not found') {
+        super(message);
         this.name = 'ShippingMethodNotFoundError';
     }
 }
