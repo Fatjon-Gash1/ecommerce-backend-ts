@@ -3,13 +3,59 @@ import {
     IPlatformRating,
     ProductRating,
     IProductRating,
+    IRating,
 } from '../models/document';
+import { Model } from 'mongoose';
 import { User, Product } from '../models/relational';
 import {
     UserNotFoundError,
     ProductNotFoundError,
     RatingNotFoundError,
 } from '../errors';
+
+interface RatingDetails {
+    firstName: string;
+    lastName: string;
+    userProfession: string;
+    rating: number;
+    review: string;
+    anonymous: boolean;
+}
+
+interface PlatformRatingDetails extends RatingDetails {
+    featureHighlights: string;
+}
+
+interface ProductRatingDetails extends RatingDetails {
+    productHighlights: string;
+    alternatives: number[];
+}
+
+interface RatingResponse {
+    userId: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    userProfession?: string;
+    rating: number;
+    review: string;
+    anonymous?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+    _id: unknown;
+}
+
+interface PlatformRatingResponse extends RatingResponse {
+    featureHighlights: string;
+    numberOfPurchases?: number;
+    mostPurchasesCategory?: string;
+}
+
+interface ProductRatingResponse extends RatingResponse {
+    productId: number;
+    productHighlights?: string;
+    alternatives?: number[];
+}
 
 /**
  * Service related to platform and product ratings
@@ -18,41 +64,89 @@ export class RatingService {
     /**
      * Adds a rating to the platform.
      *
+     * @param userId - The id of the user
      * @param details - Rating details
      * @returns A promise that resolves to the created platform rating
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found.
      */
     public async addPlatformRating(
-        details: IPlatformRating
-    ): Promise<IPlatformRating> {
-        const {
-            userId,
-            firstName,
-            lastName,
-            userProfession,
-            rating,
-            review,
-            anonymous,
-            featureHighlights,
-        } = details;
+        userId: number,
+        details: PlatformRatingDetails
+    ): Promise<PlatformRatingResponse> {
         const customer = await User.findByPk(userId);
 
         if (!customer) {
-            throw new UserNotFoundError('Could not find customer');
+            throw new UserNotFoundError('Customer not found');
         }
 
         const result = await PlatformRating.create({
             userId,
             username: customer.username,
-            firstName,
-            lastName,
-            userProfession,
-            rating,
-            review,
-            anonymous,
-            featureHighlights,
+            ...details,
         });
 
-        return result;
+        return {
+            userId,
+            username: customer.username,
+            ...details,
+            numberOfPurchases: result.numberOfPurchases,
+            mostPurchasesCategory: result.mostPurchasesCategory,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            _id: result._id,
+        };
+    }
+
+    /**
+     * Adds a rating & review to a product.
+     *
+     * @param userId - The id of the user
+     * @param productId - The id of the product
+     * @param details - Rating details
+     * @returns A promise that resolves to a Product Rating object
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found.
+     *
+     * @throws {@link ProductNotFoundError}
+     * Thrown if the product is not found.
+     */
+    public async addProductRating(
+        userId: number,
+        productId: number,
+        details: ProductRatingDetails
+    ): Promise<ProductRatingResponse> {
+        const [product, customer] = await Promise.all([
+            Product.findByPk(productId),
+            User.findByPk(userId),
+        ]);
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        if (!product) {
+            throw new ProductNotFoundError();
+        }
+
+        const rating = await ProductRating.create({
+            userId,
+            productId,
+            username: customer.username,
+            ...details,
+        });
+
+        return {
+            userId,
+            productId,
+            username: customer.username,
+            ...details,
+            createdAt: rating.createdAt,
+            updatedAt: rating.updatedAt,
+            _id: rating._id,
+        };
     }
 
     /**
@@ -60,26 +154,32 @@ export class RatingService {
      *
      * @returns A promise that resolves to all platform ratings
      */
-    public async getPlatformRatings(): Promise<IPlatformRating[]> {
-        return await PlatformRating.find({});
+    public async getPlatformRatings(): Promise<PlatformRatingResponse[]> {
+        const ratings = await PlatformRating.find({}).select('-__t -__v');
+
+        return ratings.map((rating) => rating.toObject());
     }
 
     /**
-     * Retrieves a platform rating by id.
+     * Retrieves a platform rating by object id.
      *
-     * @param ratingId - The id of the platform rating
+     * @param ratingId - The object id of the platform rating
      * @returns A promise that resolves to the platform rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found
      */
     public async getPlatformRatingById(
-        ratingId: number
-    ): Promise<IPlatformRating> {
-        const rating = await PlatformRating.findById(ratingId);
+        ratingId: string
+    ): Promise<PlatformRatingResponse> {
+        const rating =
+            await PlatformRating.findById(ratingId).select('-__t -__v');
 
         if (!rating) {
             throw new RatingNotFoundError();
         }
 
-        return rating;
+        return rating.toObject();
     }
 
     /**
@@ -101,127 +201,52 @@ export class RatingService {
     }
 
     /**
-     * Updates an existing platform rating.
+     * Retrieves all ratings & reviews of a product.
      *
-     * @param ratingId - The id of the platform rating
-     * @param details - Rating details
-     * @returns A promise that resolves to the updated platform rating
-     */
-    public async updatePlatformRating(
-        ratingId: number,
-        details: IPlatformRating
-    ): Promise<IPlatformRating> {
-        const updatedRating = await PlatformRating.findByIdAndUpdate(ratingId, {
-            details,
-        });
-
-        if (!updatedRating) {
-            throw new RatingNotFoundError();
-        }
-
-        return updatedRating;
-    }
-
-    /**
-     * Removes a platform rating by id.
-     *
-     * @param ratingId - The id of the platform rating
-     * @returns A promise that resolves to a boolean indicating
-     * if the rating was removed
-     */
-    public async deletePlatformRatingById(ratingId: number): Promise<void> {
-        const deleted = await PlatformRating.findByIdAndDelete(ratingId);
-
-        if (!deleted) {
-            throw new RatingNotFoundError();
-        }
-    }
-
-    /**
-     * Adds a rating & review to a product.
-     *
-     * @param details - Rating details
-     */
-    public async addProductRating(
-        details: IProductRating
-    ): Promise<IProductRating> {
-        const {
-            userId,
-            productId,
-            firstName,
-            lastName,
-            userProfession,
-            rating,
-            review,
-            anonymous,
-            productHighlights,
-            alternatives,
-        } = details;
-
-        const [product, customer] = await Promise.all([
-            Product.findByPk(productId),
-            User.findByPk(userId),
-        ]);
-
-        if (!customer) {
-            throw new UserNotFoundError('Could not find customer');
-        }
-
-        if (!product) {
-            throw new ProductNotFoundError();
-        }
-
-        return await ProductRating.create({
-            userId,
-            productId,
-            username: customer.username,
-            firstName,
-            lastName,
-            userProfession,
-            rating,
-            review,
-            anonymous,
-            productHighlights,
-            alternatives,
-        });
-    }
-
-    /**
-     * Retrieves all product ratings & reviews.
-     *
-     * @param productId - The ID of the product
+     * @param productId - The id of the product
      * @returns A promise that resolves to all product ratings
+     *
+     * @throws {@link ProductNotFoundError}
+     * Thrown if the product is not found.
      */
-    public async getProductRatings(
+    public async getProductRatingsByProductId(
         productId: number
-    ): Promise<IProductRating[]> {
+    ): Promise<ProductRatingResponse[]> {
         const product = await Product.findByPk(productId);
 
         if (!product) {
             throw new ProductNotFoundError();
         }
 
-        return await ProductRating.find({ productId });
+        const ratings = await ProductRating.find({ productId })
+            .select('-__t -__v')
+            .sort({
+                rating: -1,
+            });
+
+        return ratings.map((rating) => rating.toObject());
     }
 
     /**
      * Retrieves a product rating & review by id.
      *
-     * @param reviewId - The id of the product rating
+     * @param ratingId - The id of the product rating
      * @returns A promise that resolves to the product rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found.
      */
     public async getProductRatingById(
-        ratingId: number
-    ): Promise<IProductRating> {
-        const rating = await ProductRating.findById(ratingId);
+        ratingId: string
+    ): Promise<ProductRatingResponse> {
+        const rating =
+            await ProductRating.findById(ratingId).select('-__t -__v');
 
         if (!rating) {
-            throw new RatingNotFoundError(
-                `Product rating with id: ${ratingId} not found`
-            );
+            throw new RatingNotFoundError();
         }
 
-        return rating;
+        return rating.toObject();
     }
 
     /**
@@ -243,19 +268,32 @@ export class RatingService {
     }
 
     /**
-     * Updates an existing product rating & review.
+     * Generic method that updates an existing rating type
      *
-     * @param ratingId - The id of the product rating
+     * @param ratingType - The model to update
+     * @param ratingId - The id of the platform rating
      * @param details - Rating details
-     * @returns A promise that resolves to the updated product rating
+     * @returns A promise that resolves to the updated platform rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found.
      */
-    public async updateProductRating(
-        ratingId: number,
-        details: IProductRating
-    ): Promise<IProductRating> {
-        const updatedRating = await ProductRating.findByIdAndUpdate(ratingId, {
-            details,
-        });
+    public async updateRating<T extends IRating>(
+        ratingType: Model<T>,
+        userId: number,
+        ratingId: string,
+        details: PlatformRatingDetails | ProductRatingDetails
+    ): Promise<PlatformRatingResponse | ProductRatingResponse> {
+        const updatedRating = await ratingType
+            .findOneAndUpdate(
+                { _id: ratingId, userId },
+                {
+                    ...details,
+                },
+                { new: true }
+            )
+            .select('-__t -__v')
+            .lean<PlatformRatingResponse | ProductRatingResponse>();
 
         if (!updatedRating) {
             throw new RatingNotFoundError();
@@ -265,19 +303,114 @@ export class RatingService {
     }
 
     /**
-     * Removes a product rating & review by id.
+     * Updates a platform rating
      *
-     * @param ratingId - The id of the product rating
-     * @returns A promise that resolves to a boolean indicating
-     * if the rating was removed
+     * @userId - The id of the user
+     * @param ratingId - The id of the platform rating
+     * @param details - Rating details
+     * @returns A promise that resolves to the updated platform rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found.
      */
-    public async deleteProductRatingById(ratingId: number): Promise<boolean> {
+    public async updatePlatformRating(
+        userId: number,
+        ratingId: string,
+        details: PlatformRatingDetails
+    ): Promise<PlatformRatingResponse> {
+        return (await this.updateRating(
+            PlatformRating,
+            userId,
+            ratingId,
+            details
+        )) as PlatformRatingResponse;
+    }
+
+    /**
+     * Updates a product rating
+     *
+     * @userId - The id of the user
+     * @param ratingId - The id of the product rating
+     * @param details - Rating details
+     * @returns A promise that resolves to the updated product rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found.
+     */
+    public async updateProductRating(
+        userId: number,
+        ratingId: string,
+        details: ProductRatingDetails
+    ): Promise<ProductRatingResponse> {
+        return (await this.updateRating(
+            ProductRating,
+            userId,
+            ratingId,
+            details
+        )) as ProductRatingResponse;
+    }
+
+    /**
+     * Removes a platform rating by id.
+     *
+     * @param [userId=null] - The user id
+     * @param ratingId - The id of the platform rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found.
+     */
+    public async deletePlatformRatingById(
+        userId: number | null,
+        ratingId: string
+    ): Promise<void> {
+        if (userId) {
+            const deleted = await PlatformRating.findOneAndDelete({
+                userId,
+                _id: ratingId,
+            });
+
+            if (!deleted) {
+                throw new RatingNotFoundError('Platform rating not found');
+            }
+            return;
+        }
+
+        const deleted = await PlatformRating.findByIdAndDelete(ratingId);
+
+        if (!deleted) {
+            throw new RatingNotFoundError('Platform rating not found');
+        }
+    }
+
+    /**
+     * Removes a product rating by id.
+     *
+     * @param [userId=null] - The user id
+     * @param ratingId - The id of the product rating
+     *
+     * @throws {@link RatingNotFoundError}
+     * Thrown if the rating is not found.
+     */
+    public async deleteProductRatingById(
+        userId: number | null,
+        ratingId: string
+    ): Promise<void> {
+        if (userId) {
+            const deleted = await ProductRating.findOneAndDelete({
+                userId,
+                _id: ratingId,
+            });
+
+            if (!deleted) {
+                throw new RatingNotFoundError('Product rating not found');
+            }
+            return;
+        }
+
         const deleted = await ProductRating.findByIdAndDelete(ratingId);
 
         if (!deleted) {
             throw new RatingNotFoundError('Product rating not found');
         }
-
-        return true;
     }
 }

@@ -14,7 +14,7 @@ export class PaymentService {
     /**
      * Create a new stripe customer if one is not found.
      *
-     * @param customerId - The id of the cutomer model to look upp.
+     * @param customerId - The id of the customer model to look upp.
      * @returns A Promise resolving to the found/created customer object.
      *
      * @throws {Error}

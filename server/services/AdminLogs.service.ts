@@ -35,7 +35,6 @@ export class AdminLogsService {
             customer: 'customer',
             admin: 'admin',
             category: 'category',
-            subcategory: 'subcategory',
             product: 'product',
             country: 'shipping country',
             city: 'shipping city',
