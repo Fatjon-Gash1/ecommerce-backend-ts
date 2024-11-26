@@ -36,6 +36,14 @@ export class Admin extends Model<AdminAttributes> implements AdminAttributes {
 
 Admin.init(
     {
+        userId: {
+            type: DataTypes.INTEGER,
+            unique: true,
+            references: {
+                model: User,
+                key: 'id',
+            },
+        },
         role: {
             type: DataTypes.ENUM('admin', 'manager'),
             allowNull: false,
