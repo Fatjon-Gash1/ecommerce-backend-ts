@@ -14,10 +14,10 @@ export const signupRateLimiter = rateLimit({
 
 export const loginRateLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
-    max: 3,
+    max: 5,
     message: {
         status: 429,
-        error: 'Too many login attempts, please try again later.',
+        error: 'Too many login attempts, please try again after 10 minutes.',
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -37,7 +37,7 @@ export const passwordChangeRateLimiter = rateLimit({
 
 export const tokenRateLimiter = rateLimit({
     windowMs: 30 * 60 * 1000,
-    max: 1,
+    max: 100, // Change to 1 after API testing
     message: {
         status: 429,
         error: 'Token retrieval limit reached, please try again after 30 minutes.',
