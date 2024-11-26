@@ -1,10 +1,11 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../../config/db';
 
 interface PurchaseAttributes {
-    id: number;
+    id?: number;
     customerId?: number;
     productId?: number;
+    quantity: number;
 
     // Reports related
     categoryId?: number;
@@ -17,9 +18,10 @@ export class Purchase
     extends Model<PurchaseAttributes>
     implements PurchaseAttributes
 {
-    declare id: number;
+    declare id?: number;
     declare customerId?: number;
     declare productId?: number;
+    declare quantity: number;
 
     // Reports related
     declare categoryId?: number;
@@ -30,16 +32,10 @@ export class Purchase
 
 Purchase.init(
     {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-            allowNull: false,
-        },
+        quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
     },
     {
         sequelize,
         tableName: 'purchases',
-        timestamps: false,
     }
 );
