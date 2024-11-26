@@ -1,20 +1,33 @@
-import type { Model, ModelStatic, WhereOptions } from 'sequelize';
-import { Op } from 'sequelize';
 import {
     ShippingCountry,
     ShippingCity,
-    ShippingWeight,
-    ShippingMethod,
-    CartItem,
     Cart,
-    Product,
+    Customer,
 } from '../models/relational';
 import {
+    ShippingMethod,
+    ShippingWeight,
+    IShippingMethod,
+    IShippingWeight,
+} from '../models/document';
+import {
     ShippingLocationNotFoundError,
-    ShippingMethodNotFoundError,
+    ShippingOptionNotFoundError,
     EmptyCartError,
     CartNotFoundError,
 } from '../errors';
+
+interface ShippingCityResponse {
+    id?: number;
+    name: string;
+    postalCode: number;
+}
+
+interface ShippingCountryResponse {
+    id?: number;
+    name: string;
+    rate: number;
+}
 
 /**
  * Service responsible for shipping-related operations
@@ -61,8 +74,10 @@ export class ShippingService {
      *
      * @returns A promise that resolves to an array of shipping countries
      */
-    public async getShippingCountries(): Promise<ShippingCountry[]> {
-        return ShippingCountry.findAll();
+    public async getShippingCountries(): Promise<ShippingCountryResponse[]> {
+        const countries = await ShippingCountry.findAll();
+
+        return countries.map((country) => country.toJSON());
     }
 
     /**
@@ -73,14 +88,19 @@ export class ShippingService {
      */
     public async getShippingCitiesByCountryId(
         countryId: number
-    ): Promise<ShippingCity[]> {
+    ): Promise<ShippingCityResponse[]> {
         const country = await ShippingCountry.findByPk(countryId);
 
         if (!country) {
             throw new ShippingLocationNotFoundError();
         }
 
-        return ShippingCity.findAll({ where: { countryId } });
+        const cities = await ShippingCity.findAll({
+            where: { countryId },
+            attributes: ['id', 'name', 'postalCode'],
+        });
+
+        return cities.map((city) => city.toJSON());
     }
 
     /**
@@ -125,7 +145,8 @@ export class ShippingService {
     ): Promise<ShippingCity> {
         const city = await ShippingCity.findOne({
             where: {
-                [Op.and]: [{ id: cityId }, { countryId }],
+                id: cityId,
+                countryId,
             },
         });
 
@@ -171,7 +192,7 @@ export class ShippingService {
         cityId: number
     ): Promise<void> {
         const deleted = await ShippingCity.destroy({
-            where: { [Op.and]: [{ id: cityId }, { countryId }] },
+            where: { id: cityId, countryId },
         });
 
         if (deleted === 0) {
@@ -182,61 +203,47 @@ export class ShippingService {
     }
 
     /**
-     * Generic method that changes the shipping rate for the provided model.
+     * Changes the shipping method rate.
      *
-     * @param model - The model to perform the update on
-     * @param attributeAndType - The shipping attribute and type
-     * @param rate - The new shipping rate
-     * @returns A promise that resolves to the updated shipping model
-     */
-    public async changeShippingRate<T extends Model>(
-        model: ModelStatic<T>,
-        attributeAndType: { key: keyof T; value: string },
-        rate: number
-    ): Promise<T> {
-        const { key, value } = attributeAndType;
-
-        const modelInstance = await model.findOne({
-            where: { [key]: value } as WhereOptions<T>,
-        });
-
-        return await modelInstance!.update({ rate });
-    }
-
-    /**
-     * Utility method that changes the shipping weight rate.
-     *
-     * @param type - Type of the weight range
-     * @param rate - The new shipping weight rate
-     * @returns A promise that resolves to the updated shipping weight rate
-     */
-    public async changeShippingWeightRate(
-        type: string,
-        rate: number
-    ): Promise<ShippingWeight> {
-        return await this.changeShippingRate(
-            ShippingWeight,
-            { key: 'weightRange', value: type },
-            rate
-        );
-    }
-
-    /**
-     * Utility method that changes the shipping method rate.
-     *
-     * @param type - Type of the shipping method
+     * @param method - Shipping method
      * @param rate - The new shipping method rate
      * @returns A promise that resolves to the updated shipping method rate
      */
     public async changeShippingMethodRate(
-        type: string,
+        method: string,
         rate: number
-    ): Promise<ShippingMethod> {
-        return await this.changeShippingRate(
-            ShippingMethod,
-            { key: 'shippingMethod', value: type },
-            rate
-        );
+    ): Promise<IShippingMethod> {
+        const shippingMethod = await ShippingMethod.findOne({ method });
+
+        if (!shippingMethod) {
+            throw new ShippingOptionNotFoundError('Shipping method not found');
+        }
+
+        shippingMethod.rate = rate;
+        return await shippingMethod.save();
+    }
+
+    /**
+     * Changes the shipping weight rate.
+     *
+     * @param weight - Shipping weight
+     * @param rate - The new shipping weight rate
+     * @returns A promise that resolves to the updated shipping weight rate
+     */
+    public async changeShippingWeightRate(
+        weight: string,
+        rate: number
+    ): Promise<IShippingWeight> {
+        const shippingWeight = await ShippingWeight.findOne({
+            weight,
+        });
+
+        if (!shippingWeight) {
+            throw new ShippingOptionNotFoundError('Shipping weight not found');
+        }
+
+        shippingWeight.rate = rate;
+        return await shippingWeight.save();
     }
 
     /**
@@ -249,23 +256,29 @@ export class ShippingService {
      * @param cartId - The ID of the customer cart
      * @returns A promise that resolves to a string representing the weight range
      *
+     * @throws {@link CartNotFoundError}
+     * Thrown if the user's cart is not found.
+     *
      * @throws {@link EmptyCartError}
      * Thrown is the provided cart has no items.
      */
-    public async determineWeightRangeByCartId(cartId: number): Promise<string> {
-        const items = await CartItem.findAll({ where: { cartId } });
+    public async determineWeightRangeForCart(userId: number): Promise<string> {
+        const cart = await Cart.findOne({
+            include: {
+                model: Customer,
+                where: { userId },
+            },
+        });
 
-        if (items.length === 0) {
-            throw new EmptyCartError();
+        if (!cart) {
+            throw new CartNotFoundError();
         }
 
-        const productIds = items
-            .map((item) => item.productId)
-            .filter((id): id is number => id !== undefined);
+        const products = await cart.getProducts();
 
-        const products: Product[] = await Product.findAll({
-            where: { id: productIds },
-        });
+        if (products.length === 0) {
+            throw new EmptyCartError();
+        }
 
         const isHeavy = products.some((product) => product.weight > 20);
         const isStandard = products.some((product) => product.weight > 1);
@@ -283,7 +296,7 @@ export class ShippingService {
     /**
      * Performs the calculation of shipping cost based on the provided parameters.
      *
-     * @param cartId - The ID of the customer cart
+     * @param userId - The ID of the user
      * @param countryName - The name of the shipping country
      * @param shippingMethod - The type of the shipping method
      * @returns A promise that resolves to the calculated shipping cost
@@ -291,38 +304,38 @@ export class ShippingService {
      * @throws {@link ShippingLocationNotFoundError}
      * Thrown if the provided shipping country is not found.
      *
-     * @throws {@link ShippingMethodNotFoundError}
-     * Thrown if the provided shipping method is not found.
+     * @throws {@link ShippingOptionNotFoundError}
+     * Thrown if the provided shipping method or weight is not found.
      */
     public async calculateShippingCost(
-        cartId: number,
+        userId: number,
         countryName: string,
         shippingMethod: string
     ): Promise<number> {
-        const cart = await Cart.findByPk(cartId);
-
         const [country, method] = await Promise.all([
-            ShippingCountry.findOne({ where: { name: countryName } }),
-            ShippingMethod.findOne({ where: { shippingMethod } }),
+            ShippingCountry.findOne({
+                where: { name: countryName.toLowerCase() },
+            }),
+            ShippingMethod.findOne({ method: shippingMethod.toLowerCase() }), // ODM Model
         ]);
-
-        if (!cart) {
-            throw new CartNotFoundError();
-        }
 
         if (!country) {
             throw new ShippingLocationNotFoundError();
         }
 
         if (!method) {
-            throw new ShippingMethodNotFoundError();
+            throw new ShippingOptionNotFoundError('Shipping method not found');
         }
 
-        const weightRange = await this.determineWeightRangeByCartId(cartId);
+        const weightRange = await this.determineWeightRangeForCart(userId);
         const weightResult = await ShippingWeight.findOne({
-            where: { weightRange },
-        });
+            weight: weightRange,
+        }); // ODM Model
 
-        return country.rate + method.rate + weightResult!.rate;
+        if (!weightResult) {
+            throw new ShippingOptionNotFoundError('Shipping weight not found');
+        }
+
+        return Math.ceil(country.rate + method.rate + weightResult.rate) - 0.01;
     }
 }
