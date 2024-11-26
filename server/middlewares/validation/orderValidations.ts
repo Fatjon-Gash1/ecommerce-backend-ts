@@ -1,15 +1,20 @@
 import { body, ValidationChain } from 'express-validator';
 
 export const validateOrderCreation = (): ValidationChain[] => [
-    body('items.productId')
-        .trim()
+    body('items')
+        .isArray({ min: 1 })
+        .withMessage(
+            'Items array is required and should contain at least one item'
+        )
+        .bail(),
+
+    body('items.*.productId')
         .notEmpty()
         .withMessage('Product ID is required')
         .isInt({ min: 1 })
         .withMessage('Product ID must be a positive number'),
 
-    body('items.quantity')
-        .trim()
+    body('items.*.quantity')
         .notEmpty()
         .withMessage('Quantity is required')
         .isInt({ min: 1 })
@@ -19,6 +24,9 @@ export const validateOrderCreation = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('Payment method is required')
-        .isAlpha()
-        .withMessage('Payment method must contain only letters'),
+        .toLowerCase()
+        .isIn(['card', 'wallet', 'bank-transfer'])
+        .withMessage(
+            'Payment method must be either card, wallet or bank-transfer'
+        ),
 ];

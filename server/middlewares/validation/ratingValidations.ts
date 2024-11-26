@@ -1,28 +1,25 @@
 import { body, ValidationChain } from 'express-validator';
 
-const commonRatingCreationValidatoins = [
+const commonRatingCreationValidations = [
     body('details.firstName')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('First name is required')
-        .isAlpha()
-        .withMessage('First name must contain only letters'),
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('First name must contain only letters and spaces'),
 
     body('details.lastName')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('Last name is required')
-        .isAlpha()
-        .withMessage('Last name must contain only letters'),
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('Last name must contain only letters and spaces'),
 
     body('details.userProfession')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('User profession must contain only letters'),
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('User profession must contain only letters and spaces'),
 
     body('details.rating')
-        .trim()
         .notEmpty()
         .withMessage('Rating is required')
         .isInt({ min: 1, max: 5 })
@@ -32,8 +29,12 @@ const commonRatingCreationValidatoins = [
         .trim()
         .notEmpty()
         .withMessage('Review is required')
-        .isAlpha()
-        .withMessage('Review must contain only letters'),
+        .isLength({ min: 10, max: 500 })
+        .withMessage('Review must be between 10 and 500 characters.')
+        .matches(/^[A-Za-z\d\s.,!?:"'()&%$#@_]*$/)
+        .withMessage(
+            'Review must contain only letters, numbers, spaces and commonly used characters'
+        ),
 
     body('details.anonymous')
         .optional()
@@ -45,32 +46,35 @@ const commonRatingUpdateValidations = [
     body('details.firstName')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('First name must contain only letters'),
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('First name must contain only letters and spaces'),
 
     body('details.lastName')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('Last name must contain only letters'),
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('Last name must contain only letters and spaces'),
 
     body('details.userProfession')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('User profession must contain only letters'),
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('User profession must contain only letters and spaces'),
 
     body('details.rating')
         .optional()
-        .trim()
         .isInt({ min: 1, max: 5 })
         .withMessage('Rating must contain only numbers between 1 and 5'),
 
     body('details.review')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('Review must contain only letters'),
+        .isLength({ min: 10, max: 500 })
+        .withMessage('Review must be between 10 and 500 characters.')
+        .matches(/^[A-Za-z\d\s.,!?:"'()&%$#@_]*$/)
+        .withMessage(
+            'Review must contain only letters, numbers, spaces and commonly used characters'
+        ),
 
     body('details.anonymous')
         .optional()
@@ -79,42 +83,29 @@ const commonRatingUpdateValidations = [
 ];
 
 export const validatePlatformRating = (): ValidationChain[] => [
-    body('details.userId')
-        .trim()
-        .notEmpty()
-        .withMessage('User ID is required')
-        .isInt()
-        .withMessage('User ID must be a number'),
-
-    ...commonRatingCreationValidatoins,
+    ...commonRatingCreationValidations,
     body('details.featureHighlights')
         .optional()
-        .isAlpha()
-        .withMessage('Field must contain only letters'),
+        .isLength({ min: 10, max: 500 })
+        .withMessage(
+            'Feature highlights must be between 10 and 500 characters.'
+        )
+        .matches(/^[A-Za-z\d\s.,!?:"'()&%$#@_]*$/)
+        .withMessage(
+            'Feature highlights must contain only letters, numbers, spaces and commonly used characters'
+        ),
 ];
 
 export const validateProductRating = (): ValidationChain[] => [
-    body('details.userId')
-        .trim()
-        .notEmpty()
-        .withMessage('User ID is required')
-        .isInt()
-        .withMessage('User ID must be a number'),
-
-    body('details.productId')
-        .trim()
-        .notEmpty()
-        .withMessage('Product ID is required')
-        .isInt()
-        .withMessage('Product ID must be a number'),
-
-    ...commonRatingCreationValidatoins,
+    ...commonRatingCreationValidations,
 
     body('details.productHighlights')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('Field must contain only letters'),
+        .matches(/^[A-Za-z\d\s.,!?:"'()&%$#@_]*$/)
+        .withMessage(
+            'Product highlights must contain only letters, numbers, spaces and commonly used characters'
+        ),
 
     body('details.alternatives')
         .optional()
@@ -126,8 +117,14 @@ export const validatePlatformRatingUpdate = (): ValidationChain[] => [
     ...commonRatingUpdateValidations,
     body('details.featureHighlights')
         .optional()
-        .isAlpha()
-        .withMessage('Field must contain only letters'),
+        .isLength({ min: 10, max: 500 })
+        .withMessage(
+            'Feature highlights must be between 10 and 500 characters.'
+        )
+        .matches(/^[A-Za-z\d\s.,!?:"'()&%$#@_]*$/)
+        .withMessage(
+            'Feature highlights must contain only letters, numbers, spaces and commonly used characters'
+        ),
 ];
 
 export const validateProductRatingUpdate = (): ValidationChain[] => [
@@ -135,8 +132,10 @@ export const validateProductRatingUpdate = (): ValidationChain[] => [
     body('details.productHighlights')
         .optional()
         .trim()
-        .isAlpha()
-        .withMessage('Field must contain only letters'),
+        .matches(/^[A-Za-z\d\s.,!?:"'()&%$#@_]*$/)
+        .withMessage(
+            'Product highlights must contain only letters, numbers, spaces and commonly used characters'
+        ),
 
     body('details.alternatives')
         .optional()

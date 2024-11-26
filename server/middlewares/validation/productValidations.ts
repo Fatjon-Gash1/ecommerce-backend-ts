@@ -7,24 +7,11 @@ export const validateCategory = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('Description is required'),
-];
 
-export const validateSubCategory = (): ValidationChain[] => [
-    body('name').trim().notEmpty().withMessage('SubCategory name is required'),
-];
-
-export const validateCategoryWithSubCategories = (): ValidationChain[] => [
-    body('name').trim().notEmpty().withMessage('Category name is required'),
-
-    body('description')
-        .trim()
-        .notEmpty()
-        .withMessage('Description is required'),
-
-    body('subNames')
-        .trim()
-        .notEmpty()
-        .withMessage('Category subcategories are required'),
+    body('parentId')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Parent ID must be a positive number'),
 ];
 
 export const validateProduct = (): ValidationChain[] => [

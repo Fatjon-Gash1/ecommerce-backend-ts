@@ -1,19 +1,19 @@
-import { body, param, ValidationChain } from 'express-validator';
+import { query, body, param, ValidationChain } from 'express-validator';
 
 export const validateShippingCostDetails = (): ValidationChain[] => [
-    body('countryName')
+    query('country')
         .trim()
         .notEmpty()
         .withMessage('Country name is required')
         .isAlpha()
         .withMessage('Country name must contain only letters'),
 
-    body('shippingMethod')
+    query('shipping-method')
         .trim()
         .notEmpty()
         .withMessage('Shipping method is required')
-        .isAlpha()
-        .withMessage('Shipping method must contain only letters'),
+        .isIn(['standard', 'express', 'next-day'])
+        .withMessage('Shipping method must be standard, express or next-day'),
 ];
 
 export const validateShippingCountry = (): ValidationChain[] => [
@@ -48,13 +48,29 @@ export const validateShippingCity = (): ValidationChain[] => [
         .withMessage('Postal code must be an integer'),
 ];
 
-export const validateShippingRate = (): ValidationChain[] => [
-    body('type')
+export const validateShippingMethodRate = (): ValidationChain[] => [
+    body('method')
         .trim()
         .notEmpty()
-        .withMessage('Type is required')
-        .isAlpha()
-        .withMessage('Type must contain only letters'),
+        .withMessage('Method is required')
+        .isIn(['standard', 'express', 'next-day'])
+        .withMessage('Method must be standard, express or next-day'),
+
+    body('rate')
+        .trim()
+        .notEmpty()
+        .withMessage('Rate is required')
+        .isFloat()
+        .withMessage('Rate must be a floating point number'),
+];
+
+export const validateShippingWeightRate = (): ValidationChain[] => [
+    body('weight')
+        .trim()
+        .notEmpty()
+        .withMessage('Weight is required')
+        .isIn(['light', 'standard', 'heavy'])
+        .withMessage('Weight must be light, standard or heavy'),
 
     body('rate')
         .trim()

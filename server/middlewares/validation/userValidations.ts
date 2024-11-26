@@ -2,13 +2,17 @@ import { query, body, ValidationChain } from 'express-validator';
 
 export const validateAvailability = (): ValidationChain[] => [
     query('username')
+        .optional()
         .trim()
         .notEmpty()
         .withMessage('Username is required')
-        .isAlphanumeric()
-        .withMessage('Username must contain only letters and numbers'),
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\d._-]+$/)
+        .withMessage(
+            'Username must contain only letters, numbers, dots, underscores, or hyphens'
+        ),
 
     query('email')
+        .optional()
         .trim()
         .notEmpty()
         .withMessage('Email is required')
@@ -19,14 +23,24 @@ export const validateAvailability = (): ValidationChain[] => [
 
 export const validateCustomerDetails = (): ValidationChain[] => [
     body('details.shippingAddress')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('Shipping address is required'),
+        .matches(
+            /^[A-Za-zÀ-ÖØ-öø-ÿ'’.\-\s]+\.\s\d+,\s\d{5}\s[A-Za-zÀ-ÖØ-öø-ÿ'’\-\s]+,\s[A-Z\s]+$/
+        )
+        .withMessage(
+            'Shipping address must contain only letters, numbers, dots, commas, or hyphens'
+        ),
 
     body('details.billingAddress')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('Billing address is required'),
+        .matches(
+            /^[A-Za-zÀ-ÖØ-öø-ÿ'’.\-\s]+\.\s\d+,\s\d{5}\s[A-Za-zÀ-ÖØ-öø-ÿ'’\-\s]+,\s[A-Z\s]+$/
+        )
+        .withMessage(
+            'Billing address must contain only letters, numbers, dots, commas, or hyphens'
+        ),
 ];
 
 export const validateLogIn = (): ValidationChain[] => [
@@ -34,9 +48,9 @@ export const validateLogIn = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('Username is required')
-        .matches(/^[a-zA-Z0-9._-]+$/)
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\d._-]+$/)
         .withMessage(
-            'Username must contain only letters, numbers, underscores, dots, or hyphens'
+            'Username must contain only letters, numbers, dots, underscores, or hyphens'
         ),
 
     body('password').trim().notEmpty().withMessage('Password is required'),
@@ -54,7 +68,7 @@ export const validatePasswords = (): ValidationChain[] => [
         .isLength({ min: 8, max: 16 })
         .withMessage('New password must be between 8 and 16 characters long')
         .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
         )
         .withMessage(
             'New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
@@ -62,42 +76,40 @@ export const validatePasswords = (): ValidationChain[] => [
 ];
 
 export const validateRegistration = (): ValidationChain[] => [
-    body('firstName')
+    body('details.firstName')
         .trim()
         .notEmpty()
         .withMessage('First name is required')
         .isLength({ min: 3 })
         .withMessage('First name must be at least 3 characters long')
-        .matches(/^[a-zA-Z\s'-]+$/)
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'’]+$/)
         .withMessage(
-            'First name must contain only letters, spaces, hyphens, or apostrophes'
-        )
-        .escape(),
+            'First name must contain only letters, spaces, or apostrophes'
+        ),
 
-    body('lastName')
+    body('details.lastName')
         .trim()
         .notEmpty()
         .withMessage('Last name is required')
         .isLength({ min: 3 })
         .withMessage('Last name must be at least 3 characters long')
-        .matches(/^[a-zA-Z\s'-]+$/)
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'’]+$/)
         .withMessage(
-            'First name must contain only letters, spaces, hyphens, or apostrophes'
-        )
-        .escape(),
+            'First name must contain only letters, spaces, or apostrophes'
+        ),
 
-    body('username')
+    body('details.username')
         .trim()
         .notEmpty()
         .withMessage('Username is required')
         .isLength({ min: 3 })
         .withMessage('Username must be at least 3 characters long')
-        .matches(/^[a-zA-Z0-9._-]+$/)
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\d._-]+$/)
         .withMessage(
-            'Username must contain only letters, numbers, underscores, dots, or hyphens'
+            'Username must contain only letters, numbers, dots, underscores, or hyphens'
         ),
 
-    body('email')
+    body('details.email')
         .trim()
         .notEmpty()
         .withMessage('Email is required')
@@ -105,14 +117,20 @@ export const validateRegistration = (): ValidationChain[] => [
         .withMessage('Email is invalid')
         .normalizeEmail(),
 
-    body('password')
+    body('details.role')
+        .optional()
+        .trim()
+        .isIn(['admin', 'manager'])
+        .withMessage('Role must be either "admin" or "manager"'),
+
+    body('details.password')
         .trim()
         .notEmpty()
         .withMessage('Password is required')
         .isLength({ min: 8, max: 16 })
         .withMessage('Password must be between 8 and 16 characters long')
         .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
         )
         .withMessage(
             'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
@@ -120,32 +138,25 @@ export const validateRegistration = (): ValidationChain[] => [
 ];
 
 export const validateUserUpdateDetails = (): ValidationChain[] => [
-    body('profilePictureUrl')
-        .trim()
-        .notEmpty()
-        .withMessage('Profile picture URL is required'),
+    body('details.profilePictureUrl').optional().trim(),
 
-    body('firstName')
+    body('details.firstName')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('First name is required')
         .isLength({ min: 3 })
         .withMessage('First name must be at least 3 characters long')
-        .matches(/^[a-zA-Z\s'-]+$/)
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'’]+$/)
         .withMessage(
-            'First name must contain only letters, spaces, hyphens, or apostrophes'
-        )
-        .escape(),
+            'First name must contain only letters, spaces, or apostrophes'
+        ),
 
-    body('lastName')
+    body('details.lastName')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('Last name is required')
         .isLength({ min: 3 })
         .withMessage('Last name must be at least 3 characters long')
-        .matches(/^[a-zA-Z\s'-]+$/)
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'’]+$/)
         .withMessage(
-            'Last name must contain only letters, spaces, hyphens, or apostrophes'
-        )
-        .escape(),
+            'Last name must contain only letters, spaces, or apostrophes'
+        ),
 ];

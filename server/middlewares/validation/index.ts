@@ -15,8 +15,6 @@ export {
 
 export {
     validateCategory,
-    validateSubCategory,
-    validateCategoryWithSubCategories,
     validateProduct,
     validateDiscount,
     validateProductUpdate,
@@ -37,7 +35,8 @@ export {
     validateShippingCostDetails,
     validateShippingCountry,
     validateShippingCity,
-    validateShippingRate,
+    validateShippingMethodRate,
+    validateShippingWeightRate,
     validateCountryId,
 } from './shippingValidations';
 
@@ -49,6 +48,10 @@ export {
     validateReportType,
 } from './analyticsValidations';
 
-export { validateId, validateQuery } from './commonValidations';
+export {
+    validateId,
+    validateObjectId,
+    validateQuery,
+} from './commonValidations';
 
 export { validationErrors } from './validationErrors';
