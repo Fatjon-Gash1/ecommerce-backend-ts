@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import { ShippingService, AdminLogsService } from '../services';
 import {
     ShippingLocationNotFoundError,
-    ShippingMethodNotFoundError,
+    ShippingOptionNotFoundError,
     EmptyCartError,
     CartNotFoundError,
+    UserNotFoundError,
 } from '../errors';
 import { JwtPayload } from 'jsonwebtoken';
 
@@ -91,7 +92,7 @@ export class ShippingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const countryId: number = Number(req.params.id);
+        const countryId: number = Number(req.params.countryId);
 
         try {
             const shippingCities =
@@ -114,15 +115,15 @@ export class ShippingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const cartId: number = Number(req.params.id);
-        const { countryName, shippingMethod } = req.body;
+        const { userId } = req.user as JwtPayload;
+        const { country, ['shipping-method']: shippingMethod } = req.query;
 
         try {
             const shippingCost =
                 await this.shippingService.calculateShippingCost(
-                    cartId,
-                    countryName,
-                    shippingMethod
+                    userId,
+                    country as string,
+                    shippingMethod as string
                 );
             return res.status(200).json({ shippingCost });
         } catch (error) {
@@ -132,31 +133,35 @@ export class ShippingController {
             }
 
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error determining weight range: ', error);
+                console.error('Error calculating shipping cost: ', error);
                 return res.status(404).json({ message: error.message });
             }
 
-            if (error instanceof ShippingMethodNotFoundError) {
-                console.error('Error determining weight range: ', error);
+            if (error instanceof ShippingOptionNotFoundError) {
+                console.error('Error calculating shipping cost: ', error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error determining weight range: ', error);
+            console.error('Error calculating shipping cost: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
 
-    public async determineWeightRangeByCartId(
+    public async determineWeightRangeForCart(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const cartId: number = Number(req.params.id);
+        const { userId } = req.user as JwtPayload;
 
         try {
             const weight =
-                await this.shippingService.determineWeightRangeByCartId(cartId);
+                await this.shippingService.determineWeightRangeForCart(userId);
             return res.status(200).json({ weight });
         } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                console.error('Error determining weight range: ', error);
+                return res.status(404).json({ message: error.message });
+            }
             if (error instanceof EmptyCartError) {
                 console.error('Error determining weight range: ', error);
                 return res.status(400).json({ message: error.message });
@@ -234,43 +239,19 @@ export class ShippingController {
         }
     }
 
-    public async changeShippingWeightRate(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const { username } = req.user as JwtPayload;
-        const { type, rate } = req.body;
-
-        try {
-            const updatedRate =
-                await this.shippingService.changeShippingWeightRate(type, rate);
-
-            res.status(200).json({
-                message: 'Shipping weight rate updated successfully',
-                updatedRate,
-            });
-
-            await this.adminLogsService!.log(
-                username,
-                'shipping weight',
-                'update'
-            );
-        } catch (error) {
-            console.error('Error changing shipping weight rate: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
     public async changeShippingMethodRate(
         req: Request,
         res: Response
     ): Promise<void | Response> {
         const { username } = req.user as JwtPayload;
-        const { type, rate } = req.body;
+        const { method, rate } = req.body;
 
         try {
             const updatedRate =
-                await this.shippingService.changeShippingMethodRate(type, rate);
+                await this.shippingService.changeShippingMethodRate(
+                    method,
+                    rate
+                );
 
             res.status(200).json({
                 message: 'Shipping method rate updated successfully',
@@ -283,7 +264,45 @@ export class ShippingController {
                 'update'
             );
         } catch (error) {
+            if (error instanceof ShippingOptionNotFoundError) {
+                console.error('Error changing shipping method rate: ', error);
+                return res.status(404).json({ message: error.message });
+            }
             console.error('Error changing shipping method rate: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async changeShippingWeightRate(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { username } = req.user as JwtPayload;
+        const { weight, rate } = req.body;
+
+        try {
+            const updatedRate =
+                await this.shippingService.changeShippingWeightRate(
+                    weight,
+                    rate
+                );
+
+            res.status(200).json({
+                message: 'Shipping weight rate updated successfully',
+                updatedRate,
+            });
+
+            await this.adminLogsService!.log(
+                username,
+                'shipping weight',
+                'update'
+            );
+        } catch (error) {
+            if (error instanceof ShippingOptionNotFoundError) {
+                console.error('Error changing shipping weight rate: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            console.error('Error changing shipping weight rate: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

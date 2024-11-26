@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import { OrderService, AdminLogsService } from '../services';
 import { JwtPayload } from 'jsonwebtoken';
-import { OrderNotFoundError, UserNotFoundError } from '../errors';
+import {
+    InvalidOrderStatusError,
+    OrderNotFoundError,
+    ProductNotFoundError,
+    UserNotFoundError,
+} from '../errors';
 
 export class OrderController {
     private orderService: OrderService;
@@ -19,12 +24,12 @@ export class OrderController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number(req.params.id);
+        const { userId } = req.user as JwtPayload;
         const { items, paymentMethod } = req.body;
 
         try {
             const order = await this.orderService.createOrder(
-                customerId,
+                userId,
                 items,
                 paymentMethod
             );
@@ -34,6 +39,10 @@ export class OrderController {
             });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
+                console.error('Error creating order: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            if (error instanceof ProductNotFoundError) {
                 console.error('Error creating order: ', error);
                 return res.status(404).json({ message: error.message });
             }
@@ -108,49 +117,36 @@ export class OrderController {
         }
     }
 
-    public async getDeliveredOrders(
+    public async getOrdersByStatus(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        let userId: number;
 
-        try {
-            const orders =
-                await this.orderService.getDeliveredOrders(customerId);
-            return res.status(200).json({ orders });
-        } catch (error) {
-            console.error('Error getting delivered orders: ', error);
-            return res.status(500).json({ message: 'Server error' });
+        if (req.params.id) {
+            userId = Number(req.params.userId);
+        } else {
+            userId = Number((req.user as JwtPayload).userId);
         }
-    }
 
-    public async getPendingOrders(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const status: string = req.query.status as string;
 
         try {
-            const orders = await this.orderService.getPendingOrders(customerId);
+            const orders = await this.orderService.getOrdersByStatus(
+                userId,
+                status
+            );
             return res.status(200).json({ orders });
         } catch (error) {
-            console.error('Error getting pending orders: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async getCanceledOrders(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
-
-        try {
-            const orders =
-                await this.orderService.getCanceledOrders(customerId);
-            return res.status(200).json({ orders });
-        } catch (error) {
-            console.error('Error getting canceled orders: ', error);
+            if (error instanceof InvalidOrderStatusError) {
+                console.error('Error getting user orders by status: ', error);
+                return res.status(400).json({ message: error.message });
+            }
+            if (error instanceof UserNotFoundError) {
+                console.error('Error getting user orders by status: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            console.error('Error getting user orders by status: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -159,10 +155,16 @@ export class OrderController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        let userId: number;
+
+        if (req.params.id) {
+            userId = Number(req.params.userId);
+        } else {
+            userId = Number((req.user as JwtPayload).userId);
+        }
 
         try {
-            const orders = await this.orderService.getOrderHistory(customerId);
+            const orders = await this.orderService.getOrderHistory(userId);
             return res.status(200).json({ orders });
         } catch (error) {
             console.error('Error getting order history: ', error);
@@ -191,7 +193,9 @@ export class OrderController {
 
         try {
             await this.orderService.cancelOrder(orderId);
-            return res.sendStatus(204);
+            return res
+                .status(200)
+                .json({ message: 'Order canceled successfully' });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
                 console.error('Error cancelling order: ', error);

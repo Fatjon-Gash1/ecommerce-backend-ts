@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { CartService } from '../services';
-import { CartNotFoundError, CartItemNotFoundError } from '../errors';
+import {
+    CartNotFoundError,
+    CartItemNotFoundError,
+    ProductNotFoundError,
+} from '../errors';
 import { JwtPayload } from 'jsonwebtoken';
 
 export class CartController {
@@ -14,18 +18,22 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
         const { productId, quantity } = req.body;
 
         try {
             const cartItem = await this.cartService.addItemToCart(
-                customerId,
+                userId,
                 productId,
                 quantity
             );
             return res.status(201).json({ cartItem });
         } catch (error) {
             if (error instanceof CartNotFoundError) {
+                console.error('Error adding item to cart: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            if (error instanceof ProductNotFoundError) {
                 console.error('Error adding item to cart: ', error);
                 return res.status(404).json({ message: error.message });
             }
@@ -39,10 +47,10 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
 
         try {
-            const cartItems = await this.cartService.getCartItems(customerId);
+            const cartItems = await this.cartService.getCartItems(userId);
             return res.status(200).json({ cartItems });
         } catch (error) {
             if (error instanceof CartNotFoundError) {
@@ -59,10 +67,10 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
 
         try {
-            const totalPrice = await this.cartService.cartCheckout(customerId);
+            const totalPrice = await this.cartService.cartCheckout(userId);
             return res.status(200).json({ totalPrice });
         } catch (error) {
             if (error instanceof CartNotFoundError) {
@@ -79,11 +87,11 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
         const productId: number = Number(req.params.id);
 
         try {
-            await this.cartService.removeItemFromCart(customerId, productId);
+            await this.cartService.removeItemFromCart(userId, productId);
             return res.sendStatus(204);
         } catch (error) {
             if (error instanceof CartNotFoundError) {
@@ -105,10 +113,10 @@ export class CartController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
 
         try {
-            await this.cartService.clearCart(customerId);
+            await this.cartService.clearCart(userId);
             return res.sendStatus(204);
         } catch (error) {
             if (error instanceof CartNotFoundError) {

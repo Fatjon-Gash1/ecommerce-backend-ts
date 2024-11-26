@@ -4,7 +4,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import {
     UserNotFoundError,
     InvalidCredentialsError,
-    InvalidUserTypeError,
+    UserAlreadyExistsError,
 } from '../errors';
 
 export class UserController {
@@ -19,15 +19,15 @@ export class UserController {
         this.notificationService = notificationService;
     }
 
-    public async signUpUser(
+    public async signUpCustomer(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const { userType, details } = req.body;
+        const { details } = req.body;
 
         try {
             const { refreshToken, accessToken } =
-                await this.userService.signUpUser(userType, details);
+                await this.userService.signUpCustomer(details);
 
             res.status(201)
                 .cookie('refreshToken', refreshToken, {
@@ -38,7 +38,7 @@ export class UserController {
                 })
                 .json({
                     accessToken,
-                    message: 'User signed up successfully',
+                    message: 'Customer registered successfully',
                 });
 
             await this.notificationService.sendWelcomeEmail(
@@ -46,12 +46,14 @@ export class UserController {
                 details.email
             );
         } catch (error) {
-            if (error instanceof InvalidUserTypeError) {
-                console.error('Error signing up user: ', error);
-                return res.status(400).json({ message: 'Invalid user type' });
+            if (error instanceof UserAlreadyExistsError) {
+                console.error('Error registering customer: ', error);
+                return res
+                    .status(409)
+                    .json({ message: 'Customer already exists' });
             }
 
-            console.error('Error signing up user: ', error);
+            console.error('Error registering customer: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -171,10 +173,10 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
 
         try {
-            const customer = await this.userService.getCustomerById(customerId);
+            const customer = await this.userService.getCustomerById(userId);
             return res.status(200).json({ customer });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
@@ -191,7 +193,7 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const userId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
         const { oldPassword, newPassword } = req.body;
 
         try {
@@ -209,6 +211,13 @@ export class UserController {
                 return res.status(404).json({ message: 'User not found' });
             }
 
+            if (error instanceof InvalidCredentialsError) {
+                console.error('Error changing password: ', error);
+                return res
+                    .status(400)
+                    .json({ message: 'Invalid old password' });
+            }
+
             console.error('Error changing password: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
@@ -218,15 +227,18 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const customerId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
         const { details } = req.body;
 
         try {
             const customer = await this.userService.updateCustomerDetails(
-                customerId,
+                userId,
                 details
             );
-            return res.status(200).json({ customer });
+            return res.status(200).json({
+                message: 'Customer details updated successfully',
+                customer,
+            });
         } catch (err) {
             if (err instanceof UserNotFoundError) {
                 console.error(
@@ -245,12 +257,14 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const userId: number = Number((req.user as JwtPayload).id);
-        const details = req.body;
+        const { userId } = req.user as JwtPayload;
+        const { details } = req.body;
 
         try {
             const user = await this.userService.updateUser(userId, details);
-            return res.status(201).json({ user });
+            return res
+                .status(201)
+                .json({ message: 'User details updated successfully', user });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error updating user: ', error);
@@ -266,7 +280,7 @@ export class UserController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const userId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
 
         try {
             await this.userService.deleteUser(userId);

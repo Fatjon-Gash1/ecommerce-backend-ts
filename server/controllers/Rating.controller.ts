@@ -23,10 +23,14 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
+        const { userId } = req.user as JwtPayload;
         const { details } = req.body;
 
         try {
-            const rating = await this.ratingService.addPlatformRating(details);
+            const rating = await this.ratingService.addPlatformRating(
+                userId,
+                details
+            );
             return res.status(201).json({
                 message: 'Rating added successfully',
                 rating,
@@ -46,11 +50,19 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
+        const { userId } = req.user as JwtPayload;
+        const productId: number = Number(req.params.productId);
         const { details } = req.body;
 
         try {
-            const rating = await this.ratingService.addProductRating(details);
-            return res.status(201).json({ rating });
+            const rating = await this.ratingService.addProductRating(
+                userId,
+                productId,
+                details
+            );
+            return res
+                .status(201)
+                .json({ message: 'Rating added successfully', rating });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error adding rating: ', error);
@@ -84,7 +96,7 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number(req.params.id);
+        const { ratingId } = req.params;
 
         try {
             const rating =
@@ -122,15 +134,17 @@ export class RatingController {
         }
     }
 
-    public async getProductRatings(
+    public async getProductRatingsByProductId(
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const productId: number = Number(req.params.id);
+        const productId: number = Number(req.params.productId);
 
         try {
             const productRatings =
-                await this.ratingService.getProductRatings(productId);
+                await this.ratingService.getProductRatingsByProductId(
+                    productId
+                );
             return res.status(200).json({ productRatings });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
@@ -147,7 +161,7 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number(req.params.id);
+        const { ratingId } = req.params;
 
         try {
             const productRating =
@@ -189,11 +203,13 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
+        const { ratingId } = req.params;
         const { details } = req.body;
 
         try {
             const updatedRating = await this.ratingService.updatePlatformRating(
+                userId,
                 ratingId,
                 details
             );
@@ -213,11 +229,13 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
+        const { ratingId } = req.params;
         const { details } = req.body;
 
         try {
             const updatedRating = await this.ratingService.updateProductRating(
+                userId,
                 ratingId,
                 details
             );
@@ -237,10 +255,11 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
+        const ratingId: string = req.params.ratingId;
 
         try {
-            await this.ratingService.deletePlatformRatingById(ratingId);
+            await this.ratingService.deletePlatformRatingById(userId, ratingId);
             res.sendStatus(204);
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
@@ -257,11 +276,11 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number(req.params.id);
+        const ratingId: string = req.params.ratingId;
         const { username } = req.user as JwtPayload;
 
         try {
-            await this.ratingService.deletePlatformRatingById(ratingId);
+            await this.ratingService.deletePlatformRatingById(null, ratingId);
             res.sendStatus(204);
 
             await this.adminLogsService!.log(username, 'rating', 'delete');
@@ -280,10 +299,11 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number((req.user as JwtPayload).id);
+        const { userId } = req.user as JwtPayload;
+        const ratingId: string = req.params.ratingId;
 
         try {
-            await this.ratingService.deleteProductRatingById(ratingId);
+            await this.ratingService.deleteProductRatingById(userId, ratingId);
             res.sendStatus(204);
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
@@ -300,11 +320,11 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: number = Number(req.params.id);
+        const ratingId: string = req.params.ratingId;
         const { username } = req.user as JwtPayload;
 
         try {
-            await this.ratingService.deleteProductRatingById(ratingId);
+            await this.ratingService.deleteProductRatingById(null, ratingId);
             res.sendStatus(204);
 
             await this.adminLogsService!.log(username, 'rating', 'delete');
