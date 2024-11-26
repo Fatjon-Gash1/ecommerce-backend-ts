@@ -33,13 +33,21 @@ export class Customer
     declare email: string; // Virtual field
     declare password: string; // Virtual field;
 
-    public async createCartforUser(): Promise<Cart | boolean> {
-        return await Cart.create({ customerId: this.id });
+    public async createCartForUser(): Promise<void> {
+        await Cart.create({ customerId: this.id });
     }
 }
 
 Customer.init(
     {
+        userId: {
+            type: DataTypes.INTEGER,
+            unique: true,
+            references: {
+                model: User,
+                key: 'id',
+            },
+        },
         stripeId: {
             type: DataTypes.STRING,
         },
@@ -95,5 +103,5 @@ Customer.beforeCreate(async (customer: Customer) => {
 });
 
 Customer.afterCreate(async (customer: Customer) => {
-    customer.createCartforUser();
+    await customer.createCartForUser();
 });
