@@ -1,7 +1,34 @@
-import { Op } from 'sequelize';
-import { Order, OrderItem, Customer } from '../models/relational';
-import { UserNotFoundError } from '../errors/UserErrors';
-import { OrderNotFoundError } from '../errors';
+import { sequelize } from '../config/db';
+import { Op, Transaction } from 'sequelize';
+import { Order, Customer } from '../models/relational';
+import {
+    UserNotFoundError,
+    OrderNotFoundError,
+    InvalidOrderStatusError,
+} from '../errors';
+
+interface OrderItemAttributes {
+    productId: number;
+    quantity: number;
+}
+
+interface OrderResponse {
+    id?: number;
+    paymentMethod: 'card' | 'wallet' | 'bank-transfer';
+    status?: 'pending' | 'delivered' | 'canceled';
+    trackingNumber?: string;
+    createdAt?: Date;
+}
+
+interface OrderItemResponse {
+    id?: number;
+    name: string;
+    description: string;
+    imageUrl: string;
+    weight: number;
+    price: number;
+    quantity?: number;
+}
 
 /**
  * Service responsible for Order-related operations.
@@ -10,43 +37,54 @@ export class OrderService {
     /**
      * Creates an order for a customer.
      *
-     * @param customerId - The ID of the customer
+     * @param userId - The user id
      * @param items - The items to add to the order
      * @param paymentMethod - The payment method for the order
      * @returns A promise resolving to the created order
      */
     public async createOrder(
-        customerId: number,
-        items: { [key: number]: number },
-        paymentMethod: string
-    ): Promise<Order> {
-        const itemsMap = new Map<number, number>(
-            Object.entries(items).map(([productId, quantity]) => [
-                Number(productId),
-                Number(quantity),
-            ])
-        );
+        userId: number,
+        items: OrderItemAttributes[],
+        paymentMethod: 'card' | 'wallet' | 'bank-transfer'
+    ): Promise<OrderResponse> {
+        const transaction: Transaction = await sequelize.transaction();
 
-        const customer = await Customer.findByPk(customerId);
+        try {
+            const customer = await Customer.findOne({
+                where: { userId },
+                transaction,
+            });
 
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
+            if (!customer) {
+                throw new UserNotFoundError('User of type Customer not found');
+            }
+
+            const order = await Order.create(
+                {
+                    customerId: customer.id,
+                    paymentMethod,
+                },
+                { transaction }
+            );
+
+            await Promise.all(
+                items.map(async ({ productId, quantity }) => {
+                    await order.addItem(productId, quantity, transaction);
+                })
+            );
+
+            await transaction.commit();
+            return {
+                id: order.id,
+                paymentMethod,
+                status: order.status,
+                trackingNumber: order.trackingNumber,
+                createdAt: order.createdAt,
+            };
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
         }
-
-        const order = await Order.create({
-            customerId,
-            paymentMethod,
-        });
-
-        await Promise.all(
-            Array.from(itemsMap.entries()).map(
-                async ([productId, quantity]) => {
-                    await order.addItem(productId, quantity);
-                }
-            )
-        );
-
-        return order;
     }
 
     /**
@@ -55,14 +93,22 @@ export class OrderService {
      * @param orderId - The ID of the order
      * @returns A promise resolving to the order
      */
-    public async getOrderById(orderId: number): Promise<Order> {
-        const order = await Order.findByPk(orderId);
+    public async getOrderById(orderId: number): Promise<OrderResponse> {
+        const order = await Order.findByPk(orderId, {
+            attributes: [
+                'id',
+                'paymentMethod',
+                'status',
+                'trackingNumber',
+                'createdAt',
+            ],
+        });
 
         if (!order) {
             throw new OrderNotFoundError();
         }
 
-        return order;
+        return order.toJSON();
     }
 
     /**
@@ -71,16 +117,33 @@ export class OrderService {
      * @param orderId - The ID of the order
      * @returns A promise resolving to an array of OrderItem instances
      */
-    public async getOrderItemsByOrderId(orderId: number): Promise<OrderItem[]> {
+    public async getOrderItemsByOrderId(
+        orderId: number
+    ): Promise<OrderItemResponse[]> {
         const order = await Order.findByPk(orderId);
 
         if (!order) {
             throw new OrderNotFoundError();
         }
 
-        const orderItems = await order.getItems();
+        const orderItems = await order.getProducts({
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'imageUrl',
+                'weight',
+                'price',
+            ],
+            joinTableAttributes: ['quantity'],
+        });
 
-        return orderItems;
+        return orderItems.map((item) => {
+            const product = item.toJSON();
+            product.quantity = product.OrderItem!.quantity;
+            delete product.OrderItem;
+            return product;
+        });
     }
 
     /**
@@ -100,59 +163,66 @@ export class OrderService {
     }
 
     /**
-     * Retrieves all finished orders for a customer.
+     * Retrieves all orders by a given status for a user.
      *
-     * @param customerId - The ID of the customer
+     * @param userId - The ID of the user
      * @returns A promise resolving to an array of Order instances
+     *
+     * @throws {@link InvalidOrderStatusError}
+     * Thrown if the status is not a valid order status.
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user of type Customer is not found.
      */
-    public async getDeliveredOrders(customerId: number): Promise<Order[]> {
+    public async getOrdersByStatus(
+        userId: number,
+        status: string
+    ): Promise<OrderResponse[]> {
+        if (!['pending', 'delivered', 'canceled'].includes(status)) {
+            throw new InvalidOrderStatusError();
+        }
+
+        const customer = await Customer.findOne({ where: { userId } });
+
+        if (!customer) {
+            throw new UserNotFoundError('User of type Customer not found');
+        }
+
         const orders = await Order.findAll({
-            where: { customerId, status: 'delivered' },
+            where: { customerId: customer.id, status },
+            attributes: [
+                'id',
+                'paymentMethod',
+                'status',
+                'trackingNumber',
+                'createdAt',
+            ],
         });
 
-        return orders;
+        return orders.map((order) => order.toJSON());
     }
 
     /**
-     * Retrieves all pending orders for a customer.
+     * Retrieves user's order history.
      *
-     * @param customerId - The ID of the customer
+     * @param userId - The ID of the user
      * @returns A promise resolving to an array of Order instances
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user of type Customer is not found.
      */
-    public async getPendingOrders(customerId: number): Promise<Order[]> {
+    public async getOrderHistory(userId: number): Promise<OrderResponse[]> {
+        const customer = await Customer.findOne({ where: { userId } });
+
+        if (!customer) {
+            throw new UserNotFoundError('User of type Customer not found');
+        }
+
         const orders = await Order.findAll({
-            where: { customerId, status: 'pending' },
+            where: { customerId: customer.id, status: { [Op.not]: 'pending' } },
         });
 
-        return orders;
-    }
-
-    /**
-     * Retrieves all canceled orders for a customer.
-     *
-     * @param customerId - The ID of the customer
-     * @returns A promise resolving to an array of Order instances
-     */
-    public async getCanceledOrders(customerId: number): Promise<Order[]> {
-        const orders = await Order.findAll({
-            where: { customerId, status: 'canceled' },
-        });
-
-        return orders;
-    }
-
-    /**
-     * Retrieves customer's order history.
-     *
-     * @param customerId - The ID of the customer
-     * @returns A promise resolving to an array of Order instances
-     */
-    public async getOrderHistory(customerId: number): Promise<Order[]> {
-        const orders = await Order.findAll({
-            where: { customerId, status: { [Op.not]: 'pending' } },
-        });
-
-        return orders;
+        return orders.map((order) => order.toJSON());
     }
 
     /**
