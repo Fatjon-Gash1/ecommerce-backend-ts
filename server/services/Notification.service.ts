@@ -1,4 +1,4 @@
-import redis from 'redis';
+import { createClient, RedisClientType } from 'redis';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { User } from '../models/relational';
@@ -18,9 +18,9 @@ interface EmailOptions {
 
 export class NotificationService {
     /**
-     * Redis client instace used to publish messages to Redis server.
+     * Redis client Instance used to publish messages to Redis server.
      */
-    private publisher: ReturnType<typeof redis.createClient>;
+    private publisher: RedisClientType;
     /**
      * Nodemailer transporter used to send emails.
      */
@@ -30,7 +30,9 @@ export class NotificationService {
      * Initialize the redis and nodemailer clients.
      */
     constructor() {
-        this.publisher = redis.createClient();
+        this.publisher = createClient({
+            url: 'redis://localhost:6379',
+        });
         this.initRedis();
         this.transporter = nodemailer.createTransport({
             service: 'gmail',
