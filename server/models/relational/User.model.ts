@@ -21,10 +21,9 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     declare email: string;
     declare password: string;
 
-    public async hashAndStorePassword(password: string): Promise<void> {
+    public async hashPassword(password: string): Promise<void> {
         const saltRounds = 10;
         this.password = await bcrypt.hash(password, saltRounds);
-        await this.save();
     }
 
     public async validatePassword(password: string): Promise<boolean> {
@@ -65,10 +64,9 @@ User.init(
         sequelize,
         modelName: 'User',
         tableName: 'users',
-        paranoid: true,
     }
 );
 
 User.beforeCreate(async (user: User) => {
-    await user.hashAndStorePassword(user.password);
+    await user.hashPassword(user.password);
 });
