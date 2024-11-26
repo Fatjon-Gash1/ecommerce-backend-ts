@@ -1,17 +1,13 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../../config/db';
+import { Product } from './Product.model';
 
 interface CategoryAttributes {
     id?: number;
     name: string;
     description: string;
     hasProducts?: boolean;
-}
-
-interface SubCategoryAttributes {
-    id?: number;
-    name: string;
-    categoryId?: number;
+    parentId: number | null;
 }
 
 export class Category
@@ -22,10 +18,16 @@ export class Category
     declare name: string;
     declare description: string;
     declare hasProducts?: boolean;
+    declare parentId: number | null;
 }
 
 Category.init(
     {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -38,19 +40,29 @@ Category.init(
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
+        parentId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: Category,
+                key: 'id',
+            },
+        },
     },
-    { sequelize, modelName: 'Category', tableName: 'categories' }
+    {
+        sequelize,
+        modelName: 'Category',
+        tableName: 'categories',
+        paranoid: true,
+    }
 );
 
-export class SubCategory
-    extends Model<SubCategoryAttributes>
-    implements SubCategoryAttributes
-{
-    declare id?: number;
-    declare name: string;
-    declare categoryId?: number;
-}
-SubCategory.init(
-    { name: { type: DataTypes.STRING, allowNull: false } },
-    { sequelize, modelName: 'SubCategory', tableName: 'subcategories' }
-);
+Category.beforeDestroy(async (category, options) => {
+    await Product.update(
+        { deletedAt: new Date() },
+        {
+            where: { categoryId: category.id },
+            transaction: options.transaction,
+        }
+    );
+});
