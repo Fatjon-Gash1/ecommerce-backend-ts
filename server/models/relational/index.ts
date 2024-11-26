@@ -2,72 +2,94 @@ import { User } from './User.model';
 import { Customer } from './Customer.model';
 import { Admin } from './Admin.model';
 import { AdminLog } from './AdminLog.model';
-import { Category, SubCategory } from './Category.model';
+import { Category } from './Category.model';
 import { Product } from './Product.model';
 import { Cart, CartItem } from './Cart.model';
 import { Order, OrderItem } from './Order.model';
 import { Sale } from './Sale.model';
 import { ShippingCountry, ShippingCity } from './ShippingCountry.model';
-import { ShippingWeight, ShippingMethod } from './ShippingRate.model';
 import { Payment } from './Payment.model';
 import { Purchase } from './Purchases.model';
 
 /* Model associations */
 
+User.hasOne(Customer, { foreignKey: 'userId', onDelete: 'CASCADE' });
+User.hasOne(Admin, { foreignKey: 'userId', onDelete: 'CASCADE' });
+
 // Inherit from User model
 Customer.belongsTo(User, {
+    foreignKey: 'userId',
     onDelete: 'CASCADE',
-    foreignKey: {
-        allowNull: false,
-    },
 });
 
-Customer.hasOne(Cart);
-Customer.hasMany(Order);
-Customer.hasMany(Payment);
-Customer.belongsToMany(Product, { through: Purchase });
+Customer.hasOne(Cart, { foreignKey: 'customerId', onDelete: 'CASCADE' });
+Customer.hasMany(Order, { foreignKey: 'customerId' });
+Customer.hasMany(Payment, { foreignKey: 'customerId' });
+Customer.belongsToMany(Product, {
+    through: Purchase,
+    foreignKey: 'customerId',
+    otherKey: 'productId',
+});
 
 // Inherit from User model
 Admin.belongsTo(User, {
+    foreignKey: 'userId',
     onDelete: 'CASCADE',
-    foreignKey: {
-        allowNull: false,
-    },
 });
 
-Admin.hasMany(AdminLog);
+Admin.hasMany(AdminLog, { foreignKey: 'adminId' });
 
-AdminLog.belongsTo(Admin);
+AdminLog.belongsTo(Admin, { foreignKey: 'adminId' });
 
-Category.hasMany(SubCategory);
-Category.hasMany(Product);
+Category.hasMany(Product, { foreignKey: 'categoryId', onDelete: 'CASCADE' });
+// Self-referential associations
+Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
+Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
 
-SubCategory.belongsTo(Category, { onDelete: 'CASCADE' });
+Product.belongsTo(Category, { foreignKey: 'categoryId', onDelete: 'CASCADE' });
+Product.belongsToMany(Cart, {
+    through: CartItem,
+    foreignKey: 'productId',
+    otherKey: 'cartId',
+});
+Product.belongsToMany(Order, {
+    through: OrderItem,
+    foreignKey: 'productId',
+    otherKey: 'orderId',
+});
+Product.belongsToMany(Customer, {
+    through: Purchase,
+    foreignKey: 'productId',
+    otherKey: 'customerId',
+});
 
-Product.belongsTo(Category);
-Product.hasOne(OrderItem);
-Product.hasOne(CartItem);
-Product.belongsToMany(Customer, { through: Purchase });
+Cart.belongsToMany(Product, {
+    through: CartItem,
+    foreignKey: 'cartId',
+    otherKey: 'productId',
+});
+Cart.belongsTo(Customer, { foreignKey: 'customerId', onDelete: 'CASCADE' });
 
-Cart.hasMany(CartItem);
-Cart.belongsTo(Customer);
+ShippingCountry.hasMany(ShippingCity, {
+    foreignKey: 'countryId',
+    onDelete: 'CASCADE',
+});
+ShippingCity.belongsTo(ShippingCountry, {
+    foreignKey: 'countryId',
+    onDelete: 'CASCADE',
+});
 
-CartItem.belongsTo(Cart);
-CartItem.belongsTo(Product);
+Payment.belongsTo(Customer, { foreignKey: 'customerId' });
 
-ShippingCountry.hasMany(ShippingCity, { foreignKey: 'countryId' });
-ShippingCity.belongsTo(ShippingCountry);
+Order.belongsToMany(Product, {
+    through: OrderItem,
+    foreignKey: 'orderId',
+    otherKey: 'productId',
+});
+Order.belongsTo(Customer, { foreignKey: 'customerId' });
+Order.hasOne(Sale, { foreignKey: 'orderId' });
 
-Payment.belongsTo(Customer);
-
-Order.hasMany(OrderItem);
-Order.belongsTo(Customer);
-Order.hasOne(Sale);
-
-OrderItem.belongsTo(Order);
-OrderItem.belongsTo(Product);
-
-Sale.belongsTo(Order);
+Sale.belongsTo(Order, { foreignKey: 'orderId' });
 
 /* End of associations */
 
@@ -77,14 +99,11 @@ export {
     Admin,
     AdminLog,
     Category,
-    SubCategory,
     Product,
     Cart,
     CartItem,
     ShippingCountry,
     ShippingCity,
-    ShippingWeight,
-    ShippingMethod,
     Payment,
     Order,
     OrderItem,
