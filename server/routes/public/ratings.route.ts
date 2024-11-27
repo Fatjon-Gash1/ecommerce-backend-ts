@@ -1,30 +1,34 @@
 import { Router } from 'express';
 import { RatingController } from '../../controllers/Rating.controller';
 import { RatingService } from '../../services';
-import { validateId, validationErrors } from '../../middlewares/validation';
+import {
+    validateId,
+    validateObjectId,
+    validationErrors,
+} from '../../middlewares/validation';
 
 const router: Router = Router();
 const ratingController = new RatingController(new RatingService());
 
 router.get(
-    '/platform/:id',
-    validateId(),
+    '/platform/:ratingId',
+    validateObjectId('ratingId'),
     validationErrors,
     ratingController.getPlatformRatingById.bind(ratingController)
 );
 router.get(
-    '/products/:id',
-    validateId(),
+    '/products/:productId',
+    validateId('productId'),
     validationErrors,
-    ratingController.getProductRatings.bind(ratingController)
+    ratingController.getProductRatingsByProductId.bind(ratingController)
 );
 router.get(
     '/platform',
     ratingController.getPlatformRatings.bind(ratingController)
 );
 router.get(
-    '/products/rating/:id',
-    validateId(),
+    '/products/rating/:ratingId',
+    validateObjectId('ratingId'),
     validationErrors,
     ratingController.getProductRatingById.bind(ratingController)
 );
