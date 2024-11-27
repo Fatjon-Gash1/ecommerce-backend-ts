@@ -105,5 +105,7 @@ router.use('/products', adminProducts);
 router.use('/orders', adminOrders);
 router.use('/shippings', adminShippings);
 router.use('/ratings', adminRatings);
+// I think i forgot the analytics route
+// After: ElasticSearch query methods, Payment route, redis caching...
 
 export default router;
