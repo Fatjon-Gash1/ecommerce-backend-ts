@@ -21,8 +21,10 @@ import {
     validationErrors,
 } from '../../middlewares/validation';
 import cartRoutes from './carts.route';
+import paymentRoutes from './payments.route';
 import orderRoutes from './orders.route';
 import shippingRoutes from './shippings.route';
+import ratingRoutes from './ratings.route';
 import adminRoutes from './private/admins.route';
 
 const router: Router = Router();
@@ -36,7 +38,7 @@ router.post(
     signupRateLimiter,
     validateRegistration(),
     validationErrors,
-    userController.signUpUser.bind(userController)
+    userController.signUpCustomer.bind(userController)
 );
 router.post(
     '/auth/login',
@@ -66,6 +68,7 @@ router.get(
 router.get(
     '/customers/profile',
     authenticateAccessToken,
+    authorize(['customer']),
     userController.getCustomerProfile.bind(userController)
 );
 
@@ -109,6 +112,13 @@ router.use(
 );
 
 router.use(
+    '/customers/payment',
+    authenticateAccessToken,
+    authorize(['customer']),
+    paymentRoutes
+);
+
+router.use(
     '/customers/orders',
     authenticateAccessToken,
     authorize(['customer']),
@@ -116,6 +126,13 @@ router.use(
 );
 
 router.use('/shippings', authenticateAccessToken, shippingRoutes);
+
+router.use(
+    '/ratings',
+    authenticateAccessToken,
+    authorize(['customer']),
+    ratingRoutes
+);
 
 router.use(
     '/admin',
