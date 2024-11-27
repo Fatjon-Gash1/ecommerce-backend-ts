@@ -29,11 +29,15 @@ router.get(
     productController.getDiscountedPrice.bind(productController)
 );
 router.get(
+    '/categories/top-level',
+    productController.getAllTopLevelCategories.bind(productController)
+);
+router.get(
     '/categories',
     productController.getAllCategories.bind(productController)
 );
 router.get(
-    '/category/subcategories/:id',
+    '/category/:id/subcategories',
     validateId(),
     validationErrors,
     productController.getSubCategoriesForCategory.bind(productController)
