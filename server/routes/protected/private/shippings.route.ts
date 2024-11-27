@@ -5,7 +5,8 @@ import { shippingUpdateRateLimiter } from '../../../middlewares/rateLimiting';
 import {
     validateShippingCountry,
     validateShippingCity,
-    validateShippingRate,
+    validateShippingMethodRate,
+    validateShippingWeightRate,
     validateId,
     validateCountryId,
     validationErrors,
@@ -49,18 +50,18 @@ router.patch(
     shippingController.updateShippingCity.bind(shippingController)
 );
 router.patch(
-    '/weight-rate',
-    shippingUpdateRateLimiter,
-    validateShippingRate(),
-    validationErrors,
-    shippingController.changeShippingWeightRate.bind(shippingController)
-);
-router.patch(
     '/method-rate',
     shippingUpdateRateLimiter,
-    validateShippingRate(),
+    validateShippingMethodRate(),
     validationErrors,
     shippingController.changeShippingMethodRate.bind(shippingController)
+);
+router.patch(
+    '/weight-rate',
+    shippingUpdateRateLimiter,
+    validateShippingWeightRate(),
+    validationErrors,
+    shippingController.changeShippingWeightRate.bind(shippingController)
 );
 
 router.delete(

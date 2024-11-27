@@ -11,8 +11,6 @@ import {
 } from '../../../middlewares/rateLimiting';
 import {
     validateCategory,
-    validateSubCategory,
-    validateCategoryWithSubCategories,
     validateProduct,
     validateDiscount,
     validateProductUpdate,
@@ -34,25 +32,11 @@ router.post(
     productController.addCategory.bind(productController)
 );
 router.post(
-    '/categories/subcategories',
-    categoryCreationRateLimiter,
-    validateSubCategory(),
-    validationErrors,
-    productController.addSubCategory.bind(productController)
-);
-router.post(
-    '/categories',
-    categoryCreationRateLimiter,
-    validateCategoryWithSubCategories(),
-    validationErrors,
-    productController.createCategoryWithSubCategories.bind(productController)
-);
-router.post(
-    '/',
+    '/categories/:id/products',
     productCreationRateLimiter,
     validateProduct(),
     validationErrors,
-    productController.addProduct.bind(productController)
+    productController.addProductByCategoryId.bind(productController)
 );
 
 router.get(
@@ -78,13 +62,6 @@ router.patch(
     productController.updateCategoryById.bind(productController)
 );
 router.patch(
-    '/categories/subcategories/:id',
-    categoryUpdateRateLimiter,
-    validateId(),
-    validationErrors,
-    productController.updateSubCategoryById.bind(productController)
-);
-router.patch(
     '/:id/discount',
     productUpdateRateLimiter,
     validateDiscount(),
@@ -105,13 +82,6 @@ router.delete(
     validateId(),
     validationErrors,
     productController.deleteCategoryById.bind(productController)
-);
-router.delete(
-    '/categories/subcategories/:id',
-    categoryDeletionRateLimiter,
-    validateId(),
-    validationErrors,
-    productController.deleteSubCategoryById.bind(productController)
 );
 router.delete(
     '/',
