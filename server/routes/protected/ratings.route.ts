@@ -7,7 +7,9 @@ import {
     validateProductRating,
     validatePlatformRatingUpdate,
     validateProductRatingUpdate,
+    validateId,
     validationErrors,
+    validateObjectId,
 } from '../../middlewares/validation';
 
 const router: Router = Router();
@@ -20,33 +22,36 @@ router.post(
     ratingController.addPlatformRating.bind(ratingController)
 );
 router.post(
-    '/products',
+    '/products/:productId',
+    validateId('productId'),
     validateProductRating(),
     validationErrors,
     ratingController.addProductRating.bind(ratingController)
 );
 
 router.patch(
-    '/platform',
+    '/platform/:ratingId',
     ratingUpdateRateLimiter,
+    validateObjectId('ratingId'),
     validatePlatformRatingUpdate(),
     validationErrors,
     ratingController.updateOwnPlatformRating.bind(ratingController)
 );
 router.patch(
-    '/products',
+    '/products/:ratingId',
     ratingUpdateRateLimiter,
+    validateObjectId('ratingId'),
     validateProductRatingUpdate(),
     validationErrors,
     ratingController.updateOwnProductRating.bind(ratingController)
 );
 
 router.delete(
-    '/platform',
+    '/platform/:ratingId',
     ratingController.deleteOwnPlatformRating.bind(ratingController)
 );
 router.delete(
-    '/products',
+    '/products/:ratingId',
     ratingController.deleteOwnProductRating.bind(ratingController)
 );
 
