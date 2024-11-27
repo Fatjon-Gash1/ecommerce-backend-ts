@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { sequelize, connectToMongoDB } from './config/db';
 import indexRoutes from './routes';
 
@@ -10,9 +11,10 @@ const port: number = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 sequelize
-    .sync({ alter: true })
+    .sync()
     .then(() => {
         console.log('Sequelize models synced with database');
     })
