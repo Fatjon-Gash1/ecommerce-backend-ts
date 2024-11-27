@@ -12,22 +12,19 @@ const router: Router = Router();
 const shippingController = new ShippingController(new ShippingService());
 
 router.get(
-    '/cities/:id',
-    validateId(),
+    '/:countryId/cities',
+    validateId('countryId'),
     validationErrors,
     shippingController.getShippingCitiesByCountryId.bind(shippingController)
 );
 router.get(
-    '/weight/:id',
+    '/weight',
     authorize(['customer']),
-    validateId(),
-    validationErrors,
-    shippingController.determineWeightRangeByCartId.bind(shippingController)
+    shippingController.determineWeightRangeForCart.bind(shippingController)
 );
 router.get(
-    '/cost/:id',
+    '/cost',
     authorize(['customer']),
-    validateId(),
     validateShippingCostDetails(),
     validationErrors,
     shippingController.calculateShippingCost.bind(shippingController)
