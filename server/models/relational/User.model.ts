@@ -22,7 +22,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     declare password: string;
 
     public async hashPassword(password: string): Promise<void> {
-        const saltRounds = 10;
+        const saltRounds = 12;
         this.password = await bcrypt.hash(password, saltRounds);
     }
 
