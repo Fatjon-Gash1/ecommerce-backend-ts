@@ -24,13 +24,15 @@ export const validateAttribute = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('Attribute is required')
+        .isIn(['firstName', 'lastName', 'username', 'email'])
+        .withMessage('Attribute must be a valid user attribute')
         .isLength({ max: 16 })
-        .withMessage('Attribute must be 16 characters or less'),
+        .withMessage('Attribute must be no longer than 16 characters'),
 
     query('value')
         .trim()
         .notEmpty()
         .withMessage('Value is required')
-        .isLength({ max: 32 })
-        .withMessage('Value must be 32 characters or less'),
+        .isLength({ max: 320 })
+        .withMessage('Attribute must be no longer than 320 characters'),
 ];
