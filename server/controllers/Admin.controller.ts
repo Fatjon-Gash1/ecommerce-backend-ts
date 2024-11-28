@@ -30,10 +30,11 @@ export class AdminController {
         const { details } = req.body;
 
         try {
-            const newCustomer =
-                await this.adminService.registerCustomer(details);
+            await this.adminService.registerCustomer(details);
 
-            res.status(201).json({ newCustomer });
+            res.status(201).json({
+                message: 'Customer registered successfully',
+            });
 
             await this.notificationService.sendWelcomeEmail(
                 details.firstName,
@@ -62,8 +63,8 @@ export class AdminController {
         const { details } = req.body;
 
         try {
-            const newAdmin = await this.adminService.registerAdmin(details);
-            res.status(201).json({ newAdmin });
+            await this.adminService.registerAdmin(details);
+            res.status(201).json({ message: 'Admin registered successfully' });
 
             await this.adminLogsService.log(username, 'admin', 'create');
         } catch (err) {
@@ -105,8 +106,9 @@ export class AdminController {
         res: Response
     ): Promise<void | Response> {
         try {
-            const activeCustomers = this.adminService.findActiveCustomers();
-            return res.status(200).json({ activeCustomers });
+            const { count, customers } =
+                await this.adminService.findActiveCustomers();
+            return res.status(200).json({ total: count, customers });
         } catch (error) {
             console.error('Error retrieving customers: ', error);
             return res.status(500).json({ message: 'Server error' });
@@ -125,6 +127,13 @@ export class AdminController {
             );
             return res.status(200).json({ customer });
         } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                console.error(
+                    'Error retrieving customer by attribute: ',
+                    error
+                );
+                return res.status(404).json({ message: error.message });
+            }
             console.error('Error retrieving customer by attribute: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
@@ -135,8 +144,9 @@ export class AdminController {
         res: Response
     ): Promise<void | Response> {
         try {
-            const customers = this.adminService.getAllCustomers();
-            return res.status(200).json({ customers });
+            const { count, customers } =
+                await this.adminService.getAllCustomers();
+            return res.status(200).json({ total: count, customers });
         } catch (error) {
             console.error('Error retrieving customers: ', error);
             return res.status(500).json({ message: 'Server error' });
@@ -155,7 +165,7 @@ export class AdminController {
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error retrieving admin by ID: ', error);
-                return res.status(404).json({ message: 'admin not found' });
+                return res.status(404).json({ message: error.message });
             }
 
             console.error('Error retrieving admin by ID: ', error);
@@ -170,10 +180,10 @@ export class AdminController {
         const { role } = req.query;
 
         try {
-            const admins = await this.adminService.getAdminsByRole(
+            const { count, admins } = await this.adminService.getAllAdmins(
                 role as string
             );
-            return res.status(200).json({ admins });
+            return res.status(200).json({ total: count, admins });
         } catch (error) {
             console.error('Error retrieving admins by role: ', error);
             return res.status(500).json({ message: 'Server error' });
@@ -185,8 +195,8 @@ export class AdminController {
         res: Response
     ): Promise<void | Response> {
         try {
-            const admins = await this.adminService.getAllAdmins();
-            return res.status(200).json({ admins });
+            const { count, admins } = await this.adminService.getAllAdmins();
+            return res.status(200).json({ total: count, admins });
         } catch (error) {
             console.error('Error retrieving admins: ', error);
             return res.status(500).json({ message: 'Server error' });
@@ -197,13 +207,13 @@ export class AdminController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const userId: number = Number(req.params.id);
+        const adminId: number = Number(req.params.adminId);
         const { username } = req.user as JwtPayload;
-        const { roleNumber } = req.body;
+        const { role } = req.body;
 
         try {
-            await this.adminService.setAdminRole(userId, roleNumber);
-            res.status(201).json({ message: 'Admin role set successfully' });
+            await this.adminService.setAdminRole(adminId, role);
+            res.status(200).json({ message: 'Admin role set successfully' });
 
             await this.adminLogsService.log(username, 'admin', 'update');
         } catch (error) {
@@ -226,7 +236,7 @@ export class AdminController {
 
         try {
             await this.adminService.deleteUser(userId);
-            res.status(200).json({ message: 'User deleted successfully' });
+            res.sendStatus(204);
 
             await this.adminLogsService.log(username, 'admin', 'delete');
         } catch (error) {
