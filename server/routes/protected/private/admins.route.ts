@@ -47,12 +47,7 @@ router.post(
     adminController.registerAdmin.bind(adminController)
 );
 
-router.get(
-    '/customers/:id',
-    validateId(),
-    validationErrors,
-    adminController.getCustomerById.bind(adminController)
-);
+router.get('/customers', adminController.getAllCustomers.bind(adminController));
 router.get(
     '/customers/active',
     adminController.findActiveCustomers.bind(adminController)
@@ -63,13 +58,16 @@ router.get(
     validationErrors,
     adminController.findCustomerByAttribute.bind(adminController)
 );
-router.get('/customers', adminController.getAllCustomers.bind(adminController));
 router.get(
-    '/admins/:id',
-    authorize(['admin']),
+    '/customers/:id',
     validateId(),
     validationErrors,
-    adminController.getAdminById.bind(adminController)
+    adminController.getCustomerById.bind(adminController)
+);
+router.get(
+    '/admins',
+    authorize(['admin']),
+    adminController.getAllAdmins.bind(adminController)
 );
 router.get(
     '/admins/search',
@@ -79,21 +77,24 @@ router.get(
     adminController.getAdminsByRole.bind(adminController)
 );
 router.get(
-    '/admins',
+    '/admins/:id',
     authorize(['admin']),
-    adminController.getAllAdmins.bind(adminController)
+    validateId(),
+    validationErrors,
+    adminController.getAdminById.bind(adminController)
 );
 
 router.patch(
-    '/admins/:id/role',
+    '/admins/:adminId/role',
     authorize(['admin']),
+    validateId('adminId'),
     validateAdminRoleSet(),
     validationErrors,
     adminController.setAdminRole.bind(adminController)
 );
 
 router.delete(
-    '/admins/:id',
+    '/users/:id',
     authorize(['admin']),
     userDeletionRateLimiter,
     validateId(),
@@ -106,6 +107,6 @@ router.use('/orders', adminOrders);
 router.use('/shippings', adminShippings);
 router.use('/ratings', adminRatings);
 // I think i forgot the analytics route
-// After: ElasticSearch query methods, Payment route, redis caching...
+// After: ElasticSearch query methods, Payment route, redis caching, serialization, refactoring...
 
 export default router;
