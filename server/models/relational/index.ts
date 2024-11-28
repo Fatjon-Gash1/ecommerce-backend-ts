@@ -18,6 +18,7 @@ User.hasOne(Admin, { foreignKey: 'userId', onDelete: 'CASCADE' });
 
 // Inherit from User model
 Customer.belongsTo(User, {
+    as: 'user',
     foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
@@ -33,6 +34,7 @@ Customer.belongsToMany(Product, {
 
 // Inherit from User model
 Admin.belongsTo(User, {
+    as: 'user',
     foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
