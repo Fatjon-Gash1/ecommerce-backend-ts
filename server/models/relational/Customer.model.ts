@@ -15,6 +15,7 @@ interface CustomerAttributes {
     username: string; // Virtual
     email: string; // Virtual
     password: string; // Virtual
+    user?: User;
 }
 
 export class Customer
@@ -32,6 +33,7 @@ export class Customer
     declare username: string; // Virtual field
     declare email: string; // Virtual field
     declare password: string; // Virtual field;
+    declare user?: User;
 
     public async createCartForUser(): Promise<void> {
         await Cart.create({ customerId: this.id });
