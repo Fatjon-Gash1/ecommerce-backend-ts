@@ -36,6 +36,20 @@ interface AuthTokens {
     accessToken: string;
 }
 
+export interface CustomerResponse {
+    id?: number;
+    stripeId?: string;
+    shippingAddress?: string;
+    billingAddress?: string;
+    isActive?: boolean;
+    createdAt?: Date;
+    profilePictureUrl?: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+}
+
 /**
  * Service responsible for user-related operations.
  */
@@ -44,7 +58,8 @@ export class UserService {
      * Registers a provided user type in the database.
      *
      * @remarks
-     * This is a generic method that will be used by utility methods below.
+     * This is a generic method that will be used by utility methods below
+     * and in a subclass.
      *
      * @param userType - The type of user to register
      * @param details - The details of the user to register
@@ -103,7 +118,7 @@ export class UserService {
         username: string,
         password: string
     ): Promise<AuthTokens> {
-        let role = null;
+        let role: 'admin' | 'manager' | 'customer' | null = null;
         const user = await User.findOne({ where: { username } });
 
         if (!user) {
@@ -116,13 +131,9 @@ export class UserService {
             throw new InvalidCredentialsError();
         }
 
-        const isAdmin = await Admin.findOne({ where: { userId: user.id } });
+        const admin = await Admin.findOne({ where: { userId: user.id } });
 
-        if (isAdmin) {
-            role = 'admin';
-        } else {
-            role = 'customer';
-        }
+        role = admin ? admin.role! : 'customer';
 
         return this.generateTokens(user.id!, user.username, role);
     }
@@ -186,26 +197,46 @@ export class UserService {
     }
 
     /**
-     * Retrieves Customer by user ID.
+     * Retrieves Customer by its Id.
      *
-     * @param userId - The user ID of the Customer
+     * @param customerId - The id of the Customer
      * @returns A promise resolving to a Customer instance
      *
      * @throws {@link UserNotFoundError}
      * Thrown if the Customer is not found
      */
-    public async getCustomerById(userId: number): Promise<Customer> {
-        const customer = await Customer.findOne({
-            where: { userId },
-            include: User,
+    public async getCustomerById(
+        customerId: number
+    ): Promise<CustomerResponse> {
+        const customer = await Customer.findByPk(customerId, {
+            attributes: [
+                'id',
+                'stripeId',
+                'shippingAddress',
+                'billingAddress',
+                'isActive',
+                'createdAt',
+            ],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: [
+                    'profilePictureUrl',
+                    'firstName',
+                    'lastName',
+                    'username',
+                    'email',
+                ],
+            },
         });
 
         if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
+            throw new UserNotFoundError('Customer not found');
         }
 
-        return customer;
-        // return customer.get({ plain: true });
+        const { user, ...rest } = customer.toJSON();
+
+        return { ...rest, ...user };
     }
 
     /**
