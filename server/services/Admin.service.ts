@@ -1,6 +1,40 @@
-import { UserService, UserCreationDetails } from './User.service';
+import {
+    UserService,
+    UserCreationDetails,
+    CustomerResponse,
+} from './User.service';
 import { User, Customer, Admin } from '../models/relational';
 import { UserNotFoundError } from '../errors';
+
+const customerAttributes = [
+    'id',
+    'stripeId',
+    'shippingAddress',
+    'billingAddress',
+    'isActive',
+    'createdAt',
+];
+
+const adminAttributes = ['id', 'role', 'createdAt'];
+
+const userAttributes = [
+    'profilePictureUrl',
+    'firstName',
+    'lastName',
+    'username',
+    'email',
+];
+
+interface AdminResponse {
+    id?: number;
+    role?: 'admin' | 'manager';
+    createdAt?: Date;
+    profilePictureUrl?: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+}
 
 /**
  * Service responsible for Admin-related operations.
@@ -10,22 +44,18 @@ export class AdminService extends UserService {
      * Registers a user as a Customer.
      *
      * @param details - The details of the user to register
-     * @returns A promise resolving to a Customer user instance
      */
-    public async registerCustomer(
-        details: UserCreationDetails
-    ): Promise<Customer> {
-        return this.registerUser(Customer, details);
+    public async registerCustomer(details: UserCreationDetails): Promise<void> {
+        await this.registerUser(Customer, details);
     }
 
     /**
      * Registers a user as an Admin.
      *
      * @param details - The details of the user to register
-     * @returns A promise resolving to an Admin user instance
      */
-    public async registerAdmin(details: UserCreationDetails): Promise<Admin> {
-        return this.registerUser(Admin, details);
+    public async registerAdmin(details: UserCreationDetails): Promise<void> {
+        await this.registerUser(Admin, details);
     }
 
     /**
@@ -33,13 +63,26 @@ export class AdminService extends UserService {
      *
      * @returns A promise resolving to an array of active Customer instances
      */
-    public async findActiveCustomers(): Promise<Customer[]> {
-        const activeCustomers = await Customer.findAll({
+    public async findActiveCustomers(): Promise<{
+        count: number;
+        customers: CustomerResponse[];
+    }> {
+        const { count, rows } = await Customer.findAndCountAll({
             where: { isActive: true },
-            include: User,
+            attributes: customerAttributes,
+            include: {
+                model: User,
+                as: 'user',
+                attributes: userAttributes,
+            },
         });
 
-        return activeCustomers;
+        const customers = rows.map((row) => {
+            const { user, ...rest } = row.toJSON();
+            return { ...rest, ...user };
+        });
+
+        return { count, customers };
     }
 
     /**
@@ -52,100 +95,112 @@ export class AdminService extends UserService {
     public async findCustomerByAttribute(
         attribute: string,
         attributeValue: string | number
-    ): Promise<Customer> {
+    ): Promise<CustomerResponse> {
         const whereCondition: { [key: string]: string | number } = {};
 
-        if (attribute && attributeValue) {
-            whereCondition[attribute] = attributeValue;
-        }
+        whereCondition[attribute] = attributeValue;
 
         const customer = await Customer.findOne({
+            attributes: customerAttributes,
             include: {
                 model: User,
-                as: 'User',
+                as: 'user',
                 where: whereCondition,
+                attributes: userAttributes,
             },
         });
 
         if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
+            throw new UserNotFoundError('Customer not found');
         }
 
-        return customer;
+        const { user, ...rest } = customer.toJSON();
+
+        return { ...rest, ...user };
     }
 
     /**
      * Retrieves all Customers in the database.
      *
-     * @returns A promise resolving to an array of Customer instances
+     * @returns A promise resolving to the total count along with
+     * an array of Customer instances
      */
-    public async getAllCustomers(): Promise<Customer[]> {
-        const users = await Customer.findAll({ include: User });
+    public async getAllCustomers(): Promise<{
+        count: number;
+        customers: CustomerResponse[];
+    }> {
+        const { count, rows } = await Customer.findAndCountAll({
+            attributes: customerAttributes,
+            include: { model: User, as: 'user', attributes: userAttributes },
+        });
 
-        return users;
+        const customers = rows.map((row) => {
+            const { user, ...rest } = row.toJSON();
+            return { ...rest, ...user };
+        });
+
+        return { count, customers };
     }
 
     /**
      * Retrieves Admin by ID.
      *
-     * @param adminId - The ID of the Admin
-     * @returns A promise resolving to a Admin instance
+     * @param adminId - The id of the Admin
+     * @returns A promise resolving to an Admin instance
      */
-    public async getAdminById(adminId: number): Promise<Admin> {
-        const admin = await Admin.findByPk(adminId, { include: User });
-
-        if (!admin) {
-            throw new UserNotFoundError('User of type Admin not found');
-        }
-
-        return admin;
-    }
-
-    /**
-     * Retrieves Admins by role.
-     *
-     * @param role - The role of the Admins
-     * @returns A promise resolving to an Admin instance array
-     */
-    public async getAdminsByRole(role: string): Promise<Admin[]> {
-        const admins = await Admin.findAll({
-            where: { role },
-            include: User,
+    public async getAdminById(adminId: number): Promise<AdminResponse> {
+        const admin = await Admin.findByPk(adminId, {
+            attributes: adminAttributes,
+            include: { model: User, as: 'user', attributes: userAttributes },
         });
 
-        return admins;
-    }
-
-    /**
-     * Retrieves all Admins in the database.
-     *
-     * @returns A promise resolving to an array of Admin instances
-     */
-    public async getAllAdmins(): Promise<Admin[]> {
-        const users = await Admin.findAll({ include: User });
-
-        return users;
-    }
-
-    /**
-     * Sets admin user role from the provided role number.
-     *
-     * @param userId - The ID of the user
-     * @param roleNumber - The role number of the user
-     * @throws UserNotFoundError if the user is not found
-     */
-    public async setAdminRole(
-        userId: number,
-        roleNumber: number
-    ): Promise<void> {
-        const admin = await Admin.findOne({ where: { userId } });
-
         if (!admin) {
-            throw new UserNotFoundError(
-                'No admin found with user id: ' + userId
-            );
+            throw new UserNotFoundError('Admin not found');
         }
 
-        await admin.setRole(roleNumber);
+        const { user, ...rest } = admin.toJSON();
+
+        return { ...rest, ...user };
+    }
+
+    /**
+     * Retrieves all Admins && optionally filtered by role.
+     *
+     * @param role - The role of the Admins (optional)
+     * @returns A promise resolving to an Admin instance array
+     */
+    public async getAllAdmins(
+        role: string | null = null
+    ): Promise<{ count: number; admins: AdminResponse[] }> {
+        const { count, rows } = await Admin.findAndCountAll({
+            where: role ? { role } : {},
+            attributes: adminAttributes,
+            include: { model: User, as: 'user', attributes: userAttributes },
+        });
+
+        const admins = rows.map((row) => {
+            const { user, ...rest } = row.toJSON();
+            return { ...rest, ...user };
+        });
+
+        return { count, admins };
+    }
+
+    /**
+     * Sets admin role from the provided role number.
+     *
+     * @param adminId - The id of the Admin
+     * @param role - The role number of the user
+     * @throws UserNotFoundError if the user is not found
+     */
+    public async setAdminRole(adminId: number, role: number): Promise<void> {
+        const admin = await Admin.findByPk(adminId);
+
+        if (!admin) {
+            throw new UserNotFoundError('Admin not found');
+        }
+
+        admin.role = role === 1 ? 'admin' : 'manager';
+        await admin.save();
     }
 }
