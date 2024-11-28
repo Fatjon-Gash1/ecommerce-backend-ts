@@ -11,6 +11,7 @@ interface AdminAttributes {
     username: string; // Virtual
     email: string; // Virtual
     password: string; // Virtual
+    user?: User;
 }
 
 export class Admin extends Model<AdminAttributes> implements AdminAttributes {
@@ -22,16 +23,7 @@ export class Admin extends Model<AdminAttributes> implements AdminAttributes {
     declare username: string; // Virtual field
     declare email: string; // Virtual field
     declare password: string; // Virtual field;
-
-    public async setRole(nr: number): Promise<void> {
-        if (nr === 1) {
-            this.role = 'admin';
-        } else if (nr === 2) {
-            this.role = 'manager';
-        } else throw new Error('Invalid role number');
-
-        await this.save();
-    }
+    declare user?: User;
 }
 
 Admin.init(
