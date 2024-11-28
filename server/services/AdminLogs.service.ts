@@ -1,4 +1,4 @@
-import { User, AdminLog } from '../models/relational';
+import { User, Admin, AdminLog } from '../models/relational';
 import { AdminLogInvalidTargetError, UserNotFoundError } from '../errors';
 
 /*
@@ -25,10 +25,14 @@ export class AdminLogsService {
         target: string,
         operation: string = 'create'
     ): Promise<void> {
-        const admin = await User.findOne({ where: { username } });
+        const admin = await Admin.findOne({
+            include: { model: User, as: 'user', where: { username } },
+        });
 
         if (!admin) {
-            throw new UserNotFoundError();
+            throw new UserNotFoundError(
+                `Admin with username: "${username}" not found!`
+            );
         }
 
         const categoryMap: { [key: string]: string } = {
@@ -47,7 +51,7 @@ export class AdminLogsService {
 
         const category = categoryMap[target];
         if (!category) {
-            throw new AdminLogInvalidTargetError(`${target}`);
+            throw new AdminLogInvalidTargetError(target);
         }
 
         const opMap: { [key: string]: string } = {
