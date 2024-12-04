@@ -1,22 +1,21 @@
 import { User, Admin, AdminLog } from '../models/relational';
 import { AdminLogInvalidTargetError, UserNotFoundError } from '../errors';
 
-/*
+/**
  * Service responsible for logging administrative operations.
  */
-
 export class AdminLogsService {
     /**
      * Logs different administrative operations.
      *
-     * @param userId The ID of the user performing the action
-     * @param username The username of the user performing the action
-     * @param target The type of entity being acted upon
-     * @param operation The action performed
+     * @param username - The username of the user performing the action
+     * @param target - The type of entity being acted upon
+     * @param operation - The action performed
      * @returns A promise that resolves to void
      *
      * @throws {@link AdminLogInvalidTargetError}
      * thrown if the provided target is not valid
+     *
      * @throws {@link AdminLogCreationError}
      * thrown if the log cannot be created
      */
@@ -35,22 +34,22 @@ export class AdminLogsService {
             );
         }
 
-        const categoryMap: { [key: string]: string } = {
-            customer: 'customer',
-            admin: 'admin',
-            category: 'category',
-            product: 'product',
-            country: 'shipping country',
-            city: 'shipping city',
-            'shipping weight': 'shipping weight rate',
-            'shipping method': 'shipping method rate',
-            review: 'review',
-            rating: 'rating',
-            report: 'report',
-        };
+        const categories: string[] = [
+            'customer',
+            'admin',
+            'category',
+            'product',
+            'order',
+            'shipping country',
+            'shipping city',
+            'shipping weight',
+            'shipping method',
+            'review',
+            'rating',
+            'report',
+        ];
 
-        const category = categoryMap[target];
-        if (!category) {
+        if (!categories.includes(target)) {
             throw new AdminLogInvalidTargetError(target);
         }
 
@@ -64,7 +63,7 @@ export class AdminLogsService {
 
         await AdminLog.create({
             adminId: admin.id,
-            category,
+            category: target,
             log: `Admin "${username}" ${op} ${target}.`,
         });
     }
