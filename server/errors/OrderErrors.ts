@@ -5,9 +5,9 @@ export class OrderNotFoundError extends Error {
     }
 }
 
-export class InvalidOrderStatusError extends Error {
-    constructor(message: string = 'Invalid order status') {
+export class OrderAlreadyMarkedError extends Error {
+    constructor(message: string = 'Order is already marked') {
         super(message);
-        this.name = 'InvalidOrderStatusError';
+        this.name = 'OrderAlreadyMarkedError';
     }
 }
