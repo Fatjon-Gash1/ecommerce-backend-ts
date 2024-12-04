@@ -4,7 +4,7 @@ import { Order, Customer } from '../models/relational';
 import {
     UserNotFoundError,
     OrderNotFoundError,
-    InvalidOrderStatusError,
+    OrderAlreadyMarkedError,
 } from '../errors';
 
 interface OrderItemAttributes {
@@ -90,19 +90,32 @@ export class OrderService {
     /**
      * Retrieves a specific order by ID.
      *
+     * @param userId - The id of the user
      * @param orderId - The ID of the order
      * @returns A promise resolving to the order
      */
-    public async getOrderById(orderId: number): Promise<OrderResponse> {
-        const order = await Order.findByPk(orderId, {
-            attributes: [
-                'id',
-                'paymentMethod',
-                'status',
-                'trackingNumber',
-                'createdAt',
-            ],
-        });
+    public async getOrderById(
+        userId: number | undefined,
+        orderId: number
+    ): Promise<OrderResponse> {
+        let order: Order | null;
+
+        if (userId) {
+            order = await Order.findOne({
+                where: { id: orderId },
+                attributes: { exclude: ['updatedAt', 'customerId'] },
+                include: {
+                    model: Customer,
+                    attributes: [],
+                    where: { userId },
+                    required: true,
+                },
+            });
+        } else {
+            order = await Order.findByPk(orderId, {
+                attributes: { exclude: ['updatedAt', 'customerId'] },
+            });
+        }
 
         if (!order) {
             throw new OrderNotFoundError();
@@ -114,13 +127,32 @@ export class OrderService {
     /**
      * Retrieves all items of a specific order.
      *
+     * @param userId - The id of the user
      * @param orderId - The ID of the order
      * @returns A promise resolving to an array of OrderItem instances
+     *
+     * @throws {@link OrderNotFoundError}
+     * Thrown if the order is not found.
      */
     public async getOrderItemsByOrderId(
+        userId: number | undefined,
         orderId: number
     ): Promise<OrderItemResponse[]> {
-        const order = await Order.findByPk(orderId);
+        let order: Order | null;
+
+        if (userId) {
+            order = await Order.findOne({
+                where: { id: orderId },
+                include: {
+                    model: Customer,
+                    attributes: [],
+                    where: { userId },
+                    required: true,
+                },
+            });
+        } else {
+            order = await Order.findByPk(orderId);
+        }
 
         if (!order) {
             throw new OrderNotFoundError();
@@ -134,6 +166,7 @@ export class OrderService {
                 'imageUrl',
                 'weight',
                 'price',
+                'discount',
             ],
             joinTableAttributes: ['quantity'],
         });
@@ -149,11 +182,23 @@ export class OrderService {
     /**
      * Calculates the total price of all items in a specific order.
      *
-     * @param orderId - The ID of the order
+     * @param userId - The id of the user
+     * @param orderId - The id of the order
      * @returns A promise resolving to the total price
      */
-    public async getTotalPriceOfOrderItems(orderId: number): Promise<number> {
-        const order = await Order.findByPk(orderId);
+    public async getTotalPriceOfOrderItems(
+        userId: number,
+        orderId: number
+    ): Promise<number> {
+        const order = await Order.findOne({
+            where: { id: orderId },
+            include: {
+                model: Customer,
+                attributes: [],
+                where: { userId },
+                required: true,
+            },
+        });
 
         if (!order) {
             throw new OrderNotFoundError();
@@ -163,66 +208,103 @@ export class OrderService {
     }
 
     /**
-     * Retrieves all orders by a given status for a user.
+     * Retrieves all platform orders by a given status.
      *
-     * @param userId - The ID of the user
-     * @returns A promise resolving to an array of Order instances
-     *
-     * @throws {@link InvalidOrderStatusError}
-     * Thrown if the status is not a valid order status.
-     *
-     * @throws {@link UserNotFoundError}
-     * Thrown if the user of type Customer is not found.
+     * @param status - The status of the order
+     * @returns A promise resolving to an array of Order instances and their count
      */
     public async getOrdersByStatus(
-        userId: number,
         status: string
-    ): Promise<OrderResponse[]> {
-        if (!['pending', 'delivered', 'canceled'].includes(status)) {
-            throw new InvalidOrderStatusError();
-        }
-
-        const customer = await Customer.findOne({ where: { userId } });
-
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
-        }
-
-        const orders = await Order.findAll({
-            where: { customerId: customer.id, status },
-            attributes: [
-                'id',
-                'paymentMethod',
-                'status',
-                'trackingNumber',
-                'createdAt',
-            ],
+    ): Promise<{ count: number; orders: OrderResponse[] }> {
+        const { count, rows } = await Order.findAndCountAll({
+            where: { status },
         });
 
-        return orders.map((order) => order.toJSON());
+        const orders = rows.map((order) => order.toJSON());
+
+        return { count, orders };
     }
 
     /**
-     * Retrieves user's order history.
+     * Retrieves all orders by a given status for a customer.
      *
-     * @param userId - The ID of the user
+     * @remarks
+     * The order history is retrieved for a customer either by their id
+     * or their implicit id.
+     *
+     * @param userId - The id of the user "Implicit customer id"
+     * @param customerId - The id of the customer
+     * @param status - The status of the order
      * @returns A promise resolving to an array of Order instances
      *
      * @throws {@link UserNotFoundError}
      * Thrown if the user of type Customer is not found.
      */
-    public async getOrderHistory(userId: number): Promise<OrderResponse[]> {
-        const customer = await Customer.findOne({ where: { userId } });
+    public async getCustomerOrdersByStatus(
+        status: string,
+        customerId: number | undefined,
+        userId: number | undefined
+    ): Promise<{ count: number; orders: OrderResponse[] }> {
+        let customer: Customer | null | undefined;
 
-        if (!customer) {
-            throw new UserNotFoundError('User of type Customer not found');
+        if (customerId) {
+            customer = await Customer.findByPk(customerId);
+        } else if (userId) {
+            customer = await Customer.findOne({ where: { userId } });
         }
 
-        const orders = await Order.findAll({
-            where: { customerId: customer.id, status: { [Op.not]: 'pending' } },
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        const { count, rows } = await Order.findAndCountAll({
+            where: { customerId: customer.id, status },
+            attributes: { exclude: ['updatedAt', 'customerId'] },
         });
 
-        return orders.map((order) => order.toJSON());
+        const orders = rows.map((row) => row.toJSON());
+
+        return { count, orders };
+    }
+
+    /**
+     * Retrieves customer's order history.
+     *
+     * @remarks
+     * The order history is retrieved for a customer either by their id
+     * or their implicit id.
+     *
+     * @param customerId - The customer id
+     * @param userId - The id of the user "Implicit customer id"
+     * @returns A promise resolving to an array of Order instances
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user of type Customer is not found.
+     */
+    public async getCustomerOrderHistory(
+        customerId: number | undefined,
+        userId: number | undefined
+    ): Promise<{ count: number; orders: OrderResponse[] }> {
+        let customer: Customer | null | undefined;
+
+        if (customerId) {
+            customer = await Customer.findByPk(customerId);
+        } else if (userId) {
+            customer = await Customer.findOne({ where: { userId } });
+        }
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        const { count, rows } = await Order.findAndCountAll({
+            where: { customerId: customer.id, status: { [Op.not]: 'pending' } },
+            attributes: { exclude: ['updatedAt', 'customerId'] },
+        });
+
+        const orders = rows.map((row) => row.toJSON());
+
+        return { count, orders };
     }
 
     /**
@@ -230,20 +312,45 @@ export class OrderService {
      *
      * @returns A promise resolving to an array of Order instances
      */
-    public async getAllOrders(): Promise<Order[]> {
-        return await Order.findAll();
+    public async getAllOrders(): Promise<{
+        count: number;
+        orders: OrderResponse[];
+    }> {
+        const { count, rows } = await Order.findAndCountAll({
+            attributes: { exclude: ['updatedAt', 'customerId'] },
+        });
+
+        const orders = rows.map((row) => row.toJSON());
+
+        return { count, orders };
     }
 
     /**
      * Marks customer's order as delivered.
      *
      * @params orderId - The ID of the order
+     *
+     * @throws {@link OrderNotFoundError}
+     * Thrown if the order is not found.
+     *
+     * @throws {@Link OrderAlreadyMarkedError}
+     * Thrown if the order is already marked as delivered or canceled.
      */
     public async markAsDelivered(orderId: number): Promise<void> {
         const order = await Order.findByPk(orderId);
 
         if (!order) {
             throw new OrderNotFoundError();
+        }
+
+        if (order.status === 'delivered') {
+            throw new OrderAlreadyMarkedError();
+        }
+
+        if (order.status === 'canceled') {
+            throw new OrderAlreadyMarkedError(
+                'Cannot mark a canceled order as delivered'
+            );
         }
 
         order.status = 'delivered';
@@ -253,10 +360,22 @@ export class OrderService {
     /**
      * Cancels a customer's order.
      *
-     * @params orderId - The ID of the order
+     * @param userId - The id of the user
+     * @params orderId - The id of the order
+     *
+     * @throws {@link OrderNotFoundError}
+     * Thrown if the order is not found.
      */
-    public async cancelOrder(orderId: number): Promise<void> {
-        const order = await Order.findByPk(orderId);
+    public async cancelOrder(userId: number, orderId: number): Promise<void> {
+        const order = await Order.findOne({
+            where: { id: orderId },
+            include: {
+                model: Customer,
+                attributes: [],
+                where: { userId },
+                required: true,
+            },
+        });
 
         if (!order) {
             throw new OrderNotFoundError();
