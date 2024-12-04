@@ -18,8 +18,7 @@ export const validateObjectId = (value: string = 'id'): ValidationChain[] => [
         .withMessage('Id is required')
         .isMongoId()
         .withMessage(
-            (_, { req }) =>
-                `${req.params!.objectId} must be a valid MongoDB ObjectId`
+            (_, { req }) => `${req.params!.id} must be a valid MongoDB ObjectId`
         ),
 ];
 

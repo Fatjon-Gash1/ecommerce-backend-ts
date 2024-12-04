@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { RatingController } from '../../../controllers/Rating.controller';
 import { RatingService, AdminLogsService } from '../../../services';
-import { validateId, validationErrors } from '../../../middlewares/validation';
+import {
+    validateId,
+    validateObjectId,
+    validationErrors,
+} from '../../../middlewares/validation';
 import { ratingDeletionRateLimiter } from '../../../middlewares/rateLimiting';
 import authorize from '../../../middlewares/authorization/authorize';
 
@@ -28,7 +32,7 @@ router.delete(
     '/platform/:id',
     authorize(['admin']),
     ratingDeletionRateLimiter,
-    validateId(),
+    validateObjectId(),
     validationErrors,
     ratingController.deletePlatformRatingById.bind(ratingController)
 );
@@ -36,7 +40,7 @@ router.delete(
     '/products/:id',
     authorize(['admin']),
     ratingDeletionRateLimiter,
-    validateId(),
+    validateObjectId(),
     validationErrors,
     ratingController.deleteProductRatingById.bind(ratingController)
 );

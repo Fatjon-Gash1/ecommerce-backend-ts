@@ -117,12 +117,14 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const userId: number = Number(req.params.id);
+        const customerId: number = Number(req.params.id);
 
         try {
-            const customerRatings =
-                await this.ratingService.getPlatformRatingsByCustomer(userId);
-            return res.status(200).json({ customerRatings });
+            const { count, ratings } =
+                await this.ratingService.getPlatformRatingsByCustomer(
+                    customerId
+                );
+            return res.status(200).json({ total: count, ratings });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error getting customer ratings: ', error);
@@ -182,12 +184,14 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const userId: number = Number(req.params.id);
+        const customerId: number = Number(req.params.id);
 
         try {
-            const productRating =
-                await this.ratingService.getProductRatingsByCustomer(userId);
-            return res.status(200).json({ productRating });
+            const { count, ratings } =
+                await this.ratingService.getProductRatingsByCustomer(
+                    customerId
+                );
+            return res.status(200).json({ total: count, ratings });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 console.error('Error getting rating: ', error);
@@ -259,7 +263,7 @@ export class RatingController {
         const ratingId: string = req.params.ratingId;
 
         try {
-            await this.ratingService.deletePlatformRatingById(userId, ratingId);
+            await this.ratingService.deletePlatformRatingById(ratingId, userId);
             res.sendStatus(204);
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
@@ -276,11 +280,11 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: string = req.params.ratingId;
+        const ratingId: string = req.params.id;
         const { username } = req.user as JwtPayload;
 
         try {
-            await this.ratingService.deletePlatformRatingById(null, ratingId);
+            await this.ratingService.deletePlatformRatingById(ratingId);
             res.sendStatus(204);
 
             await this.adminLogsService!.log(username, 'rating', 'delete');
@@ -303,7 +307,7 @@ export class RatingController {
         const ratingId: string = req.params.ratingId;
 
         try {
-            await this.ratingService.deleteProductRatingById(userId, ratingId);
+            await this.ratingService.deleteProductRatingById(ratingId, userId);
             res.sendStatus(204);
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
@@ -320,11 +324,11 @@ export class RatingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const ratingId: string = req.params.ratingId;
+        const ratingId: string = req.params.id;
         const { username } = req.user as JwtPayload;
 
         try {
-            await this.ratingService.deleteProductRatingById(null, ratingId);
+            await this.ratingService.deleteProductRatingById(ratingId);
             res.sendStatus(204);
 
             await this.adminLogsService!.log(username, 'rating', 'delete');
