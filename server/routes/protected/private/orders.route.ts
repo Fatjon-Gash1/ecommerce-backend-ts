@@ -3,7 +3,7 @@ import { OrderController } from '../../../controllers/Order.controller';
 import { OrderService, AdminLogsService } from '../../../services';
 import {
     validateId,
-    validateQuery,
+    validateOrderStatus,
     validationErrors,
 } from '../../../middlewares/validation';
 
@@ -15,23 +15,23 @@ const orderController = new OrderController(
 
 router.get('/', orderController.getAllOrders.bind(orderController));
 router.get(
-    '/:userId/',
-    validateId('userId'),
-    validateQuery('status'),
+    '/search',
+    validateOrderStatus(),
     validationErrors,
     orderController.getOrdersByStatus.bind(orderController)
 );
 router.get(
-    '/:userId/history',
-    validateId('userId'),
+    '/:customerId/search',
+    validateId('customerId'),
+    validateOrderStatus(),
     validationErrors,
-    orderController.getOrderHistory.bind(orderController)
+    orderController.getCustomerOrdersByStatus.bind(orderController)
 );
 router.get(
-    '/:id/items',
-    validateId(),
+    '/:customerId/history',
+    validateId('customerId'),
     validationErrors,
-    orderController.getOrderItemsByOrderId.bind(orderController)
+    orderController.getCustomerOrderHistory.bind(orderController)
 );
 router.get(
     '/:id',
@@ -39,14 +39,18 @@ router.get(
     validationErrors,
     orderController.getOrderById.bind(orderController)
 );
+router.get(
+    '/:id/items',
+    validateId(),
+    validationErrors,
+    orderController.getOrderItemsByOrderId.bind(orderController)
+);
 
 router.patch(
-    '/mark-as-delivered',
+    '/:id/mark-delivered',
     validateId(),
     validationErrors,
     orderController.markAsDelivered.bind(orderController)
 );
-
-// Another route to get orders by status via id
 
 export default router;
