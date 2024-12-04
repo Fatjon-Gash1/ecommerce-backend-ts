@@ -8,8 +8,9 @@ import {
     validateShippingMethodRate,
     validateShippingWeightRate,
     validateId,
-    validateCountryId,
     validationErrors,
+    validateShippingCountryUpdate,
+    validateShippingCityUpdate,
 } from '../../../middlewares/validation';
 
 const router: Router = Router();
@@ -25,27 +26,26 @@ router.post(
     shippingController.addShippingCountry.bind(shippingController)
 );
 router.post(
-    '/countries/:countryId/cities',
-    validateCountryId(),
+    '/countries/:id/cities',
+    validateId(),
     validateShippingCity(),
     validationErrors,
     shippingController.addCityToCountry.bind(shippingController)
 );
 
 router.patch(
-    '/countries/:countryId',
+    '/countries/:id',
     shippingUpdateRateLimiter,
-    validateCountryId(),
-    validateShippingCountry(),
+    validateId(),
+    validateShippingCountryUpdate(),
     validationErrors,
     shippingController.updateShippingCountry.bind(shippingController)
 );
 router.patch(
-    '/countries/:countryId/cities/:id',
+    '/countries/cities/:id',
     shippingUpdateRateLimiter,
-    validateCountryId(),
     validateId(),
-    validateShippingCity(),
+    validateShippingCityUpdate(),
     validationErrors,
     shippingController.updateShippingCity.bind(shippingController)
 );
@@ -64,15 +64,31 @@ router.patch(
     shippingController.changeShippingWeightRate.bind(shippingController)
 );
 
+router.put(
+    '/countries/:id',
+    shippingUpdateRateLimiter,
+    validateId(),
+    validateShippingCountry(),
+    validationErrors,
+    shippingController.updateShippingCountry.bind(shippingController)
+);
+router.put(
+    '/countries/cities/:id',
+    shippingUpdateRateLimiter,
+    validateId(),
+    validateShippingCity(),
+    validationErrors,
+    shippingController.updateShippingCity.bind(shippingController)
+);
+
 router.delete(
-    '/countries/:countryId',
-    validateCountryId(),
+    '/countries/:id',
+    validateId(),
     validationErrors,
     shippingController.deleteShippingCountry.bind(shippingController)
 );
 router.delete(
-    '/countries/:countryId/cities/:id',
-    validateCountryId(),
+    '/countries/cities/:id',
     validateId(),
     validationErrors,
     shippingController.deleteShippingCity.bind(shippingController)
