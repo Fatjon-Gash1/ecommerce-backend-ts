@@ -6,25 +6,6 @@ import {
 import { User, Customer, Admin } from '../models/relational';
 import { UserNotFoundError } from '../errors';
 
-const customerAttributes = [
-    'id',
-    'stripeId',
-    'shippingAddress',
-    'billingAddress',
-    'isActive',
-    'createdAt',
-];
-
-const adminAttributes = ['id', 'role', 'createdAt'];
-
-const userAttributes = [
-    'profilePictureUrl',
-    'firstName',
-    'lastName',
-    'username',
-    'email',
-];
-
 interface AdminResponse {
     id?: number;
     role?: 'admin' | 'manager';
@@ -69,11 +50,11 @@ export class AdminService extends UserService {
     }> {
         const { count, rows } = await Customer.findAndCountAll({
             where: { isActive: true },
-            attributes: customerAttributes,
+            attributes: { exclude: ['userId', 'updatedAt'] },
             include: {
                 model: User,
                 as: 'user',
-                attributes: userAttributes,
+                attributes: { exclude: ['password', 'updatedAt'] },
             },
         });
 
@@ -101,12 +82,12 @@ export class AdminService extends UserService {
         whereCondition[attribute] = attributeValue;
 
         const customer = await Customer.findOne({
-            attributes: customerAttributes,
+            attributes: { exclude: ['userId', 'updatedAt'] },
             include: {
                 model: User,
                 as: 'user',
                 where: whereCondition,
-                attributes: userAttributes,
+                attributes: { exclude: ['password', 'updatedAt'] },
             },
         });
 
@@ -130,8 +111,12 @@ export class AdminService extends UserService {
         customers: CustomerResponse[];
     }> {
         const { count, rows } = await Customer.findAndCountAll({
-            attributes: customerAttributes,
-            include: { model: User, as: 'user', attributes: userAttributes },
+            attributes: { exclude: ['userId', 'updatedAt'] },
+            include: {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['password', 'updatedAt'] },
+            },
         });
 
         const customers = rows.map((row) => {
@@ -150,8 +135,12 @@ export class AdminService extends UserService {
      */
     public async getAdminById(adminId: number): Promise<AdminResponse> {
         const admin = await Admin.findByPk(adminId, {
-            attributes: adminAttributes,
-            include: { model: User, as: 'user', attributes: userAttributes },
+            attributes: { exclude: ['userId', 'updatedAt'] },
+            include: {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['id', 'password', 'updatedAt'] },
+            },
         });
 
         if (!admin) {
@@ -170,12 +159,16 @@ export class AdminService extends UserService {
      * @returns A promise resolving to an Admin instance array
      */
     public async getAllAdmins(
-        role: string | null = null
+        role?: string
     ): Promise<{ count: number; admins: AdminResponse[] }> {
         const { count, rows } = await Admin.findAndCountAll({
             where: role ? { role } : {},
-            attributes: adminAttributes,
-            include: { model: User, as: 'user', attributes: userAttributes },
+            attributes: { exclude: ['userId', 'updatedAt'] },
+            include: {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['id', 'password', 'updatedAt'] },
+            },
         });
 
         const admins = rows.map((row) => {
