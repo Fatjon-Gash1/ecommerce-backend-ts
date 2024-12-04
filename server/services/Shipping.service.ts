@@ -4,18 +4,20 @@ import {
     Cart,
     Customer,
 } from '../models/relational';
-import {
-    ShippingMethod,
-    ShippingWeight,
-    IShippingMethod,
-    IShippingWeight,
-} from '../models/document';
+import { ShippingMethod, ShippingWeight } from '../models/document';
 import {
     ShippingLocationNotFoundError,
     ShippingOptionNotFoundError,
+    ShippingLocationAlreadyExistsError,
     EmptyCartError,
     CartNotFoundError,
 } from '../errors';
+
+interface ShippingCountryResponse {
+    id?: number;
+    name: string;
+    rate: number;
+}
 
 interface ShippingCityResponse {
     id?: number;
@@ -23,9 +25,15 @@ interface ShippingCityResponse {
     postalCode: number;
 }
 
-interface ShippingCountryResponse {
+interface ShippingMethodResponse {
     id?: number;
-    name: string;
+    method: string;
+    rate: number;
+}
+
+interface ShippingWeightResponse {
+    id?: number;
+    weight: string;
     rate: number;
 }
 
@@ -43,8 +51,17 @@ export class ShippingService {
     public async addShippingCountry(
         name: string,
         rate: number
-    ): Promise<ShippingCountry> {
-        return await ShippingCountry.create({ name, rate });
+    ): Promise<ShippingCountryResponse> {
+        const [country, created] = await ShippingCountry.findOrCreate({
+            where: { name },
+            defaults: { name, rate },
+        });
+
+        if (!created) {
+            throw new ShippingLocationAlreadyExistsError('country');
+        }
+
+        return country.toJSON();
     }
 
     /**
@@ -59,14 +76,24 @@ export class ShippingService {
         countryId: number,
         name: string,
         postalCode: number
-    ): Promise<ShippingCity> {
+    ): Promise<ShippingCityResponse> {
         const country = await ShippingCountry.findByPk(countryId);
 
         if (!country) {
-            throw new ShippingLocationNotFoundError();
+            throw new ShippingLocationNotFoundError('country');
         }
 
-        return await ShippingCity.create({ countryId, name, postalCode });
+        const [city, created] = await ShippingCity.findOrCreate({
+            where: { name },
+            defaults: { countryId, name, postalCode },
+        });
+
+        if (!created) {
+            throw new ShippingLocationAlreadyExistsError('city');
+        }
+
+        delete city.dataValues.countryId;
+        return city.toJSON();
     }
 
     /**
@@ -92,7 +119,7 @@ export class ShippingService {
         const country = await ShippingCountry.findByPk(countryId);
 
         if (!country) {
-            throw new ShippingLocationNotFoundError();
+            throw new ShippingLocationNotFoundError('country');
         }
 
         const cities = await ShippingCity.findAll({
@@ -106,7 +133,7 @@ export class ShippingService {
     /**
      * Updates a shipping country.
      *
-     * @param countryId - Country ID
+     * @param countryId - Country id
      * @param name - Country name
      * @param rate - Shipping rate
      * @returns A promise that resolves to the updated country
@@ -115,55 +142,48 @@ export class ShippingService {
         countryId: number,
         name: string,
         rate: number
-    ): Promise<ShippingCountry> {
+    ): Promise<ShippingCountryResponse> {
         const country = await ShippingCountry.findByPk(countryId);
 
         if (!country) {
-            throw new ShippingLocationNotFoundError();
+            throw new ShippingLocationNotFoundError('country');
         }
 
-        country.name = name;
-        country.rate = rate;
+        await country.update({ name, rate });
 
-        return await country.save();
+        return country.toJSON();
     }
 
     /**
      * Updates a shipping city.
      *
-     * @param countryId - Country ID
-     * @param cityId - City ID
+     * @param cityId - City id
      * @param name - City name
      * @param postalCode - Postal code
      * @returns A promise that resolves to the updated city
      */
     public async updateShippingCity(
-        countryId: number,
         cityId: number,
         name: string,
         postalCode: number
-    ): Promise<ShippingCity> {
-        const city = await ShippingCity.findOne({
-            where: {
-                id: cityId,
-                countryId,
-            },
+    ): Promise<ShippingCityResponse> {
+        const city = await ShippingCity.findByPk(cityId, {
+            attributes: { exclude: ['countryId'] },
         });
 
         if (!city) {
-            throw new ShippingLocationNotFoundError('Shipping City not found');
+            throw new ShippingLocationNotFoundError('city');
         }
 
-        city.name = name;
-        city.postalCode = postalCode;
+        await city.update({ name, postalCode });
 
-        return await city.save();
+        return city.toJSON();
     }
 
     /**
      * Deletes a shipping country.
      *
-     * @param countryId - Country ID
+     * @param countryId - Country id
      * @returns A promise that resolves to a boolean value indicating
      * whether the country was deleted
      */
@@ -173,32 +193,24 @@ export class ShippingService {
         });
 
         if (deleted === 0) {
-            throw new ShippingLocationNotFoundError(
-                `Country with Id: "${countryId}" not found or already deleted.`
-            );
+            throw new ShippingLocationNotFoundError('country');
         }
     }
 
     /**
      * Deletes a shipping city.
      *
-     * @param countryId - Country ID
-     * @param cityId - City ID
+     * @param cityId - City id
      * @returns A promise that resolves to a boolean value indicating
      * whether the city was deleted
      */
-    public async deleteShippingCity(
-        countryId: number,
-        cityId: number
-    ): Promise<void> {
+    public async deleteShippingCity(cityId: number): Promise<void> {
         const deleted = await ShippingCity.destroy({
-            where: { id: cityId, countryId },
+            where: { id: cityId },
         });
 
         if (deleted === 0) {
-            throw new ShippingLocationNotFoundError(
-                `City with Id: "${cityId}" not found or already deleted.`
-            );
+            throw new ShippingLocationNotFoundError('city');
         }
     }
 
@@ -212,7 +224,7 @@ export class ShippingService {
     public async changeShippingMethodRate(
         method: string,
         rate: number
-    ): Promise<IShippingMethod> {
+    ): Promise<ShippingMethodResponse> {
         const shippingMethod = await ShippingMethod.findOne({ method });
 
         if (!shippingMethod) {
@@ -220,7 +232,9 @@ export class ShippingService {
         }
 
         shippingMethod.rate = rate;
-        return await shippingMethod.save();
+        await shippingMethod.save();
+
+        return shippingMethod.toObject();
     }
 
     /**
@@ -233,7 +247,7 @@ export class ShippingService {
     public async changeShippingWeightRate(
         weight: string,
         rate: number
-    ): Promise<IShippingWeight> {
+    ): Promise<ShippingWeightResponse> {
         const shippingWeight = await ShippingWeight.findOne({
             weight,
         });
@@ -243,7 +257,9 @@ export class ShippingService {
         }
 
         shippingWeight.rate = rate;
-        return await shippingWeight.save();
+        await shippingWeight.save();
+
+        return shippingWeight.toObject();
     }
 
     /**
@@ -320,7 +336,7 @@ export class ShippingService {
         ]);
 
         if (!country) {
-            throw new ShippingLocationNotFoundError();
+            throw new ShippingLocationNotFoundError('country');
         }
 
         if (!method) {
