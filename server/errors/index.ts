@@ -27,13 +27,14 @@ import {
 import {
     ShippingLocationNotFoundError,
     ShippingOptionNotFoundError,
+    ShippingLocationAlreadyExistsError,
 } from './ShippingErrors';
 import {
     PaymentFailedError,
     InvalidPaymentMethodError,
     InsufficientFundsError,
 } from './PaymentErrors';
-import { OrderNotFoundError, InvalidOrderStatusError } from './OrderErrors';
+import { OrderNotFoundError, OrderAlreadyMarkedError } from './OrderErrors';
 import { RatingNotFoundError } from './RatingErrors';
 import {
     NotificationError,
@@ -62,11 +63,12 @@ export {
     CartItemAdditionError,
     ShippingLocationNotFoundError,
     ShippingOptionNotFoundError,
+    ShippingLocationAlreadyExistsError,
     PaymentFailedError,
     InvalidPaymentMethodError,
     InsufficientFundsError,
     OrderNotFoundError,
-    InvalidOrderStatusError,
+    OrderAlreadyMarkedError,
     RatingNotFoundError,
     NotificationError,
     EmailNotificationError,
