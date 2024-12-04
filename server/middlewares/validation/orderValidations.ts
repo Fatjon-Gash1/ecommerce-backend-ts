@@ -1,4 +1,4 @@
-import { body, ValidationChain } from 'express-validator';
+import { body, query, ValidationChain } from 'express-validator';
 
 export const validateOrderCreation = (): ValidationChain[] => [
     body('items')
@@ -29,4 +29,14 @@ export const validateOrderCreation = (): ValidationChain[] => [
         .withMessage(
             'Payment method must be either card, wallet or bank-transfer'
         ),
+];
+
+export const validateOrderStatus = (): ValidationChain[] => [
+    query('status')
+        .trim()
+        .notEmpty()
+        .withMessage('Status is required')
+        .toLowerCase()
+        .isIn(['pending', 'delivered', 'canceled'])
+        .withMessage('Status must be either pending, delivered or canceled'),
 ];

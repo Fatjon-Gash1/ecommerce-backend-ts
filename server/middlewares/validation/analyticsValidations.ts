@@ -13,15 +13,6 @@ export const validateProductStatus = (): ValidationChain[] => [
         .withMessage('Invalid status'),
 ];
 
-export const validateOrderStatus = (): ValidationChain[] => [
-    query('status')
-        .trim()
-        .notEmpty()
-        .withMessage('Status is required')
-        .isIn(['pending', 'delivered', 'cancelled'])
-        .withMessage('Invalid status'),
-];
-
 export const validateReportName = (): ValidationChain[] => [
     query('name')
         .trim()
