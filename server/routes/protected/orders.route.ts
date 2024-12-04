@@ -5,7 +5,7 @@ import {
     validateOrderCreation,
     validateId,
     validationErrors,
-    validateQuery,
+    validateOrderStatus,
 } from '../../middlewares/validation';
 
 const router: Router = Router();
@@ -19,17 +19,20 @@ router.post(
 );
 
 router.get(
-    '/',
-    validateQuery('status'),
+    '/search',
+    validateOrderStatus(),
     validationErrors,
-    orderController.getOrdersByStatus.bind(orderController)
+    orderController.getCustomerOrdersByStatus.bind(orderController)
 );
-router.get('/history', orderController.getOrderHistory.bind(orderController));
 router.get(
-    '/:id/items/total',
+    '/history',
+    orderController.getCustomerOrderHistory.bind(orderController)
+);
+router.get(
+    '/:id',
     validateId(),
     validationErrors,
-    orderController.getTotalPriceOfOrderItems.bind(orderController)
+    orderController.getOrderById.bind(orderController)
 );
 router.get(
     '/:id/items',
@@ -38,10 +41,10 @@ router.get(
     orderController.getOrderItemsByOrderId.bind(orderController)
 );
 router.get(
-    '/:id',
+    '/:id/items/total',
     validateId(),
     validationErrors,
-    orderController.getOrderById.bind(orderController)
+    orderController.getTotalPriceOfOrderItems.bind(orderController)
 );
 
 router.patch(
