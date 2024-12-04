@@ -102,7 +102,7 @@ Order.init(
         trackingNumber: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: Order.generateTrackingNumber(),
+            defaultValue: () => Order.generateTrackingNumber(),
         },
     },
     { sequelize, modelName: 'Order', tableName: 'orders' }
