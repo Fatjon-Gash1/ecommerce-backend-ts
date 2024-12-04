@@ -48,7 +48,7 @@ export class ShippingCity extends Model<CityAttributes> {
 
 ShippingCity.init(
     {
-        name: { type: DataTypes.STRING, allowNull: false, unique: true },
+        name: { type: DataTypes.STRING, allowNull: false },
         postalCode: { type: DataTypes.INTEGER, allowNull: false },
     },
     { sequelize, tableName: 'shipping_cities', timestamps: false }
