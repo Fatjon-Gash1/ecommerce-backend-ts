@@ -48,14 +48,6 @@ export class Product
     declare CartItem?: ICartItem;
     declare quantity?: number;
     declare OrderItem?: Product;
-
-    public getPriceWithDiscount(): number {
-        return this.price - (this.price * this.discount!) / 100;
-    }
-
-    public async getCategory(): Promise<Category | null> {
-        return await Category.findByPk(this.categoryId);
-    }
 }
 
 Product.init(
@@ -63,7 +55,6 @@ Product.init(
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
         },
         description: {
             type: DataTypes.STRING,
@@ -80,11 +71,10 @@ Product.init(
         imageUrl: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
         },
         stockQuantity: {
             type: DataTypes.INTEGER,
-            defaultValue: 0,
+            defaultValue: 1,
         },
         weight: {
             type: DataTypes.FLOAT,
@@ -103,7 +93,7 @@ Product.init(
     }
 );
 
-const bulkOperations: object[] = [];
+/*const bulkOperations: object[] = [];
 const limit = 5;
 
 Product.afterCreate(async (product) => {
@@ -160,7 +150,11 @@ Product.afterDestroy(async (product) => {
 
     // Execute bulk request after specific operations
     if (bulkOperations.length >= limit) {
-        await client.bulk({ body: bulkOperations });
-        bulkOperations.length = 0;
+        try {
+            await client.bulk({ body: bulkOperations });
+            bulkOperations.length = 0;
+        } catch (err) {
+            console.error('Elasticsearch bulk operation error on delete:', err);
+        }
     }
-});
+});*/
