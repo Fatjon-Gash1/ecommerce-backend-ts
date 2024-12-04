@@ -10,11 +10,11 @@ import {
 
 export class ProductController {
     private productService: ProductService;
-    private adminLogsService: AdminLogsService | null;
+    private adminLogsService?: AdminLogsService;
 
     constructor(
         productService: ProductService,
-        adminLogsService: AdminLogsService | null = null
+        adminLogsService?: AdminLogsService
     ) {
         this.productService = productService;
         this.adminLogsService = adminLogsService;
@@ -54,7 +54,7 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const categoryId = Number(req.params.id);
+        const categoryId: number = Number(req.params.id);
         const { username } = req.user as JwtPayload;
         const { details } = req.body;
 
@@ -68,8 +68,12 @@ export class ProductController {
                 product,
             });
 
-            this.adminLogsService!.log(username, 'product', 'create');
+            await this.adminLogsService!.log(username, 'product', 'create');
         } catch (error) {
+            if (error instanceof CategoryNotFoundError) {
+                console.error('Error adding product: ', error);
+                return res.status(404).json({ message: error.message });
+            }
             if (error instanceof ProductAlreadyExistsError) {
                 console.error('Error adding product: ', error);
                 return res.status(400).json({ message: error.message });
@@ -210,7 +214,7 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const productId: number = Number(req.params.id);
+        const productId: number = Number(req.params.productId);
 
         try {
             const category =
@@ -232,28 +236,20 @@ export class ProductController {
         }
     }
 
-    public async getProductsInStock(
-        _req: Request,
+    public async getProductsByStockStatus(
+        req: Request,
         res: Response
     ): Promise<void | Response> {
+        const { status } = req.query;
+
         try {
-            const products = await this.productService.getProductsInStock();
-            return res.status(200).json({ products });
+            const { count, products } =
+                await this.productService.getProductsByStockStatus(
+                    status as string
+                );
+            return res.status(200).json({ total: count, products });
         } catch (error) {
             console.error('Error getting products in stock: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async getProductsOutOfStock(
-        _req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        try {
-            const products = await this.productService.getProductsOutOfStock();
-            return res.status(200).json({ products });
-        } catch (error) {
-            console.error('Error getting products out of stock: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -283,6 +279,7 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
+        const { username } = req.user as JwtPayload;
         const categoryId: number = Number(req.params.id);
         const { name, description } = req.body;
 
@@ -292,12 +289,15 @@ export class ProductController {
                 name,
                 description
             );
-            return res.status(200).json({ category });
+            res.status(200).json({ category });
+
+            await this.adminLogsService!.log(username, 'category', 'update');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 console.error('Error updating category: ', error);
                 return res.status(404).json({ message: error.message });
             }
+
             console.error('Error updating category: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
@@ -307,7 +307,7 @@ export class ProductController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const productId: number = Number(req.params.id);
+        const productId: number = Number(req.params.productId);
         const { username } = req.user as JwtPayload;
         const { discount } = req.body;
 
@@ -318,11 +318,11 @@ export class ProductController {
                     discount
                 );
             res.status(200).json({
-                message: 'Product discount set successfully',
+                discount,
                 discountedPrice,
             });
 
-            this.adminLogsService!.log(username, 'product', 'update');
+            await this.adminLogsService!.log(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error setting discount: ', error);
@@ -334,7 +334,7 @@ export class ProductController {
         }
     }
 
-    public async updateProduct(
+    public async updateProductById(
         req: Request,
         res: Response
     ): Promise<void | Response> {
@@ -343,16 +343,15 @@ export class ProductController {
         const { details } = req.body;
 
         try {
-            const updatedProduct = await this.productService.updateProduct(
+            const updatedProduct = await this.productService.updateProductById(
                 productId,
                 details
             );
             res.status(200).json({
-                message: 'Product updated successfully',
                 updatedProduct,
             });
 
-            this.adminLogsService!.log(username, 'product', 'update');
+            await this.adminLogsService!.log(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 console.error('Error updating product: ', error);

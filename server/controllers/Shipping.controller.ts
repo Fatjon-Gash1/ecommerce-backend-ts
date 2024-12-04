@@ -6,16 +6,17 @@ import {
     EmptyCartError,
     CartNotFoundError,
     UserNotFoundError,
+    ShippingLocationAlreadyExistsError,
 } from '../errors';
 import { JwtPayload } from 'jsonwebtoken';
 
 export class ShippingController {
     private shippingService: ShippingService;
-    private adminLogsService: AdminLogsService | null;
+    private adminLogsService?: AdminLogsService;
 
     constructor(
         shippingService: ShippingService,
-        adminLogsService: AdminLogsService | null = null
+        adminLogsService?: AdminLogsService
     ) {
         this.shippingService = shippingService;
         this.adminLogsService = adminLogsService;
@@ -38,8 +39,17 @@ export class ShippingController {
                 country,
             });
 
-            await this.adminLogsService!.log(username, 'country', 'create');
+            await this.adminLogsService!.log(
+                username,
+                'shipping country',
+                'create'
+            );
         } catch (error) {
+            if (error instanceof ShippingLocationAlreadyExistsError) {
+                console.error('Error adding new country: ', error);
+                return res.status(400).json({ message: error.message });
+            }
+
             console.error('Error adding new country: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
@@ -54,22 +64,33 @@ export class ShippingController {
         const { name, postalCode } = req.body;
 
         try {
-            const city = await this.shippingService.addCityToCountry(
+            const shippingCity = await this.shippingService.addCityToCountry(
                 countryId,
                 name,
                 postalCode
             );
 
-            res.status(200).json({ message: 'City added successfully', city });
+            res.status(200).json({
+                message: 'Shipping city added successfully',
+                shippingCity,
+            });
 
-            await this.adminLogsService!.log(username, 'city', 'create');
+            await this.adminLogsService!.log(
+                username,
+                'shipping city',
+                'create'
+            );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error adding city: ', error);
+                console.error('Error adding shipping city: ', error);
                 return res.status(404).json({ message: error.message });
             }
+            if (error instanceof ShippingLocationAlreadyExistsError) {
+                console.error('Error adding shipping city: ', error);
+                return res.status(400).json({ message: error.message });
+            }
 
-            console.error('Error adding city: ', error);
+            console.error('Error adding shipping city: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -189,11 +210,15 @@ export class ShippingController {
                 );
 
             res.status(200).json({
-                message: 'Country updated successfully',
+                message: 'Shipping country updated successfully',
                 updatedCountry,
             });
 
-            await this.adminLogsService!.log(username, 'country', 'update');
+            await this.adminLogsService!.log(
+                username,
+                'shipping country',
+                'update'
+            );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error updating country: ', error);
@@ -209,25 +234,27 @@ export class ShippingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const countryId: number = Number(req.params.countryId);
         const cityId: number = Number(req.params.id);
         const { username } = req.user as JwtPayload;
         const { name, postalCode } = req.body;
 
         try {
             const updatedCity = await this.shippingService.updateShippingCity(
-                countryId,
                 cityId,
                 name,
                 postalCode
             );
 
             res.status(200).json({
-                message: 'City updated successfully',
+                message: 'Shipping city updated successfully',
                 updatedCity,
             });
 
-            await this.adminLogsService!.log(username, 'city', 'update');
+            await this.adminLogsService!.log(
+                username,
+                'shipping city',
+                'update'
+            );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error updating city: ', error);
@@ -319,7 +346,11 @@ export class ShippingController {
 
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'country', 'delete');
+            await this.adminLogsService!.log(
+                username,
+                'shipping country',
+                'delete'
+            );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error deleting country: ', error);
@@ -335,16 +366,19 @@ export class ShippingController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const countryId: number = Number(req.params.countryId);
         const cityId: number = Number(req.params.id);
         const { username } = req.user as JwtPayload;
 
         try {
-            await this.shippingService.deleteShippingCity(countryId, cityId);
+            await this.shippingService.deleteShippingCity(cityId);
 
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'city', 'delete');
+            await this.adminLogsService!.log(
+                username,
+                'shipping city',
+                'delete'
+            );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
                 console.error('Error deleting city: ', error);

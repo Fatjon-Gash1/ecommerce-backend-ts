@@ -157,7 +157,7 @@ export class AdminController {
         req: Request,
         res: Response
     ): Promise<void | Response> {
-        const adminId = Number(req.params.id);
+        const adminId: number = Number(req.params.id);
 
         try {
             const admin = await this.adminService.getAdminById(adminId);

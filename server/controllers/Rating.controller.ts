@@ -9,11 +9,11 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export class RatingController {
     private ratingService: RatingService;
-    private adminLogsService: AdminLogsService | null;
+    private adminLogsService?: AdminLogsService;
 
     constructor(
         ratingService: RatingService,
-        adminLogsService: AdminLogsService | null = null
+        adminLogsService?: AdminLogsService
     ) {
         this.ratingService = ratingService;
         this.adminLogsService = adminLogsService;
