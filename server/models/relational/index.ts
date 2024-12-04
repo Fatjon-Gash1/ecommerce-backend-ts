@@ -45,8 +45,16 @@ AdminLog.belongsTo(Admin, { foreignKey: 'adminId' });
 
 Category.hasMany(Product, { foreignKey: 'categoryId', onDelete: 'CASCADE' });
 // Self-referential associations
-Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
-Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
+Category.hasMany(Category, {
+    as: 'children',
+    foreignKey: 'parentId',
+    onDelete: 'CASCADE',
+});
+Category.belongsTo(Category, {
+    as: 'parent',
+    foreignKey: 'parentId',
+    onDelete: 'CASCADE',
+});
 
 Product.belongsTo(Category, { foreignKey: 'categoryId', onDelete: 'CASCADE' });
 Product.belongsToMany(Cart, {
