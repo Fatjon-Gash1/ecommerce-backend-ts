@@ -21,15 +21,35 @@ export const validateShippingCountry = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('Country name is required')
-        .isAlpha()
-        .withMessage('Country name must contain only letters'),
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ'’.\-\s]+$/)
+        .withMessage(
+            'Country name must contain only letters, numbers, dots, commas, or hyphens'
+        ),
 
     body('rate')
-        .trim()
         .notEmpty()
         .withMessage('Shipping rate is required')
-        .isFloat()
-        .withMessage('Shipping rate must be a floating point number'),
+        .isFloat({ min: 0.5, max: 100 })
+        .withMessage(
+            'Shipping rate must be a floating point number between 0.5 and 100'
+        ),
+];
+
+export const validateShippingCountryUpdate = (): ValidationChain[] => [
+    body('name')
+        .optional()
+        .trim()
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ'’.\-\s]+$/)
+        .withMessage(
+            'Country name must contain only letters, numbers, dots, commas, or hyphens'
+        ),
+
+    body('rate')
+        .optional()
+        .isFloat({ min: 0.5, max: 100 })
+        .withMessage(
+            'Shipping rate must be a floating point number between 0.5 and 100'
+        ),
 ];
 
 export const validateShippingCity = (): ValidationChain[] => [
@@ -37,15 +57,31 @@ export const validateShippingCity = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('City name is required')
-        .isAlpha()
-        .withMessage('City name must contain only letters'),
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ'’.\-\s]+$/)
+        .withMessage(
+            'City name must contain only letters, numbers, dots, commas, or hyphens'
+        ),
 
     body('postalCode')
-        .trim()
         .notEmpty()
         .withMessage('Postal code is required')
-        .isInt()
-        .withMessage('Postal code must be an integer'),
+        .isAlphanumeric()
+        .withMessage('Postal code must be a number, string, or alphanumeric'),
+];
+
+export const validateShippingCityUpdate = (): ValidationChain[] => [
+    body('name')
+        .optional()
+        .trim()
+        .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ'’.\-\s]+$/)
+        .withMessage(
+            'City name must contain only letters, numbers, dots, commas, or hyphens'
+        ),
+
+    body('postalCode')
+        .optional()
+        .isAlphanumeric()
+        .withMessage('Postal code must be a number, string, or alphanumeric'),
 ];
 
 export const validateShippingMethodRate = (): ValidationChain[] => [
@@ -57,7 +93,6 @@ export const validateShippingMethodRate = (): ValidationChain[] => [
         .withMessage('Method must be standard, express or next-day'),
 
     body('rate')
-        .trim()
         .notEmpty()
         .withMessage('Rate is required')
         .isFloat()
@@ -73,17 +108,8 @@ export const validateShippingWeightRate = (): ValidationChain[] => [
         .withMessage('Weight must be light, standard or heavy'),
 
     body('rate')
-        .trim()
         .notEmpty()
         .withMessage('Rate is required')
         .isFloat()
         .withMessage('Rate must be a floating point number'),
-];
-
-export const validateCountryId = (): ValidationChain[] => [
-    param('countryId')
-        .notEmpty()
-        .withMessage('Country Id is required')
-        .isInt({ min: 1 })
-        .withMessage('Country Id must be a positive integer'),
 ];

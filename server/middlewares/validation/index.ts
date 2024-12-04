@@ -16,7 +16,9 @@ export {
 export {
     validateCategory,
     validateProduct,
+    validateStockStatus,
     validateDiscount,
+    validateCategoryUpdate,
     validateProductUpdate,
 } from './productValidations';
 
@@ -29,21 +31,21 @@ export {
 
 export { validateCartItemDetails } from './cartValidations';
 
-export { validateOrderCreation } from './orderValidations';
+export { validateOrderCreation, validateOrderStatus } from './orderValidations';
 
 export {
     validateShippingCostDetails,
     validateShippingCountry,
+    validateShippingCountryUpdate,
     validateShippingCity,
+    validateShippingCityUpdate,
     validateShippingMethodRate,
     validateShippingWeightRate,
-    validateCountryId,
 } from './shippingValidations';
 
 export {
     validatePagination,
     validateProductStatus,
-    validateOrderStatus,
     validateReportName,
     validateReportType,
 } from './analyticsValidations';
