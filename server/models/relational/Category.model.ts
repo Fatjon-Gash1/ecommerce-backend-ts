@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, BelongsToManyGetAssociationsMixin } from 'sequelize';
 import { sequelize } from '../../config/db';
 import { Product } from './Product.model';
 
@@ -19,6 +19,7 @@ export class Category
     declare description: string;
     declare hasProducts?: boolean;
     declare parentId: number | null;
+    declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
 }
 
 Category.init(
@@ -58,11 +59,8 @@ Category.init(
 );
 
 Category.beforeDestroy(async (category, options) => {
-    await Product.update(
-        { deletedAt: new Date() },
-        {
-            where: { categoryId: category.id },
-            transaction: options.transaction,
-        }
-    );
+    await Product.destroy({
+        where: { categoryId: category.id },
+        transaction: options.transaction,
+    });
 });
