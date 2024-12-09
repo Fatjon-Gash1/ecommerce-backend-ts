@@ -5,6 +5,8 @@ import {
     ProductNotFoundError,
     InvalidStockStatusError,
     ReportNotFoundError,
+    UserNotFoundError,
+    AdminLogInvalidTargetError,
 } from '../errors';
 import { JwtPayload } from 'jsonwebtoken';
 
@@ -32,8 +34,18 @@ export class AnalyticsController {
                 message: 'Sales report generated successfully',
             });
 
-            await this.adminLogsService.log(username, 'report', 'create');
+            await this.adminLogsService.log(username, 'sales report', 'create');
         } catch (error) {
+            // Curious about the response delivery.. TEST
+            if (error instanceof UserNotFoundError) {
+                console.error('Error generating sales report: ', error);
+                return res.status(404).json({ message: error.message });
+            }
+            if (error instanceof AdminLogInvalidTargetError) {
+                console.error('Error generating sales report: ', error);
+                return res.status(400).json({ message: error.message });
+            }
+
             console.error('Error generating sales report: ', error);
             return res.status(500).json({ message: 'Server error' });
         }
@@ -51,7 +63,7 @@ export class AnalyticsController {
                 message: 'Stock report generated successfully',
             });
 
-            await this.adminLogsService.log(username, 'report', 'create');
+            await this.adminLogsService.log(username, 'stock report', 'create');
         } catch (error) {
             console.error('Error generating stock report: ', error);
             return res.status(500).json({ message: 'Server error' });
@@ -63,11 +75,9 @@ export class AnalyticsController {
         res: Response
     ): Promise<void | Response> {
         try {
-            const { totalCount, products } =
+            const { purchasesCount, products } =
                 await this.analyticsService.getTotalProductPurchases();
-            return res
-                .status(200)
-                .json({ totalProducts: totalCount, products });
+            return res.status(200).json({ purchasesCount, products });
         } catch (error) {
             console.error('Error getting total product purchases: ', error);
             return res.status(500).json({ message: 'Server error' });
@@ -242,6 +252,7 @@ export class AnalyticsController {
     }
 
     public async getProductsByStockStatus(
+        // might have to remove this one...
         req: Request,
         res: Response
     ): Promise<void | Response> {
