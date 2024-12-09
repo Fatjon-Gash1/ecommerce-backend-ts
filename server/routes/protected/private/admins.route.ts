@@ -22,6 +22,7 @@ import adminProducts from './products.route';
 import adminOrders from './orders.route';
 import adminShippings from './shippings.route';
 import adminRatings from './ratings.route';
+import adminAnalytics from './analytics.route';
 
 const router: Router = Router();
 const adminController = new AdminController(
@@ -106,7 +107,7 @@ router.use('/products', adminProducts);
 router.use('/orders', adminOrders);
 router.use('/shippings', adminShippings);
 router.use('/ratings', adminRatings);
-// I think i forgot the analytics route
+router.use('/analytics', adminAnalytics);
 // After: ElasticSearch query methods, Payment route, redis caching, serialization, refactoring...
 
 export default router;
