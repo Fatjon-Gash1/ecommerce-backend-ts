@@ -1,7 +1,8 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, BelongsToManyGetAssociationsMixin } from 'sequelize';
 import { sequelize } from '../../config/db';
 import { User } from './User.model';
 import { Cart } from './Cart.model';
+import { Product } from './Product.model';
 
 interface CustomerAttributes {
     id?: number;
@@ -34,6 +35,9 @@ export class Customer
     declare email: string; // Virtual field
     declare password: string; // Virtual field;
     declare user?: User;
+
+    // For reports
+    declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
 
     public async createCartForUser(): Promise<void> {
         await Cart.create({ customerId: this.id });
