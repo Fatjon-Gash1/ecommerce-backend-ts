@@ -13,11 +13,14 @@ export class AdminLogsService {
      * @param operation - The action performed
      * @returns A promise that resolves to void
      *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the admin is not found.
+     *
      * @throws {@link AdminLogInvalidTargetError}
-     * thrown if the provided target is not valid
+     * Thrown if the provided target is not valid
      *
      * @throws {@link AdminLogCreationError}
-     * thrown if the log cannot be created
+     * Thrown if the log cannot be created
      */
     public async log(
         username: string,
@@ -30,7 +33,7 @@ export class AdminLogsService {
 
         if (!admin) {
             throw new UserNotFoundError(
-                `Admin with username: "${username}" not found!`
+                `Could not log admin "${username}". Admin not found!`
             );
         }
 
@@ -46,7 +49,8 @@ export class AdminLogsService {
             'shipping method',
             'review',
             'rating',
-            'report',
+            'sales report',
+            'stock report',
         ];
 
         if (!categories.includes(target)) {
