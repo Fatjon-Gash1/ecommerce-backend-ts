@@ -12,6 +12,9 @@ interface OrderAttributes {
     id?: number;
     customerId?: number;
     paymentMethod: 'card' | 'wallet' | 'bank-transfer';
+    shippingCountry: string;
+    shippingWeight: 'light' | 'standard' | 'heavy';
+    shippingMethod: 'standard' | 'express' | 'next-day';
     status?: 'pending' | 'delivered' | 'canceled';
     trackingNumber?: string;
     createdAt?: Date;
@@ -28,6 +31,9 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     declare id?: number;
     declare customerId?: number;
     declare paymentMethod: 'card' | 'wallet' | 'bank-transfer';
+    declare shippingCountry: string;
+    declare shippingWeight: 'light' | 'standard' | 'heavy';
+    declare shippingMethod: 'standard' | 'express' | 'next-day';
     declare status?: 'pending' | 'delivered' | 'canceled';
     declare trackingNumber?: string;
     declare createdAt?: Date;
@@ -93,6 +99,18 @@ Order.init(
     {
         paymentMethod: {
             type: DataTypes.ENUM('card', 'wallet', 'bank-transfer'),
+            allowNull: false,
+        },
+        shippingCountry: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        shippingWeight: {
+            type: DataTypes.ENUM('light', 'standard', 'heavy'),
+            allowNull: false,
+        },
+        shippingMethod: {
+            type: DataTypes.ENUM('standard', 'express', 'next-day'),
             allowNull: false,
         },
         status: {
