@@ -38,7 +38,7 @@ export class Cart extends Model<CartAttributes> implements CartAttributes {
             return acc + price * item.quantity;
         }, 0);
 
-        return totalPrice ? Math.ceil(totalPrice) - 0.01 : 0;
+        return totalPrice;
     }
 }
 
