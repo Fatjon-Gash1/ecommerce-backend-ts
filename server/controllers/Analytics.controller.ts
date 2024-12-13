@@ -71,12 +71,16 @@ export class AnalyticsController {
     }
 
     public async getTotalProductPurchases(
-        _req: Request,
+        req: Request,
         res: Response
     ): Promise<void | Response> {
+        const { filter } = req.query;
+
         try {
             const { purchasesCount, products } =
-                await this.analyticsService.getTotalProductPurchases();
+                await this.analyticsService.getTotalProductPurchases(
+                    filter as 'quantity' | 'totalRevenue'
+                );
             return res.status(200).json({ purchasesCount, products });
         } catch (error) {
             console.error('Error getting total product purchases: ', error);
@@ -84,14 +88,14 @@ export class AnalyticsController {
         }
     }
 
-    public async getTotalProductRevenue(
+    public async getTotalProductsRevenue(
         _req: Request,
         res: Response
     ): Promise<void | Response> {
         try {
-            const totalProductRevenue =
-                await this.analyticsService.getTotalProductRevenue();
-            return res.status(200).json({ totalProductRevenue });
+            const totalProductsRevenue =
+                await this.analyticsService.getTotalProductsRevenue();
+            return res.status(200).json({ totalProductsRevenue });
         } catch (error) {
             console.error('Error getting total product revenue: ', error);
             return res.status(500).json({ message: 'Server error' });
