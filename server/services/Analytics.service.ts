@@ -17,14 +17,15 @@ import { Sequelize, Op } from 'sequelize';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
+import sequelize from 'sequelize';
 
 const reportsDir = path.join(__dirname, '../reports');
 
-interface ProductPurchases {
-    productId: number;
-    productName: string;
-    productPrice: number;
-    purchaseCount: number;
+interface PurchasedProductResponse {
+    id?: number;
+    name: string;
+    price: number;
+    quantity: number;
     totalRevenue: number;
 }
 
@@ -50,7 +51,7 @@ export class AnalyticsService {
         const user = await User.findOne({ where: { username } });
 
         if (!user) {
-            throw new UserNotFoundError();
+            throw new UserNotFoundError('Admin not found');
         }
 
         const firstName =
@@ -58,11 +59,12 @@ export class AnalyticsService {
         const lastName =
             user.lastName.charAt(0).toUpperCase() + user.lastName.slice(1);
 
-        const productRevenue = await this.getTotalProductRevenue();
+        const productRevenue = await this.getTotalProductsRevenue();
         const totalRevenue = await this.getTotalRevenue();
         const totalTransactions = await Sale.count();
         const averageOrderValue = await this.getAverageOrderValue();
-        const { totalCount } = await this.getTotalProductPurchases();
+        const { purchasesCount } =
+            await this.getTotalProductPurchases('quantity');
         const pendingOrders = await this.getPlatformOrdersByStatus('Pending');
         const cancelledOrders =
             await this.getPlatformOrdersByStatus('Cancelled');
@@ -71,7 +73,9 @@ export class AnalyticsService {
         const categoryData = await this.getCategoryPurchases();
 
         const doc = new PDFDocument();
-        doc.pipe(fs.createWriteStream('reports/sales_report.pdf'));
+        doc.pipe(
+            fs.createWriteStream(`reports/sales_report_${Date.now()}.pdf`)
+        );
 
         doc.fontSize(25).text('Product Sales Report', { align: 'center' });
         doc.fontSize(18)
@@ -95,7 +99,9 @@ export class AnalyticsService {
             .text(' (+35%)');
         doc.fillColor('black')
             .moveDown(0.25)
-            .text('Number of Products Sold: ' + totalCount, { continued: true })
+            .text('Number of Products Sold: ' + purchasesCount, {
+                continued: true,
+            })
             .fillColor('#4CAF50')
             .text(' (+8%)');
         doc.fillColor('black')
@@ -286,45 +292,69 @@ export class AnalyticsService {
     }
 
     /**
-     * Retrieves the total product purchases in the platform.
+     * Retrieves the total number of product purchases and each
+     * purchased product in the platform.
      *
      * @returns A promise that resolves to an object containing
-     * the count and an array of products
+     * the total purchase count and an array of purchased products
      */
-    public async getTotalProductPurchases(): Promise<{
-        totalCount: number;
-        products: ProductPurchases[];
+    public async getTotalProductPurchases(
+        filter: 'quantity' | 'totalRevenue'
+    ): Promise<{
+        purchasesCount: number;
+        products: PurchasedProductResponse[];
     }> {
-        const totalCount = await Purchase.count();
-        const results = await Purchase.findAll({
-            include: [
-                {
-                    model: Product,
-                    attributes: ['id', 'name', 'price'],
-                },
-            ],
+        const purchasesCount = await Purchase.sum('quantity');
+        const foundProducts = await Purchase.findAll({
             attributes: [
-                [Sequelize.col('Product.id'), 'productId'],
-                [Sequelize.col('Product.name'), 'productName'],
-                [Sequelize.col('Product.price'), 'productPrice'],
                 [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.id')),
-                    'purchaseCount',
+                    sequelize.cast(
+                        sequelize.fn('SUM', sequelize.col('quantity')),
+                        'int'
+                    ),
+                    'quantity',
                 ],
                 [
-                    Sequelize.fn('SUM', Sequelize.col('Product.price')),
-                    'totalRevenue',
+                    sequelize.cast(
+                        sequelize.fn('SUM', sequelize.col('discountRate')),
+                        'float'
+                    ),
+                    'discountRate',
                 ],
+                'productId',
             ],
-            group: ['Product.id', 'Product.name', 'Product.price'],
-            order: [
-                [Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'DESC'],
-            ],
+            group: ['productId'],
+        });
+
+        const productIds: number[] = foundProducts
+            .map((row) => row.productId)
+            .filter((row) => row != undefined);
+
+        const productResults = await Product.findAll({
+            where: { id: productIds },
+            attributes: ['id', 'name', 'price'],
+        });
+
+        const productsWithQuantity: PurchasedProductResponse[] = [];
+
+        for (let index = 0; index < productResults.length; index++) {
+            const { quantity, discountRate } = foundProducts[index];
+            const totalRevenue = discountRate * productResults[index].price;
+
+            productsWithQuantity.push({
+                ...productResults[index].toJSON(),
+                quantity,
+                totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+            });
+        }
+
+        productsWithQuantity.sort((a, b) => {
+            return b[filter] - a[filter];
         });
 
         return {
-            totalCount,
-            products: results as unknown as ProductPurchases[],
+            purchasesCount,
+            products: productsWithQuantity,
         };
     }
 
@@ -332,26 +362,40 @@ export class AnalyticsService {
      *
      * @returns A promise that resolves to a number of total product sales.
      */
-    public async getTotalProductRevenue(): Promise<number> {
-        const result = await Purchase.findOne({
-            include: {
-                model: Product,
-                attributes: [],
-            },
+    public async getTotalProductsRevenue(): Promise<number> {
+        const purchaseData = await Purchase.findAll({
             attributes: [
                 [
-                    Sequelize.fn('SUM', Sequelize.col('Product.price')),
-                    'totalRevenue',
+                    sequelize.cast(
+                        sequelize.fn('SUM', sequelize.col('discountRate')),
+                        'float'
+                    ),
+                    'discountRate',
                 ],
+                'productId',
             ],
-            raw: true,
+            group: ['productId'],
         });
 
-        if (!result) {
-            return 0;
+        const productIds: number[] = purchaseData
+            .map((row) => row.productId)
+            .filter((row) => row !== undefined);
+
+        const products = await Product.findAll({
+            where: { id: productIds },
+            attributes: ['price'],
+        });
+
+        let totalRevenue = 0;
+
+        for (let index = 0; index < products.length; index++) {
+            const { discountRate } = purchaseData[index];
+            const currentSum = discountRate * products[index].price;
+
+            totalRevenue += parseFloat(currentSum.toFixed(2));
         }
 
-        return Number(result.totalRevenue);
+        return totalRevenue;
     }
 
     /**
@@ -457,7 +501,7 @@ export class AnalyticsService {
         customerId: number
     ): Promise<{
         totalCount: number;
-        products: ProductPurchases[];
+        products: PurchasedProductResponse[];
     }> {
         const totalCount = await Purchase.count({ where: { customerId } });
         const results = await Purchase.findAll({
@@ -485,7 +529,7 @@ export class AnalyticsService {
 
         return {
             totalCount,
-            products: results as unknown as ProductPurchases[],
+            products: results as unknown as PurchasedProductResponse[],
         };
     }
 
@@ -546,10 +590,9 @@ export class AnalyticsService {
      * @param limit - The number of products to retrieve
      * @returns A promise resolving to an array of Product instances
      */
-    public async getTopSellingProducts(
-        limit: number
-    ): Promise<ProductPurchases[]> {
-        const products = await Product.findAll({
+    public async getTopSellingProducts(limit: number): Promise<number> {
+        return limit;
+        /*const products = await Product.findAll({
             include: [
                 {
                     model: Purchase,
@@ -580,9 +623,8 @@ export class AnalyticsService {
                 productPrice: product.price,
                 purchaseCount: product.getDataValue('purchaseCount'),
             }))
-            .filter(
-                (product): product is ProductPurchases => product !== undefined
-            );
+            .filter((product) => product !== undefined);
+            */
     }
 
     /**
