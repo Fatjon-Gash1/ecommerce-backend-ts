@@ -352,6 +352,6 @@ export class ShippingService {
             throw new ShippingOptionNotFoundError('Shipping weight not found');
         }
 
-        return Math.ceil(country.rate + method.rate + weightResult.rate) - 0.01;
+        return country.rate + method.rate + weightResult.rate;
     }
 }
