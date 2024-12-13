@@ -6,6 +6,7 @@ interface PurchaseAttributes {
     customerId?: number;
     productId?: number;
     quantity: number;
+    discountRate: number;
 
     // Reports related
     categoryId?: number;
@@ -22,6 +23,7 @@ export class Purchase
     declare customerId?: number;
     declare productId?: number;
     declare quantity: number;
+    declare discountRate: number;
 
     // Reports related
     declare categoryId?: number;
@@ -33,6 +35,7 @@ export class Purchase
 Purchase.init(
     {
         quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
+        discountRate: { type: DataTypes.FLOAT, defaultValue: 1 },
     },
     {
         sequelize,
