@@ -45,7 +45,10 @@ export class OrderService {
     public async createOrder(
         userId: number,
         items: OrderItemAttributes[],
-        paymentMethod: 'card' | 'wallet' | 'bank-transfer'
+        paymentMethod: 'card' | 'wallet' | 'bank-transfer',
+        shippingCountry: string,
+        shippingWeight: 'standard' | 'light' | 'heavy',
+        shippingMethod: 'standard' | 'express' | 'next-day'
     ): Promise<OrderResponse> {
         const transaction: Transaction = await sequelize.transaction();
 
@@ -63,6 +66,9 @@ export class OrderService {
                 {
                     customerId: customer.id,
                     paymentMethod,
+                    shippingCountry,
+                    shippingWeight,
+                    shippingMethod,
                 },
                 { transaction }
             );
