@@ -25,13 +25,22 @@ export class OrderController {
         res: Response
     ): Promise<void | Response> {
         const { userId } = req.user as JwtPayload;
-        const { items, paymentMethod } = req.body;
+        const {
+            items,
+            paymentMethod,
+            shippingCountry,
+            shippingWeight,
+            shippingMethod,
+        } = req.body;
 
         try {
             const order = await this.orderService.createOrder(
                 userId,
                 items,
-                paymentMethod
+                paymentMethod,
+                shippingCountry,
+                shippingWeight,
+                shippingMethod
             );
             return res.status(201).json({
                 message: 'Order created successfully',
