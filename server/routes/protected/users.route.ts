@@ -112,7 +112,7 @@ router.use(
 );
 
 router.use(
-    '/customers/payment',
+    '/customers/payments',
     authenticateAccessToken,
     authorize(['customer']),
     paymentRoutes
