@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
-import { Customer, Payment } from '../models/relational';
+import { Customer, Payment, User } from '../models/relational';
 import dotenv from 'dotenv';
+import { UserNotFoundError } from '../errors';
 
 dotenv.config();
 
@@ -20,37 +21,13 @@ export class PaymentService {
      * @throws {Error}
      * Thrown if it fails to create/find the customer.
      */
-    async findOrCreateCustomer(
-        customerId: number
-    ): Promise<Stripe.Customer | null> {
-        try {
-            const customer = await Customer.findByPk(customerId);
+    async createCustomer(name: string, email: string): Promise<string> {
+        const stripeCustomer = await this.stripe.customers.create({
+            name,
+            email,
+        });
 
-            if (customer && customer.stripeId) {
-                return (await this.stripe.customers.retrieve(
-                    customer.stripeId
-                )) as Stripe.Customer;
-            }
-
-            if (customer) {
-                const { email } = customer;
-                const stripeCustomer = await this.stripe.customers.create({
-                    name: `${customer.firstName} ${customer.lastName}`,
-                    email,
-                });
-
-                await Customer.update(
-                    { stripeId: stripeCustomer.id },
-                    { where: { id: customerId } }
-                );
-
-                return stripeCustomer;
-            }
-            return null;
-        } catch (err) {
-            console.error('Error creating stripe customer:', err);
-            throw new Error('Unable to find or create stripe customer');
-        }
+        return stripeCustomer.id;
     }
 
     /**
@@ -95,8 +72,8 @@ export class PaymentService {
         } catch (err) {
             if (err instanceof Stripe.errors.StripeError) {
                 console.error(
-                    'Stripe error creating payment intent:',
-                    err.message
+                    'Stripe error creating payment intent (From Service):',
+                    err
                 );
                 throw new Error(`Payment creation failed: ${err.message}`);
             } else {
@@ -126,10 +103,7 @@ export class PaymentService {
             return paymentIntent;
         } catch (err) {
             if (err instanceof Stripe.errors.StripeError) {
-                console.error(
-                    'Stripe error retrieving payment intent:',
-                    err.message
-                );
+                console.error('Stripe error retrieving payment intent:', err);
                 throw new Error(
                     `Failed to retrieve payment intent: ${err.message}`
                 );
