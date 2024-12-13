@@ -1,5 +1,14 @@
 import { query, ValidationChain } from 'express-validator';
 
+export const validatePurchaseFilter = (): ValidationChain[] => [
+    query('filter')
+        .trim()
+        .notEmpty()
+        .withMessage('Filter field is required')
+        .isIn(['quantity', 'totalRevenue'])
+        .withMessage('Field must be quantity or totalRevenue'),
+];
+
 export const validatePagination = (): ValidationChain[] => [
     query('limit').trim().notEmpty().withMessage('A data limit is required'),
 ];
