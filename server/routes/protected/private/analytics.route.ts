@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { AnalyticsController } from '../../../controllers/Analytics.controller';
 import { AnalyticsService, AdminLogsService } from '../../../services';
 import {
+    validatePurchaseFilter,
     validatePagination,
     validateProductStatus,
     validateOrderStatus,
@@ -28,11 +29,13 @@ router.post(
 
 router.get(
     '/products/purchases',
+    validatePurchaseFilter(),
+    validationErrors,
     analyticsController.getTotalProductPurchases.bind(analyticsController)
 );
 router.get(
     '/products/revenue',
-    analyticsController.getTotalProductRevenue.bind(analyticsController)
+    analyticsController.getTotalProductsRevenue.bind(analyticsController)
 );
 router.get(
     '/revenue',
