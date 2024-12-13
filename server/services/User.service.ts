@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { User, Customer, Admin } from '../models/relational';
 import { type ModelStatic, type Model, Op } from 'sequelize';
+import { PaymentService } from './Payment.service';
 import {
     UserNotFoundError,
     UserAlreadyExistsError,
@@ -54,6 +55,12 @@ export interface CustomerResponse {
  * Service responsible for user-related operations.
  */
 export class UserService {
+    private paymentService?: PaymentService;
+
+    constructor(paymentService?: PaymentService) {
+        this.paymentService = paymentService;
+    }
+
     /**
      * Registers a provided user type in the database.
      *
@@ -83,9 +90,9 @@ export class UserService {
 
         if (user) {
             throw new UserAlreadyExistsError();
-        } else {
-            return await userType.create(details as T['_creationAttributes']);
         }
+
+        return await userType.create(details as T['_creationAttributes']);
     }
 
     /**
@@ -97,12 +104,14 @@ export class UserService {
     public async signUpCustomer(
         details: UserCreationDetails
     ): Promise<AuthTokens> {
-        const registeredCustomer = await this.registerUser(Customer, details);
-
-        return this.generateTokens(
-            registeredCustomer.userId!,
-            registeredCustomer.username
+        const newCustomer = await this.registerUser(Customer, details);
+        newCustomer.stripeId = await this.paymentService!.createCustomer(
+            `${newCustomer.firstName} ${newCustomer.lastName}`,
+            newCustomer.email
         );
+        await newCustomer.save();
+
+        return this.generateTokens(newCustomer.userId!, newCustomer.username);
     }
 
     /**
