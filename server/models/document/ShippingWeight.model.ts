@@ -1,7 +1,7 @@
 import { mongoose } from '../../config/mongodb';
 const { Schema, model } = mongoose;
 
-export interface IShippingWeight extends Document {
+export interface IShippingWeight {
     weight: 'light' | 'standard' | 'heavy';
     rate: number;
 }

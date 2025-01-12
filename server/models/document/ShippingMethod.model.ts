@@ -1,7 +1,7 @@
 import { mongoose } from '../../config/mongodb';
 const { Schema, model } = mongoose;
 
-export interface IShippingMethod extends Document {
+export interface IShippingMethod {
     method: 'standard' | 'express' | 'next-day';
     rate: number;
 }
