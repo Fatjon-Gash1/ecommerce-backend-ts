@@ -1,4 +1,4 @@
-import redis from 'redis';
+/*import redis from 'redis';
 import wss from './webSocket';
 import websocket from 'ws';
 
@@ -26,4 +26,13 @@ import websocket from 'ws';
             }
         });
     });
-})();
+})();*/
+import IORedis from 'ioredis';
+export const connectToRedisServer = (): IORedis => {
+    try {
+        return new IORedis();
+    } catch (error) {
+        console.error('Error connecting to Redis server: ', error);
+        throw new Error('Failed to connect to Redis server');
+    }
+};
