@@ -42,6 +42,7 @@ export class AdminLogsService {
             'admin',
             'category',
             'product',
+            'membership',
             'order',
             'shipping country',
             'shipping city',

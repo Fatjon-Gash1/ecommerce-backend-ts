@@ -1,5 +1,6 @@
 import { sequelize } from '../config/db';
 import { Op } from 'sequelize';
+import { PaymentService } from './Payment.service';
 import { Category, Product } from '../models/relational';
 import client from '../config/elasticsearchClient';
 import {
@@ -12,6 +13,7 @@ import {
 interface ProductDetails {
     name: string;
     description: string;
+    currency: string;
     price: number;
     discount?: number;
     imageUrl: string;
@@ -41,6 +43,7 @@ interface ProductResponse {
     categoryId?: number;
     name: string;
     description: string;
+    currency: string;
     price: number;
     discount?: number;
     imageUrl: string;
@@ -55,6 +58,12 @@ interface ProductResponse {
  * Service responsible for product-related operations.
  */
 export class ProductService {
+    private paymentService?: PaymentService;
+
+    constructor(paymentService?: PaymentService) {
+        this.paymentService = paymentService;
+    }
+
     /**
      * Creates a new category in the database.
      *
@@ -119,6 +128,12 @@ export class ProductService {
         if (productImage) {
             throw new ProductAlreadyExistsError('Product image already in use');
         }
+
+        /*await this.paymentService!.createProduct({
+            name: details.name,
+            currency: details.currency,
+            price: details.price,
+        });*/
 
         const newProduct = await Product.create({
             categoryId,

@@ -55,28 +55,28 @@ export interface CustomerResponse {
  * Service responsible for user-related operations.
  */
 export class UserService {
-    private paymentService?: PaymentService;
+    protected paymentService: PaymentService;
 
-    constructor(paymentService?: PaymentService) {
+    constructor(paymentService: PaymentService) {
         this.paymentService = paymentService;
     }
 
     /**
-     * Registers a provided user type in the database.
+     * Creates a provided user type class instance.
      *
      * @remarks
-     * This is a generic method that will be used by utility methods below
+     * This is a factory method that will be used by utility methods below
      * and in a subclass.
      *
-     * @param userType - The type of user to register
-     * @param details - The details of the user to register
-     * @returns A promise resolving to the created user
+     * @param userClass - The user type class
+     * @param details - The details of the user to build
+     * @returns A promise resolving to the created class instance
      *
      * @throws {@link UserAlreadyExistsError}
      * Thrown if the user already exists.
      */
-    protected async registerUser<T extends Model>(
-        userType: ModelStatic<T>,
+    protected async userFactory<T extends Model>(
+        userClass: ModelStatic<T>,
         details: UserCreationDetails
     ): Promise<T> {
         const user = await User.findOne({
@@ -92,7 +92,7 @@ export class UserService {
             throw new UserAlreadyExistsError();
         }
 
-        return await userType.create(details as T['_creationAttributes']);
+        return userClass.build(details as T['_creationAttributes']);
     }
 
     /**
@@ -104,8 +104,8 @@ export class UserService {
     public async signUpCustomer(
         details: UserCreationDetails
     ): Promise<AuthTokens> {
-        const newCustomer = await this.registerUser(Customer, details);
-        newCustomer.stripeId = await this.paymentService!.createCustomer(
+        const newCustomer = await this.userFactory(Customer, details);
+        newCustomer.stripeId = await this.paymentService.createCustomer(
             `${newCustomer.firstName} ${newCustomer.lastName}`,
             newCustomer.email
         );
@@ -133,6 +133,7 @@ export class UserService {
         if (!user) {
             throw new UserNotFoundError();
         }
+        console.log('Password in the service: ', password);
 
         const isPasswordValid = await user.validatePassword(password);
 

@@ -27,7 +27,12 @@ export class AdminService extends UserService {
      * @param details - The details of the user to register
      */
     public async registerCustomer(details: UserCreationDetails): Promise<void> {
-        await this.registerUser(Customer, details);
+        const newCustomer = await this.userFactory(Customer, details);
+        newCustomer.stripeId = await this.paymentService.createCustomer(
+            `${newCustomer.firstName} ${newCustomer.lastName}`,
+            newCustomer.email
+        );
+        await newCustomer.save();
     }
 
     /**
@@ -36,7 +41,8 @@ export class AdminService extends UserService {
      * @param details - The details of the user to register
      */
     public async registerAdmin(details: UserCreationDetails): Promise<void> {
-        await this.registerUser(Admin, details);
+        const newAdmin = await this.userFactory(Admin, details);
+        await newAdmin.save();
     }
 
     /**

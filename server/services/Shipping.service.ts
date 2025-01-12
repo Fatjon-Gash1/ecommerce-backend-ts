@@ -3,6 +3,8 @@ import {
     ShippingCity,
     Cart,
     Customer,
+    Product,
+    CartItem,
 } from '../models/relational';
 import { ShippingMethod, ShippingWeight } from '../models/document';
 import {
@@ -11,6 +13,7 @@ import {
     ShippingLocationAlreadyExistsError,
     EmptyCartError,
     CartNotFoundError,
+    ProductNotFoundError,
 } from '../errors';
 
 interface ShippingCountryResponse {
@@ -36,6 +39,18 @@ interface ShippingWeightResponse {
     weight: string;
     rate: number;
 }
+
+interface ProductItem {
+    productId: number;
+    quantity: number;
+}
+
+interface ShippingCostResponse {
+    cost: number;
+    weightRange: WeightRange;
+}
+
+type WeightRange = 'light' | 'standard' | 'heavy';
 
 /**
  * Service responsible for shipping-related operations
@@ -278,7 +293,9 @@ export class ShippingService {
      * @throws {@link EmptyCartError}
      * Thrown is the provided cart has no items.
      */
-    public async determineWeightRangeForCart(userId: number): Promise<string> {
+    public async determineWeightRangeForCart(
+        userId: number
+    ): Promise<WeightRange> {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
@@ -290,32 +307,61 @@ export class ShippingService {
             throw new CartNotFoundError();
         }
 
-        const products = await cart.getProducts();
+        const cartItems = await CartItem.findAll({
+            where: { cartId: cart.id },
+            attributes: ['productId', 'quantity'],
+        }).then((items) =>
+            items
+                .map((item) => item.toJSON())
+                .filter(
+                    (item): item is ProductItem => item.productId !== undefined
+                )
+        );
 
-        if (products.length === 0) {
+        if (cartItems.length === 0) {
             throw new EmptyCartError();
         }
 
-        const isHeavy = products.some((product) => product.weight > 20);
-        const isStandard = products.some((product) => product.weight > 1);
+        return await this.determineWeightRange(cartItems);
+    }
 
-        if (isHeavy) {
-            return 'heavy';
-        }
-        if (isStandard) {
-            return 'standard';
-        }
+    /**
+     * Determines the order items weight range.
+     *
+     * @param productItems - The product items. Either cart items or order items
+     * @returns A promise that resolves to a string representing the weight range
+     */
+    public async determineWeightRange(
+        productItems: ProductItem[]
+    ): Promise<WeightRange> {
+        const orderWeight = await Promise.all(
+            productItems.map(async (item) => {
+                const product = await Product.findByPk(item.productId, {
+                    attributes: ['weight'],
+                });
 
-        return 'light';
+                if (!product) {
+                    throw new ProductNotFoundError();
+                }
+
+                return product.weight * item.quantity;
+            })
+        ).then((weights) => weights.reduce((acc, weight) => acc + weight, 0));
+
+        return orderWeight > 20
+            ? 'heavy'
+            : orderWeight > 10
+              ? 'standard'
+              : 'light';
     }
 
     /**
      * Performs the calculation of shipping cost based on the provided parameters.
      *
-     * @param userId - The ID of the user
      * @param countryName - The name of the shipping country
      * @param shippingMethod - The type of the shipping method
-     * @returns A promise that resolves to the calculated shipping cost
+     * @param [userId] - The id of the user
+     * @returns A promise that resolves to the calculated shipping cost and the weight range
      *
      * @throws {@link ShippingLocationNotFoundError}
      * Thrown if the provided shipping country is not found.
@@ -324,10 +370,11 @@ export class ShippingService {
      * Thrown if the provided shipping method or weight is not found.
      */
     public async calculateShippingCost(
-        userId: number,
         countryName: string,
-        shippingMethod: string
-    ): Promise<number> {
+        shippingMethod: string, // next-day for replenishment
+        userId?: number,
+        orderItems?: ProductItem[]
+    ): Promise<ShippingCostResponse> {
         const [country, method] = await Promise.all([
             ShippingCountry.findOne({
                 where: { name: countryName.toLowerCase() },
@@ -343,7 +390,10 @@ export class ShippingService {
             throw new ShippingOptionNotFoundError('Shipping method not found');
         }
 
-        const weightRange = await this.determineWeightRangeForCart(userId);
+        const weightRange: WeightRange = orderItems
+            ? await this.determineWeightRange(orderItems)
+            : await this.determineWeightRangeForCart(userId!);
+
         const weightResult = await ShippingWeight.findOne({
             weight: weightRange,
         }); // ODM Model
@@ -352,6 +402,9 @@ export class ShippingService {
             throw new ShippingOptionNotFoundError('Shipping weight not found');
         }
 
-        return country.rate + method.rate + weightResult.rate;
+        return {
+            cost: country.rate + method.rate + weightResult.rate,
+            weightRange,
+        };
     }
 }

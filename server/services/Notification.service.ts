@@ -1,4 +1,4 @@
-import { createClient, RedisClientType } from 'redis';
+//import { createClient, RedisClientType } from 'redis';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { User } from '../models/relational';
@@ -20,7 +20,7 @@ export class NotificationService {
     /**
      * Redis client Instance used to publish messages to Redis server.
      */
-    private publisher: RedisClientType;
+    //private publisher: RedisClientType;
     /**
      * Nodemailer transporter used to send emails.
      */
@@ -30,10 +30,10 @@ export class NotificationService {
      * Initialize the redis and nodemailer clients.
      */
     constructor() {
-        this.publisher = createClient({
+        /*   this.publisher = createClient({
             url: 'redis://localhost:6379',
         });
-        this.initRedis();
+        this.initRedis();*/
         this.transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -49,14 +49,14 @@ export class NotificationService {
      * @throws {Error}
      * Throws an error if Redis connection fails.
      */
-    private async initRedis(): Promise<void> {
+    /*private async initRedis(): Promise<void> {
         try {
             await this.publisher.connect();
         } catch (err) {
             console.error('Error connecting to Redis: ', err);
             throw new Error('Failed to connect to Redis');
         }
-    }
+    }*/
 
     /**
      * Notifies customers about new order confirmation.
@@ -64,7 +64,7 @@ export class NotificationService {
      * Throws {@link NotificationError}
      * Thrown if it fails to publish the notification.
      */
-    public async orderConfirmationNotify(): Promise<void> {
+    /*public async orderConfirmationNotify(): Promise<void> {
         try {
             await this.publisher.publish('order_shipment', 'order delivered');
         } catch (err) {
@@ -82,7 +82,7 @@ export class NotificationService {
      * Throws {@link NotificationError}
      * Thrown if it fails to publish the notification.
      */
-    public async productBackInStockNotify(): Promise<void> {
+    /*public async productBackInStockNotify(): Promise<void> {
         try {
             await this.publisher.publish(
                 'back_in_stock',
@@ -105,7 +105,7 @@ export class NotificationService {
      * Throws {@link NotificationError}
      * Thrown if it fails to publish the notification.
      */
-    public async newOffersNotify(): Promise<void> {
+    /*public async newOffersNotify(): Promise<void> {
         try {
             await this.publisher.publish('offers', 'new products available');
         } catch (err) {

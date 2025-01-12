@@ -1,5 +1,6 @@
 import { sequelize } from '../config/db';
-import { Op, Transaction } from 'sequelize';
+import { Op } from 'sequelize';
+import type { Transaction } from 'sequelize';
 import { Order, Customer } from '../models/relational';
 import {
     UserNotFoundError,
@@ -14,6 +15,7 @@ interface OrderItemAttributes {
 
 interface OrderResponse {
     id?: number;
+    customerId?: number;
     paymentMethod: 'card' | 'wallet' | 'bank-transfer';
     status?: 'pending' | 'delivered' | 'canceled';
     trackingNumber?: string;
@@ -40,6 +42,10 @@ export class OrderService {
      * @param userId - The user id
      * @param items - The items to add to the order
      * @param paymentMethod - The payment method for the order
+     * @param shippingCountry - The shipping country for the order
+     * @param shippingWeight - The shipping weight for the order
+     * @param shippingMethod - The shipping method for the order
+     * @param [transactionObj] - An existing transaction
      * @returns A promise resolving to the created order
      */
     public async createOrder(
@@ -48,9 +54,11 @@ export class OrderService {
         paymentMethod: 'card' | 'wallet' | 'bank-transfer',
         shippingCountry: string,
         shippingWeight: 'standard' | 'light' | 'heavy',
-        shippingMethod: 'standard' | 'express' | 'next-day'
+        shippingMethod: 'standard' | 'express' | 'next-day',
+        transactionObj?: Transaction
     ): Promise<OrderResponse> {
-        const transaction: Transaction = await sequelize.transaction();
+        const transaction: Transaction =
+            transactionObj ?? (await sequelize.transaction());
 
         try {
             const customer = await Customer.findOne({
@@ -59,7 +67,7 @@ export class OrderService {
             });
 
             if (!customer) {
-                throw new UserNotFoundError('User of type Customer not found');
+                throw new UserNotFoundError('Customer not found');
             }
 
             const order = await Order.create(
@@ -79,16 +87,21 @@ export class OrderService {
                 })
             );
 
-            await transaction.commit();
+            if (!transactionObj) {
+                await transaction.commit();
+            }
             return {
                 id: order.id,
+                customerId: order.customerId,
                 paymentMethod,
                 status: order.status,
                 trackingNumber: order.trackingNumber,
                 createdAt: order.createdAt,
             };
         } catch (error) {
-            await transaction.rollback();
+            if (!transactionObj) {
+                await transaction.rollback();
+            }
             throw error;
         }
     }
@@ -334,12 +347,12 @@ export class OrderService {
     /**
      * Marks customer's order as delivered.
      *
-     * @params orderId - The ID of the order
+     * @param orderId - The id of the order
      *
      * @throws {@link OrderNotFoundError}
      * Thrown if the order is not found.
      *
-     * @throws {@Link OrderAlreadyMarkedError}
+     * @throws {@link OrderAlreadyMarkedError}
      * Thrown if the order is already marked as delivered or canceled.
      */
     public async markAsDelivered(orderId: number): Promise<void> {
@@ -367,7 +380,7 @@ export class OrderService {
      * Cancels a customer's order.
      *
      * @param userId - The id of the user
-     * @params orderId - The id of the order
+     * @param orderId - The id of the order
      *
      * @throws {@link OrderNotFoundError}
      * Thrown if the order is not found.

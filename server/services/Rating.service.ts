@@ -314,7 +314,7 @@ export class RatingService {
     /**
      * Updates a platform rating
      *
-     * @userId - The id of the user
+     * @param userId - The id of the user
      * @param ratingId - The id of the platform rating
      * @param details - Rating details
      * @returns A promise that resolves to the updated platform rating
@@ -338,7 +338,7 @@ export class RatingService {
     /**
      * Updates a product rating
      *
-     * @userId - The id of the user
+     * @param userId - The id of the user
      * @param ratingId - The id of the product rating
      * @param details - Rating details
      * @returns A promise that resolves to the updated product rating
