@@ -5,7 +5,8 @@
     "scripts": {
         "start": "node dist/server.js",
         "dev": "nodemon dist/server.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "docs": "typedoc"
     },
     "keywords": [],
     "author": "",
@@ -23,6 +24,7 @@
         "bcrypt": "^5.1.1",
         "body-parser": "^1.20.2",
         "bull": "^4.16.3",
+        "bullmq": "^5.34.5",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
@@ -30,13 +32,13 @@
         "express-rate-limit": "^7.4.1",
         "express-validator": "^7.2.0",
         "fs": "^0.0.1-security",
+        "ioredis": "^5.4.2",
         "jsonwebtoken": "^9.0.2",
         "mongoose": "^8.6.0",
         "mysql2": "^3.11.0",
         "nodemailer": "^6.9.15",
         "path": "^0.12.7",
         "pdfkit": "^0.15.0",
-        "redis": "^4.7.0",
         "sequelize": "^6.37.3",
         "stripe": "^16.11.0",
         "ws": "^8.18.0"
@@ -52,6 +54,8 @@
         "globals": "^15.9.0",
         "nodemon": "^3.1.4",
         "sequelize-cli": "^6.6.2",
+        "typedoc": "^0.27.6",
+        "typedoc-plugin-markdown": "^4.4.1",
         "typescript": "^5.5.4",
         "typescript-eslint": "^8.4.0"
     }
