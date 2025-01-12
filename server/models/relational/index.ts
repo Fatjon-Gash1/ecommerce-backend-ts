@@ -9,7 +9,8 @@ import { Order, OrderItem } from './Order.model';
 import { Sale } from './Sale.model';
 import { ShippingCountry, ShippingCity } from './ShippingCountry.model';
 import { Payment } from './Payment.model';
-import { Purchase } from './Purchases.model';
+import { Purchase } from './Purchase.model';
+import { Subscription, SubscriptionPayment } from './Subscription.model';
 
 /* Model associations */
 
@@ -30,6 +31,11 @@ Customer.belongsToMany(Product, {
     through: Purchase,
     foreignKey: 'customerId',
     otherKey: 'productId',
+});
+Customer.belongsToMany(Order, {
+    through: Subscription,
+    foreignKey: 'customerId',
+    otherKey: 'orderId',
 });
 
 // Inherit from User model
@@ -98,8 +104,22 @@ Order.belongsToMany(Product, {
 });
 Order.belongsTo(Customer, { foreignKey: 'customerId' });
 Order.hasOne(Sale, { foreignKey: 'orderId' });
+Order.belongsToMany(Customer, {
+    through: Subscription,
+    foreignKey: 'orderId',
+    otherKey: 'customerId',
+});
 
 Sale.belongsTo(Order, { foreignKey: 'orderId' });
+
+Subscription.hasMany(SubscriptionPayment, {
+    foreignKey: 'subscriptionId',
+    onDelete: 'CASCADE',
+});
+SubscriptionPayment.belongsTo(Subscription, {
+    foreignKey: 'subscriptionId',
+    onDelete: 'CASCADE',
+});
 
 /* End of associations */
 
@@ -119,4 +139,6 @@ export {
     OrderItem,
     Sale,
     Purchase,
+    Subscription,
+    SubscriptionPayment,
 };
