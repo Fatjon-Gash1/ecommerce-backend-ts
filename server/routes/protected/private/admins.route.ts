@@ -4,6 +4,7 @@ import {
     AdminService,
     NotificationService,
     AdminLogsService,
+    PaymentService,
 } from '../../../services';
 import authorize from '../../../middlewares/authorization/authorize';
 import {
@@ -19,14 +20,18 @@ import {
     validationErrors,
 } from '../../../middlewares/validation';
 import adminProducts from './products.route';
+import adminSubscriptions from './subscriptions.route';
 import adminOrders from './orders.route';
 import adminShippings from './shippings.route';
 import adminRatings from './ratings.route';
 import adminAnalytics from './analytics.route';
 
 const router: Router = Router();
+const adminService = new AdminService(
+    new PaymentService(process.env.STRIPE_KEY as string)
+);
 const adminController = new AdminController(
-    new AdminService(),
+    adminService,
     new NotificationService(),
     new AdminLogsService()
 );
@@ -104,6 +109,7 @@ router.delete(
 );
 
 router.use('/products', adminProducts);
+router.use('/subscriptions', adminSubscriptions);
 router.use('/orders', adminOrders);
 router.use('/shippings', adminShippings);
 router.use('/ratings', adminRatings);

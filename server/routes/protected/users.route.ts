@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { UserController } from '../../controllers/User.controller';
-import { UserService, NotificationService } from '../../services';
+import {
+    UserService,
+    PaymentService,
+    NotificationService,
+} from '../../services';
 import authenticateRefreshToken from '../../middlewares/authentication/refreshToken';
 import authenticateAccessToken from '../../middlewares/authentication/accessToken';
 import authorize from '../../middlewares/authorization/authorize';
@@ -28,8 +32,11 @@ import ratingRoutes from './ratings.route';
 import adminRoutes from './private/admins.route';
 
 const router: Router = Router();
+const userService = new UserService(
+    new PaymentService(process.env.STRIPE_KEY as string)
+);
 const userController = new UserController(
-    new UserService(),
+    userService,
     new NotificationService()
 );
 
