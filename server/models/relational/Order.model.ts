@@ -1,9 +1,5 @@
-import {
-    DataTypes,
-    BelongsToManyGetAssociationsMixin,
-    Model,
-    Transaction,
-} from 'sequelize';
+import { DataTypes, BelongsToManyGetAssociationsMixin, Model } from 'sequelize';
+import type { Transaction } from 'sequelize';
 import { sequelize } from '../../config/db';
 import { Product } from './Product.model';
 import { ProductNotFoundError } from '../../errors';
@@ -48,7 +44,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     public async addItem(
         productId: number,
         quantity: number,
-        transaction: Transaction | null = null
+        transaction: Transaction
     ): Promise<OrderItem> {
         const foundProduct = await Product.findByPk(productId, { transaction });
 

@@ -58,9 +58,9 @@ Category.init(
     }
 );
 
-Category.beforeDestroy(async (category, options) => {
+Category.beforeDestroy(async ({ id }, options) => {
     await Product.destroy({
-        where: { categoryId: category.id },
+        where: { categoryId: id },
         transaction: options.transaction,
     });
 });

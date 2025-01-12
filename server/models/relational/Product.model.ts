@@ -12,6 +12,7 @@ interface ProductAttributes {
     categoryId?: number;
     name: string;
     description: string;
+    currency: string;
     price: number;
     discount?: number;
     imageUrl: string;
@@ -35,6 +36,7 @@ export class Product
     declare categoryId?: number;
     declare name: string;
     declare description: string;
+    declare currency: string;
     declare price: number;
     declare discount?: number;
     declare imageUrl: string;
@@ -59,6 +61,10 @@ Product.init(
         description: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        currency: {
+            type: DataTypes.STRING,
+            defaultValue: 'eur',
         },
         price: {
             type: DataTypes.FLOAT,

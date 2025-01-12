@@ -7,7 +7,8 @@ import { Product } from './Product.model';
 interface CustomerAttributes {
     id?: number;
     userId?: number;
-    stripeId?: string;
+    stripeId: string;
+    sPaymentMethodId?: string;
     shippingAddress?: string;
     billingAddress?: string;
     isActive?: boolean;
@@ -25,7 +26,8 @@ export class Customer
 {
     declare id?: number;
     declare userId?: number;
-    declare stripeId?: string;
+    declare stripeId: string;
+    declare sPaymentMethodId?: string;
     declare shippingAddress?: string;
     declare billingAddress?: string;
     declare isActive?: boolean;
@@ -55,6 +57,10 @@ Customer.init(
             },
         },
         stripeId: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        sPaymentMethodId: {
             type: DataTypes.STRING,
         },
         shippingAddress: {

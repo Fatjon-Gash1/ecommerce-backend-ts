@@ -20,7 +20,7 @@ export class Payment
     declare amount: number;
     declare currency: 'usd' | 'eur';
     declare description: string;
-}
+} // This model seems obsolete
 
 Payment.init(
     {
