@@ -1,7 +1,7 @@
 import { mongoose } from '../../config/db';
 const { Schema, model } = mongoose;
 
-export interface IRating extends Document {
+export interface IRating {
     userId: number;
     username: string;
     firstName: string;
