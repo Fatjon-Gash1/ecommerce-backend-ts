@@ -1,7 +1,7 @@
 import { mongoose } from '../../config/mongodb';
 const { Schema, model } = mongoose;
 
-interface IProductAnalytic extends Document {
+interface IProductAnalytic {
     productId: number;
     purchases: number;
     reviews: number;
