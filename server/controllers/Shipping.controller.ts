@@ -142,9 +142,9 @@ export class ShippingController {
         try {
             const shippingCost =
                 await this.shippingService.calculateShippingCost(
-                    userId,
                     country as string,
-                    shippingMethod as string
+                    shippingMethod as string,
+                    userId
                 );
             return res.status(200).json({ shippingCost });
         } catch (error) {
