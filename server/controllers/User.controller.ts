@@ -64,6 +64,7 @@ export class UserController {
     ): Promise<void | Response> {
         const { username, password } = req.body;
 
+        console.log('Password:', password);
         try {
             const { refreshToken, accessToken } =
                 await this.userService.loginUser(username, password);
