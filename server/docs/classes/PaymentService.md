@@ -1,6 +1,6 @@
 [**server**](../README.md)
 
-***
+---
 
 [server](../README.md) / PaymentService
 
@@ -52,7 +52,7 @@ Defined in: [Payment.service.ts:108](https://github.com/Fatjon-Gash1/edge-tech/b
 
 `Promise`\<`void`\>
 
-***
+---
 
 ### archiveProduct()
 
@@ -74,7 +74,7 @@ The id of the product to archive
 
 `Promise`\<`void`\>
 
-***
+---
 
 ### createCustomer()
 
@@ -104,7 +104,7 @@ Email of the customer
 
 A Promise resolving to the Stripe customer id
 
-***
+---
 
 ### createMembershipSubscription()
 
@@ -130,7 +130,7 @@ Defined in: [Payment.service.ts:445](https://github.com/Fatjon-Gash1/edge-tech/b
 
 `Promise`\<`void`\>
 
-***
+---
 
 ### createPaymentIntent()
 
@@ -181,7 +181,7 @@ Thrown if the user is not found.
 
 Thrown if the stripe customer is deleted.
 
-***
+---
 
 ### createPaymentMethod()
 
@@ -203,7 +203,7 @@ Defined in: [Payment.service.ts:79](https://github.com/Fatjon-Gash1/edge-tech/bl
 
 `Promise`\<`string`\>
 
-***
+---
 
 ### createProduct()
 
@@ -221,7 +221,7 @@ Defined in: [Payment.service.ts:342](https://github.com/Fatjon-Gash1/edge-tech/b
 
 `Promise`\<\{ `priceId`: `string`; `productId`: `string`; \}\>
 
-***
+---
 
 ### createSetupIntent()
 
@@ -243,7 +243,7 @@ Defined in: [Payment.service.ts:91](https://github.com/Fatjon-Gash1/edge-tech/bl
 
 `Promise`\<`SetupIntentResponse`\>
 
-***
+---
 
 ### deletePaymentMethod()
 
@@ -271,7 +271,7 @@ The payment method id to delete
 
 `Promise`\<`void`\>
 
-***
+---
 
 ### getPaymentIntentsForCustomer()
 
@@ -297,7 +297,7 @@ A Promise resolving to the retrieved payment intent.
 
 Thrown if it fails to retrieve the payment intent.
 
-***
+---
 
 ### getPaymentMethodById()
 
@@ -327,7 +327,7 @@ The payment method id to retrieve
 
 A promise resolving to the payment method object
 
-***
+---
 
 ### getPaymentMethods()
 
@@ -351,7 +351,7 @@ The user id of the customer
 
 A promise resolving to an array of payment methods
 
-***
+---
 
 ### refundPayment()
 
@@ -373,7 +373,7 @@ Defined in: [Payment.service.ts:331](https://github.com/Fatjon-Gash1/edge-tech/b
 
 `Promise`\<`void`\>
 
-***
+---
 
 ### updatePaymentMethod()
 
@@ -415,7 +415,7 @@ The card expiration year
 
 A promise resolving to the updated payment method object
 
-***
+---
 
 ### updateProduct()
 
