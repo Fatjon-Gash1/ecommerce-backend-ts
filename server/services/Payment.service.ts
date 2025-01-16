@@ -296,13 +296,14 @@ export class PaymentService {
         }
 
         await this.stripe.paymentIntents.create({
-            amount: amount * 100,
+            amount: Math.round(amount * 100),
             confirm: true,
             currency,
             customer: customer.stripeId,
             payment_method:
                 paymentMethodId ??
                 stripeCustomer!.invoice_settings.default_payment_method!.toString(),
+            // Try out a longer ternary which assigns the first payment method "[0]" of the customer's payment methods array in case the id of it is not provided or a default one is not found.
             return_url: 'http://localhost:3000/success',
         });
     }

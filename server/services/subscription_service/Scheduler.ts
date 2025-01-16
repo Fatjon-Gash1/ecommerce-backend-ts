@@ -40,13 +40,13 @@ export class Scheduler {
 
     private createQueue(queueName: string): Queue {
         return new Queue(queueName, {
-            defaultJobOptions: {
+            /*   defaultJobOptions: {
                 attempts: 5, // 2^(1->2->3->4->*5(-1)) * 5000 | executions: 10000ms, 10000ms, 20000ms, 40000ms, 80000ms
                 backoff: {
                     type: 'exponential',
                     delay: 5000,
                 },
-            },
+            },*/
             connection: this.connection,
         });
     }

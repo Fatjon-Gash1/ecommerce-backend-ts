@@ -402,8 +402,12 @@ export class ShippingService {
             throw new ShippingOptionNotFoundError('Shipping weight not found');
         }
 
+        const cost: number = parseFloat(
+            (country.rate + method.rate + weightResult.rate).toFixed(2)
+        );
+
         return {
-            cost: country.rate + method.rate + weightResult.rate,
+            cost,
             weightRange,
         };
     }

@@ -42,7 +42,9 @@ async function processPayment(job: Job): Promise<WeightRange> {
             job.data.orderItems
         );
 
-    const totalAmount: number = productTotal + shippingCost; // Log these numbers and remove queue job retries. Error: StripeInvalidRequestError: Invalid integer: 422694.00000000006
+    const totalAmount: number = parseFloat(
+        (productTotal + shippingCost).toFixed(2)
+    );
 
     await paymentService.createPaymentIntent(
         job.data.userId,
