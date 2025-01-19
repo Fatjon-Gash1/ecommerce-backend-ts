@@ -26,7 +26,7 @@ export const validateProduct = (): ValidationChain[] => [
         .trim()
         .notEmpty()
         .withMessage('Description is required')
-        .matches(/^[A-Za-z\s\d.,!?:"'()&%]*$/)
+        .matches(/^[A-Za-z\s\d.,!?:"'()&%-]*$/)
         .withMessage('Description must contain only valid characters'),
 
     body('details.price')
