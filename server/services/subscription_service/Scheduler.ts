@@ -1,6 +1,8 @@
 import { Queue } from 'bullmq';
 import { connectToRedisServer } from '../../config/redis';
 import type IORedis from 'ioredis';
+import { Customer, Subscription } from '../../models/relational';
+import { UserNotFoundError } from '../../errors';
 
 interface OrderData {
     userId: number;
@@ -40,13 +42,13 @@ export class Scheduler {
 
     private createQueue(queueName: string): Queue {
         return new Queue(queueName, {
-            /*   defaultJobOptions: {
+            defaultJobOptions: {
                 attempts: 5, // 2^(1->2->3->4->*5(-1)) * 5000 | executions: 10000ms, 10000ms, 20000ms, 40000ms, 80000ms
                 backoff: {
                     type: 'exponential',
                     delay: 5000,
                 },
-            },*/
+            },
             connection: this.connection,
         });
     }
@@ -55,12 +57,29 @@ export class Scheduler {
         data: ReplenishmentData,
         interval: number,
         unit: Unit,
-        trial?: Date,
-        expiry?: Date,
+        trial?: string,
+        expiry?: string,
         times?: number
     ): Promise<void> {
         const milliseconds = this.convertToMilliseconds(interval, unit);
         const startDate = new Date().toISOString().split('T')[0];
+
+        const customer = await Customer.findOne({
+            where: { userId: data.userId },
+        });
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        const subscriptionData = {
+            customerId: customer.id,
+            startDate: trial ?? startDate,
+            endDate: expiry,
+            times,
+        };
+
+        const subscription = await Subscription.create(subscriptionData);
 
         await this.queue.upsertJobScheduler(
             this.generateId('scheduler'),
@@ -77,6 +96,7 @@ export class Scheduler {
                     startDate: trial ?? startDate,
                     endDate: expiry,
                     period: milliseconds,
+                    subscriptionId: subscription.id,
                 },
                 opts: {
                     removeOnComplete: true,
