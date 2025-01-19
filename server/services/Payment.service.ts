@@ -122,6 +122,31 @@ export class PaymentService {
         );
 
         await this.createSetupIntent(customer.stripeId!, paymentMethodId);
+
+        const setupIntents = await this.stripe.setupIntents.list({
+            customer: customer.stripeId,
+        });
+
+        if (setupIntents.data.length === 1) {
+            await this.stripe.customers.update(customer.stripeId, {
+                invoice_settings: { default_payment_method: paymentMethodId },
+            });
+        }
+    }
+
+    public async setDefaultPaymentMethod(
+        userId: number,
+        paymentMethodId: string
+    ) {
+        const customer = await Customer.findOne({ where: { userId } });
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        await this.stripe.customers.update(customer.stripeId, {
+            invoice_settings: { default_payment_method: paymentMethodId },
+        });
     }
 
     /**
@@ -303,7 +328,6 @@ export class PaymentService {
             payment_method:
                 paymentMethodId ??
                 stripeCustomer!.invoice_settings.default_payment_method!.toString(),
-            // Try out a longer ternary which assigns the first payment method "[0]" of the customer's payment methods array in case the id of it is not provided or a default one is not found.
             return_url: 'http://localhost:3000/success',
         });
     }
