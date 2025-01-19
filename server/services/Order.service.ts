@@ -90,6 +90,7 @@ export class OrderService {
             if (!transactionObj) {
                 await transaction.commit();
             }
+
             return {
                 id: order.id,
                 customerId: order.customerId,
@@ -102,6 +103,7 @@ export class OrderService {
             if (!transactionObj) {
                 await transaction.rollback();
             }
+
             throw error;
         }
     }
