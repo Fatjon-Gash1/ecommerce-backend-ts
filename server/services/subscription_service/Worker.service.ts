@@ -1,13 +1,17 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import type { Job } from 'bullmq';
-import { Product, Subscription } from '../../models/relational';
+import { Product, Subscription, User } from '../../models/relational';
 import { sequelize } from '../../config/db';
 import type { Transaction } from 'sequelize';
 import { ShippingService } from '../Shipping.service';
 import { PaymentService } from '../Payment.service';
 import { OrderService } from '../Order.service';
 import { ProductNotFoundError } from '../../errors';
+import { NotificationService } from '../Notification.service';
+import { readFile } from 'fs/promises';
+import path from 'path';
+const TEMPLATES_PATH = `/home/fatjon/Documents/projects/edge-tech/server/services/subscription_service`;
 
 interface OrderItem {
     productId: number;
@@ -61,10 +65,12 @@ async function processPayment(job: Job): Promise<WeightRange> {
 export class WorkerService {
     private connection: IORedis;
     private worker: Worker;
+    private notificationService: NotificationService;
 
     constructor(queueName: string) {
         this.connection = new IORedis({ maxRetriesPerRequest: null });
         this.worker = this.instantiateWorker(queueName);
+        this.notificationService = new NotificationService();
     }
 
     private instantiateWorker(queueName: string): Worker {
@@ -112,15 +118,19 @@ export class WorkerService {
                 );
 
                 const subscriptionData = {
-                    customerId: order.customerId,
                     orderId: order.id,
-                    startDate: job.data.startDate,
-                    endDate: job.data.endDate,
                     lastPaymentDate: paymentDate,
                     nextPaymentDate,
                 };
 
-                await Subscription.create(subscriptionData, { transaction });
+                const subscription = await Subscription.findByPk(
+                    job.data.subscriptionId,
+                    { transaction }
+                );
+
+                if (!subscription) throw new Error('Subscription not found');
+
+                await subscription.update(subscriptionData, { transaction });
 
                 await transaction.commit();
             } catch (error) {
@@ -130,11 +140,44 @@ export class WorkerService {
             }
         });
 
-        this.worker.on('failed', (job, err) => {
-            console.log(
+        this.worker.on('failed', async (job, err) => {
+            console.error(
                 `Job${job ? ` with id "${job.id}"` : ''} has failed because ${err.message}`
             );
-            // Admin notification operation..
+
+            if (!job) return console.error('Failed job not found!');
+            console.log('Retry attempt: ', job.attemptsMade);
+
+            if (job.attemptsMade === 1) {
+                try {
+                    const user = await User.findByPk(job.data.userId);
+
+                    if (!user) {
+                        return console.error(
+                            `Email on failed replenishment payment could not be sent. User with id "${job.data.userId}" was not found.`
+                        );
+                    }
+
+                    const paymentFailedEmail = await readFile(
+                        path.join(TEMPLATES_PATH, 'PaymentFailedEmail.html'),
+                        'utf-8'
+                    );
+
+                    await this.notificationService.sendEmail({
+                        to: user.email,
+                        subject: 'Replenishment payment failed',
+                        text: 'Fallback test',
+                        html: paymentFailedEmail,
+                    });
+                } catch (err) {
+                    console.error(
+                        'Email on failed replenishment payment could not be sent. An unexpected error occurred: ',
+                        err
+                    );
+                }
+
+                // Admin notification operation..
+            }
         });
 
         this.worker.on('error', (err) => {
