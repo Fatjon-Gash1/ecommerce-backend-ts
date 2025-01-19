@@ -1,6 +1,6 @@
 [**server**](../README.md)
 
-***
+---
 
 [server](../README.md) / OrderService
 
@@ -53,7 +53,7 @@ The id of the order
 OrderNotFoundError
 Thrown if the order is not found.
 
-***
+---
 
 ### createOrder()
 
@@ -113,7 +113,7 @@ An existing transaction
 
 A promise resolving to the created order
 
-***
+---
 
 ### getAllOrders()
 
@@ -129,7 +129,7 @@ Retrieves all orders in the database.
 
 A promise resolving to an array of Order instances
 
-***
+---
 
 ### getCustomerOrderHistory()
 
@@ -169,7 +169,7 @@ or their implicit id.
 UserNotFoundError
 Thrown if the user of type Customer is not found.
 
-***
+---
 
 ### getCustomerOrdersByStatus()
 
@@ -215,7 +215,7 @@ or their implicit id.
 UserNotFoundError
 Thrown if the user of type Customer is not found.
 
-***
+---
 
 ### getOrderById()
 
@@ -245,7 +245,7 @@ The ID of the order
 
 A promise resolving to the order
 
-***
+---
 
 ### getOrderItemsByOrderId()
 
@@ -280,7 +280,7 @@ A promise resolving to an array of OrderItem instances
 OrderNotFoundError
 Thrown if the order is not found.
 
-***
+---
 
 ### getOrdersByStatus()
 
@@ -304,7 +304,7 @@ The status of the order
 
 A promise resolving to an array of Order instances and their count
 
-***
+---
 
 ### getTotalPriceOfOrderItems()
 
@@ -334,7 +334,7 @@ The id of the order
 
 A promise resolving to the total price
 
-***
+---
 
 ### markAsDelivered()
 
