@@ -6,9 +6,10 @@ interface SubscriptionAttributes {
     customerId?: number;
     orderId?: number;
     startDate: string;
-    lastPaymentDate: string;
-    nextPaymentDate: string;
+    lastPaymentDate?: string;
+    nextPaymentDate?: string;
     endDate?: string;
+    times?: number;
 }
 
 interface SubscriptionPaymentAttributes {
@@ -25,9 +26,10 @@ export class Subscription
     declare customerId?: number;
     declare orderId?: number;
     declare startDate: string;
-    declare lastPaymentDate: string;
-    declare nextPaymentDate: string;
+    declare lastPaymentDate?: string;
+    declare nextPaymentDate?: string;
     declare endDate?: string;
+    declare times?: number;
 }
 
 Subscription.init(
@@ -39,14 +41,15 @@ Subscription.init(
             primaryKey: true,
         },
         startDate: { type: DataTypes.DATE, allowNull: false },
-        lastPaymentDate: { type: DataTypes.DATE, allowNull: false },
-        nextPaymentDate: { type: DataTypes.DATE, allowNull: false },
+        lastPaymentDate: { type: DataTypes.DATE },
+        nextPaymentDate: { type: DataTypes.DATE },
         endDate: { type: DataTypes.DATE },
+        times: { type: DataTypes.INTEGER },
     },
     {
         sequelize,
         tableName: 'subscriptions',
-        timestamps: false,
+        paranoid: true,
     }
 );
 
@@ -70,10 +73,10 @@ SubscriptionPayment.init(
     }
 );
 
-Subscription.beforeCreate(async ({ lastPaymentDate, id }, options) => {
+Subscription.beforeUpdate(async ({ lastPaymentDate, id }, options) => {
     await SubscriptionPayment.create(
         {
-            paymentDate: lastPaymentDate,
+            paymentDate: lastPaymentDate!,
             subscriptionId: id,
         },
         { transaction: options.transaction }
