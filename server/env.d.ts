@@ -13,6 +13,7 @@ declare namespace NodeJS {
         REFRESH_TOKEN_EXPIRY?: string;
         GMAIL_USER?: string;
         GMAIL_PASS?: string;
+        TEMPLATES_PATH?: string;
         STRIPE_KEY?: string;
     }
 }

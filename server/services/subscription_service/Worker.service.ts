@@ -11,7 +11,7 @@ import { ProductNotFoundError } from '../../errors';
 import { NotificationService } from '../Notification.service';
 import { readFile } from 'fs/promises';
 import path from 'path';
-const TEMPLATES_PATH = `/home/fatjon/Documents/projects/edge-tech/server/services/subscription_service`;
+const TEMPLATES_PATH = process.env.TEMPLATES_PATH as string;
 
 interface OrderItem {
     productId: number;
@@ -136,7 +136,6 @@ export class WorkerService {
             } catch (error) {
                 await transaction.rollback();
                 console.error("Error from worker's complete event: ", error);
-                // Notify admins
             }
         });
 
@@ -175,8 +174,6 @@ export class WorkerService {
                         err
                     );
                 }
-
-                // Admin notification operation..
             }
         });
 
