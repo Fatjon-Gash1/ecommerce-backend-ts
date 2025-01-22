@@ -10,7 +10,7 @@ import { Sale } from './Sale.model';
 import { ShippingCountry, ShippingCity } from './ShippingCountry.model';
 import { Payment } from './Payment.model';
 import { Purchase } from './Purchase.model';
-import { Subscription, SubscriptionPayment } from './Subscription.model';
+import { Replenishment, ReplenishmentPayment } from './Replenishment.model';
 
 /* Model associations */
 
@@ -33,7 +33,7 @@ Customer.belongsToMany(Product, {
     otherKey: 'productId',
 });
 Customer.belongsToMany(Order, {
-    through: Subscription,
+    through: Replenishment,
     foreignKey: 'customerId',
     otherKey: 'orderId',
 });
@@ -105,19 +105,21 @@ Order.belongsToMany(Product, {
 Order.belongsTo(Customer, { foreignKey: 'customerId' });
 Order.hasOne(Sale, { foreignKey: 'orderId' });
 Order.belongsToMany(Customer, {
-    through: Subscription,
+    through: Replenishment,
     foreignKey: 'orderId',
     otherKey: 'customerId',
 });
 
 Sale.belongsTo(Order, { foreignKey: 'orderId' });
 
-Subscription.hasMany(SubscriptionPayment, {
-    foreignKey: 'subscriptionId',
+Replenishment.hasMany(ReplenishmentPayment, {
+    as: 'payments',
+    foreignKey: 'replenishmentId',
     onDelete: 'CASCADE',
 });
-SubscriptionPayment.belongsTo(Subscription, {
-    foreignKey: 'subscriptionId',
+ReplenishmentPayment.belongsTo(Replenishment, {
+    as: 'payments',
+    foreignKey: 'replenishmentId',
     onDelete: 'CASCADE',
 });
 
@@ -139,6 +141,6 @@ export {
     OrderItem,
     Sale,
     Purchase,
-    Subscription,
-    SubscriptionPayment,
+    Replenishment,
+    ReplenishmentPayment,
 };
