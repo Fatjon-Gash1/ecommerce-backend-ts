@@ -92,7 +92,13 @@ export class UserService {
             throw new UserAlreadyExistsError();
         }
 
-        return userClass.build(details as T['_creationAttributes']);
+        const { firstName, lastName, ...rest } = details;
+
+        return userClass.build({
+            firstName: firstName.charAt(0).toUpperCase() + firstName.slice(1),
+            lastName: lastName.charAt(0).toUpperCase() + lastName.slice(1),
+            ...rest,
+        } as T['_creationAttributes']);
     }
 
     /**

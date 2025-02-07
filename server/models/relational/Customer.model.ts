@@ -8,7 +8,7 @@ interface CustomerAttributes {
     id?: number;
     userId?: number;
     stripeId: string;
-    sPaymentMethodId?: string;
+    stripePaymentMethodId?: string;
     shippingAddress?: string;
     billingAddress?: string;
     isActive?: boolean;
@@ -27,7 +27,7 @@ export class Customer
     declare id?: number;
     declare userId?: number;
     declare stripeId: string;
-    declare sPaymentMethodId?: string;
+    declare stripePaymentMethodId?: string;
     declare shippingAddress?: string;
     declare billingAddress?: string;
     declare isActive?: boolean;
@@ -60,16 +60,14 @@ Customer.init(
             type: DataTypes.STRING,
             allowNull: false,
         },
-        sPaymentMethodId: {
+        stripePaymentMethodId: {
             type: DataTypes.STRING,
         },
         shippingAddress: {
             type: DataTypes.STRING,
-            defaultValue: 'none',
         },
         billingAddress: {
             type: DataTypes.STRING,
-            defaultValue: 'none',
         },
         isActive: {
             type: DataTypes.BOOLEAN,

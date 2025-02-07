@@ -17,6 +17,9 @@ interface OrderResponse {
     id?: number;
     customerId?: number;
     paymentMethod: 'card' | 'wallet' | 'bank-transfer';
+    shippingCountry: string;
+    shippingWeight: 'light' | 'standard' | 'heavy';
+    shippingMethod: 'standard' | 'express' | 'next-day';
     status?: 'pending' | 'delivered' | 'canceled';
     trackingNumber?: string;
     createdAt?: Date;
@@ -91,14 +94,7 @@ export class OrderService {
                 await transaction.commit();
             }
 
-            return {
-                id: order.id,
-                customerId: order.customerId,
-                paymentMethod,
-                status: order.status,
-                trackingNumber: order.trackingNumber,
-                createdAt: order.createdAt,
-            };
+            return order.toJSON();
         } catch (error) {
             if (!transactionObj) {
                 await transaction.rollback();
