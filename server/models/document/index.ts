@@ -5,6 +5,7 @@ import PlatformRating, { IPlatformRating } from './PlatformRating.model';
 import ProductRating, { IProductRating } from './ProductRating.model';
 import ProductAnalytic from './ProductAnalytic.model';
 import Membership from './Membership.model';
+import PlatformData from './PlatformData.model';
 
 export {
     ShippingMethod,
@@ -19,4 +20,5 @@ export {
     IProductRating,
     ProductAnalytic,
     Membership,
+    PlatformData,
 };
