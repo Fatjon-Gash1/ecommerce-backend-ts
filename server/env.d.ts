@@ -15,5 +15,6 @@ declare namespace NodeJS {
         GMAIL_PASS?: string;
         TEMPLATES_PATH?: string;
         STRIPE_KEY?: string;
+        CLIENT_URL?: string;
     }
 }

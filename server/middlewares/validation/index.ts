@@ -11,6 +11,7 @@ export {
     validateAttribute,
     validateAdminRole,
     validateAdminRoleSet,
+    validatePlatformData,
 } from './adminValidations';
 
 export {

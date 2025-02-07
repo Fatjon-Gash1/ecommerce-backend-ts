@@ -85,7 +85,8 @@ export const validateRegistration = (): ValidationChain[] => [
         .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'’]+$/)
         .withMessage(
             'First name must contain only letters, spaces, or apostrophes'
-        ),
+        )
+        .toLowerCase(),
 
     body('details.lastName')
         .trim()
@@ -96,7 +97,8 @@ export const validateRegistration = (): ValidationChain[] => [
         .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'’]+$/)
         .withMessage(
             'First name must contain only letters, spaces, or apostrophes'
-        ),
+        )
+        .toLowerCase(),
 
     body('details.username')
         .trim()
