@@ -4,15 +4,18 @@ import { sequelize } from '../../config/db';
 interface ReplenishmentAttributes {
     id?: number;
     schedulerId: string;
+    nextJobId?: string | null;
     customerId?: number;
     orderId?: number;
     startDate: string;
-    lastPaymentDate?: string;
-    nextPaymentDate?: string;
+    lastPaymentDate?: string | null;
+    nextPaymentDate?: string | null;
     unit: Unit;
     interval: number;
-    endDate?: string | null;
-    times?: number | null;
+    endDate?: string;
+    times?: number;
+    executions?: number;
+    status?: Status;
 }
 
 interface ReplenishmentPaymentAttributes {
@@ -22,6 +25,7 @@ interface ReplenishmentPaymentAttributes {
 }
 
 type Unit = 'day' | 'week' | 'month' | 'year' | 'custom';
+type Status = 'scheduled' | 'active' | 'finished' | 'canceled' | 'failed';
 
 export class Replenishment
     extends Model<ReplenishmentAttributes>
@@ -29,15 +33,23 @@ export class Replenishment
 {
     declare id?: number;
     declare schedulerId: string;
+    declare nextJobId?: string | null;
     declare customerId?: number;
     declare orderId?: number;
     declare startDate: string;
-    declare lastPaymentDate?: string;
-    declare nextPaymentDate?: string;
+    declare lastPaymentDate?: string | null;
+    declare nextPaymentDate?: string | null;
     declare unit: Unit;
     declare interval: number;
-    declare endDate?: string | null;
-    declare times?: number | null;
+    declare endDate?: string;
+    declare times?: number;
+    declare executions?: number;
+    declare status?:
+        | 'scheduled'
+        | 'active'
+        | 'finished'
+        | 'canceled'
+        | 'failed';
 }
 
 Replenishment.init(
@@ -49,6 +61,7 @@ Replenishment.init(
             primaryKey: true,
         },
         schedulerId: { type: DataTypes.STRING, allowNull: false },
+        nextJobId: { type: DataTypes.STRING },
         startDate: { type: DataTypes.DATE, allowNull: false },
         lastPaymentDate: { type: DataTypes.DATE },
         nextPaymentDate: { type: DataTypes.DATE },
@@ -59,6 +72,22 @@ Replenishment.init(
         interval: { type: DataTypes.INTEGER, allowNull: false },
         endDate: { type: DataTypes.DATE },
         times: { type: DataTypes.INTEGER },
+        executions: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
+        },
+        status: {
+            type: DataTypes.ENUM(
+                'scheduled',
+                'active',
+                'finished',
+                'canceled',
+                'failed'
+            ),
+            allowNull: false,
+            defaultValue: 'active',
+        },
     },
     {
         sequelize,
@@ -88,11 +117,13 @@ ReplenishmentPayment.init(
 );
 
 Replenishment.beforeUpdate(async ({ lastPaymentDate, id }, options) => {
-    await ReplenishmentPayment.create(
-        {
-            paymentDate: lastPaymentDate!,
-            replenishmentId: id,
-        },
-        { transaction: options.transaction }
-    );
+    if (lastPaymentDate) {
+        await ReplenishmentPayment.create(
+            {
+                paymentDate: lastPaymentDate,
+                replenishmentId: id,
+            },
+            { transaction: options.transaction }
+        );
+    }
 });
