@@ -4,6 +4,7 @@ import {
     AdminService,
     NotificationService,
     AdminLogsService,
+    PlatformDataService,
     PaymentService,
 } from '../../../services';
 import authorize from '../../../middlewares/authorization/authorize';
@@ -18,6 +19,8 @@ import {
     validateAdminRole,
     validateAdminRoleSet,
     validationErrors,
+    validatePlatformData,
+    validateObjectId,
 } from '../../../middlewares/validation';
 import adminProducts from './products.route';
 import adminSubscriptions from './subscriptions.route';
@@ -25,6 +28,7 @@ import adminOrders from './orders.route';
 import adminShippings from './shippings.route';
 import adminRatings from './ratings.route';
 import adminAnalytics from './analytics.route';
+import { checkExact } from 'express-validator';
 
 const router: Router = Router();
 const adminService = new AdminService(
@@ -33,7 +37,8 @@ const adminService = new AdminService(
 const adminController = new AdminController(
     adminService,
     new NotificationService(),
-    new AdminLogsService()
+    new AdminLogsService(),
+    new PlatformDataService()
 );
 
 router.post(
@@ -89,6 +94,11 @@ router.get(
     validationErrors,
     adminController.getAdminById.bind(adminController)
 );
+router.get(
+    '/platform-data',
+    authorize(['admin']),
+    adminController.getPlatformData.bind(adminController)
+);
 
 router.patch(
     '/admins/:adminId/role',
@@ -97,6 +107,15 @@ router.patch(
     validateAdminRoleSet(),
     validationErrors,
     adminController.setAdminRole.bind(adminController)
+);
+router.patch(
+    '/platform-data/:id',
+    authorize(['admin']),
+    validateObjectId(),
+    validatePlatformData(),
+    checkExact([]),
+    validationErrors,
+    adminController.updatePlatformData.bind(adminController)
 );
 
 router.delete(
