@@ -1,6 +1,6 @@
 [**server**](../README.md)
 
-***
+---
 
 [server](../README.md) / UserService
 
@@ -84,7 +84,7 @@ Thrown if the user is not found.
 InvalidCredentialsError
 Thrown if the old password is invalid.
 
-***
+---
 
 ### checkUserAvailability()
 
@@ -114,7 +114,7 @@ The value of the field
 
 A promise resolving to an object containing a boolean and a message
 
-***
+---
 
 ### deleteUser()
 
@@ -141,7 +141,7 @@ The ID of the user to delete
 UserNotFoundError
 Thrown if the user is not found
 
-***
+---
 
 ### generateTokens()
 
@@ -177,7 +177,7 @@ The role of the user
 
 An object containing access and refresh tokens
 
-***
+---
 
 ### getCustomerById()
 
@@ -206,7 +206,7 @@ A promise resolving to a Customer instance
 UserNotFoundError
 Thrown if the Customer is not found
 
-***
+---
 
 ### loginUser()
 
@@ -244,7 +244,7 @@ UserNotFoundError if the user is not found
 
 InvalidCredentialsError if the password is invalid
 
-***
+---
 
 ### signUpCustomer()
 
@@ -268,7 +268,7 @@ The details of the customer to sign-up
 
 A promise resolving to an object containing access and refresh tokens
 
-***
+---
 
 ### updateCustomerDetails()
 
@@ -301,7 +301,7 @@ The shipping and billing details
 UserNotFoundError
 Thrown if the Customer is not found.
 
-***
+---
 
 ### updateUser()
 
@@ -336,7 +336,7 @@ A promise resolving to the updated user
 UserNotFoundError
 Thrown if the user is not found
 
-***
+---
 
 ### userFactory()
 
@@ -348,7 +348,7 @@ Creates a provided user type class instance.
 
 #### Type Parameters
 
-• **T** *extends* `Model`
+• **T** _extends_ `Model`
 
 #### Parameters
 
