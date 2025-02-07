@@ -4,6 +4,7 @@ import {
     AdminService,
     NotificationService,
     AdminLogsService,
+    PlatformDataService,
 } from '../services';
 import { UserNotFoundError, UserAlreadyExistsError } from '../errors';
 
@@ -11,15 +12,18 @@ export class AdminController {
     private adminService: AdminService;
     private notificationService: NotificationService;
     private adminLogsService: AdminLogsService;
+    private platformDataService: PlatformDataService;
 
     constructor(
         adminService: AdminService,
         notificationService: NotificationService,
-        AdminLogsService: AdminLogsService
+        AdminLogsService: AdminLogsService,
+        platformDataService: PlatformDataService
     ) {
         this.adminService = adminService;
         this.notificationService = notificationService;
         this.adminLogsService = AdminLogsService;
+        this.platformDataService = platformDataService;
     }
 
     public async registerCustomer(
@@ -203,6 +207,20 @@ export class AdminController {
         }
     }
 
+    public async getPlatformData(
+        _req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        try {
+            const platformData =
+                await this.platformDataService.getPlatformData();
+            return res.status(200).json({ platformData });
+        } catch (error) {
+            console.error('Error retrieving platform data: ', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async setAdminRole(
         req: Request,
         res: Response
@@ -227,6 +245,25 @@ export class AdminController {
         }
     }
 
+    public async updatePlatformData(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const id = req.params.id;
+        const data = req.body;
+
+        try {
+            const updatedData =
+                await this.platformDataService.updatePlatformData(id, data);
+            return res.status(200).json({
+                message: 'Platform data updated successfully',
+                data: updatedData,
+            });
+        } catch (error) {
+            console.error('Error updating platform data:', error);
+            res.status(500).json({ message: 'Server error' });
+        }
+    }
     public async deleteUserById(
         req: Request,
         res: Response
