@@ -108,17 +108,24 @@ The backend is structured using the **MVCS (Model-View-Controller+Service)** pat
     cd ecommerce-backend
     ```
 2.  Install Dependencies:
+
     ```sh
     npm install
     ```
-    3. Configure environment variables:
+
+3.  Configure environment variables:
+
     - Copy `.env.example` to `.env`.
     - Set your database credentials, Stripe API keys, and other necessary variables.
-    3. Start the server:
+
+4.  Start the server:
+
     ```sh
     npm run dev
     ```
+
     Or, using Docker:
+
     ```sh
     docker-compose up --build
     ```
