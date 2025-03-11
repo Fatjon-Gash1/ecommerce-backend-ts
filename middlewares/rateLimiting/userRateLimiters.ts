@@ -35,6 +35,18 @@ export const passwordChangeRateLimiter = rateLimit({
     skipSuccessfulRequests: true,
 });
 
+export const passwordResetRequestRateLimiter = rateLimit({
+    windowMs: 30 * 60 * 1000,
+    max: 30, // Change to 1 after API testing
+    message: {
+        status: 429,
+        error: 'Too many password reset requests. Please try again after 30 minutes.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+});
+
 export const tokenRateLimiter = rateLimit({
     windowMs: 30 * 60 * 1000,
     max: 100, // Change to 1 after API testing

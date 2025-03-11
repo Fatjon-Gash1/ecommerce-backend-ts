@@ -4,7 +4,14 @@ export {
     tokenRateLimiter,
     updateRateLimiter,
     passwordChangeRateLimiter,
+    passwordResetRequestRateLimiter,
 } from './userRateLimiters';
+
+export {
+    membershipSubscriptionRateLimiter,
+    replenishmentUpdateRateLimiter,
+    replenishmentCancelToggleRateLimiter,
+} from './subscriptionRateLimiters';
 
 export { ratingUpdateRateLimiter } from './ratingRateLimiters';
 
