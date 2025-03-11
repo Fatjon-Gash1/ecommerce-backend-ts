@@ -14,4 +14,5 @@ resources/.arch-internal-preview.css
 .arch-internal-preview.css
 node_modules
 .env
+app.log
 dist
