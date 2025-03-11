@@ -1,16 +1,17 @@
 import { Request, Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { ProductService, AdminLogsService } from '../services';
+import { ProductService, AdminLogsService, LoggerService } from '@/services';
 import {
     CategoryAlreadyExistsError,
     CategoryNotFoundError,
     ProductNotFoundError,
     ProductAlreadyExistsError,
-} from '../errors';
+} from '@/errors';
 
 export class ProductController {
     private productService: ProductService;
     private adminLogsService?: AdminLogsService;
+    private logger: LoggerService;
 
     constructor(
         productService: ProductService,
@@ -18,6 +19,7 @@ export class ProductController {
     ) {
         this.productService = productService;
         this.adminLogsService = adminLogsService;
+        this.logger = new LoggerService();
     }
 
     public async addCategory(
@@ -41,11 +43,11 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'category', 'create');
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
-                console.error('Error adding category: ', error);
+                this.logger.error('Error adding category: ' + error);
                 return res.status(400).json({ message: error.message });
             }
 
-            console.error('Error adding category: ', error);
+            this.logger.error('Error adding category: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -57,11 +59,14 @@ export class ProductController {
         const categoryId: number = Number(req.params.id);
         const { username } = req.user as JwtPayload;
         const { details } = req.body;
+        const { promote } = req.query;
 
         try {
             const product = await this.productService.addProductByCategoryId(
+                username,
                 categoryId,
-                details
+                details,
+                promote as boolean | undefined
             );
             res.status(201).json({
                 message: 'Product added successfully',
@@ -71,15 +76,15 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'product', 'create');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
-                console.error('Error adding product: ', error);
+                this.logger.error('Error adding product: ' + error);
                 return res.status(404).json({ message: error.message });
             }
             if (error instanceof ProductAlreadyExistsError) {
-                console.error('Error adding product: ', error);
+                this.logger.error('Error adding product: ' + error);
                 return res.status(400).json({ message: error.message });
             }
 
-            console.error('Error adding product: ', error);
+            this.logger.error('Error adding product: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -93,7 +98,7 @@ export class ProductController {
                 await this.productService.getAllTopLevelCategories();
             return res.status(200).json({ total: count, categories: rows });
         } catch (error) {
-            console.error('Error getting top level categories: ', error);
+            this.logger.error('Error getting top level categories: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -107,7 +112,7 @@ export class ProductController {
                 await this.productService.getAllCategories();
             return res.status(200).json({ total: count, categories: rows });
         } catch (error) {
-            console.error('Error getting categories: ', error);
+            this.logger.error('Error getting categories: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -126,11 +131,11 @@ export class ProductController {
             return res.status(200).json({ total: count, subcategories: rows });
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
-                console.error('Error getting subcategories: ', error);
+                this.logger.error('Error getting subcategories: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting subcategories: ', error);
+            this.logger.error('Error getting subcategories: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -143,7 +148,7 @@ export class ProductController {
             const { count, rows } = await this.productService.getAllProducts();
             return res.status(200).json({ total: count, products: rows });
         } catch (error) {
-            console.error('Error getting all products: ', error);
+            this.logger.error('Error getting all products: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -160,11 +165,13 @@ export class ProductController {
             return res.status(200).json({ total: count, products: rows });
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
-                console.error('Error getting products by category: ', error);
+                this.logger.error(
+                    'Error getting products by category: ' + error
+                );
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting products by category: ', error);
+            this.logger.error('Error getting products by category: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -180,11 +187,11 @@ export class ProductController {
             return res.status(200).json({ product });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error getting product: ', error);
+                this.logger.error('Error getting product: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting product: ', error);
+            this.logger.error('Error getting product: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -201,11 +208,11 @@ export class ProductController {
             return res.status(200).json({ product });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error viewing product: ', error);
+                this.logger.error('Error viewing product: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error viewing product: ', error);
+            this.logger.error('Error viewing product: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -222,16 +229,16 @@ export class ProductController {
             return res.status(200).json({ category });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error getting product category: ', error);
+                this.logger.error('Error getting product category: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof CategoryNotFoundError) {
-                console.error('Error getting product category: ', error);
+                this.logger.error('Error getting product category: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting product category: ', error);
+            this.logger.error('Error getting product category: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -249,7 +256,7 @@ export class ProductController {
                 );
             return res.status(200).json({ total: count, products });
         } catch (error) {
-            console.error('Error getting products in stock: ', error);
+            this.logger.error('Error getting products in stock: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -266,11 +273,11 @@ export class ProductController {
             return res.status(200).json({ discountedPrice });
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error getting discounted price: ', error);
+                this.logger.error('Error getting discounted price: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting discounted price: ', error);
+            this.logger.error('Error getting discounted price: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -294,11 +301,11 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'category', 'update');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
-                console.error('Error updating category: ', error);
+                this.logger.error('Error updating category: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error updating category: ', error);
+            this.logger.error('Error updating category: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -310,12 +317,15 @@ export class ProductController {
         const productId: number = Number(req.params.productId);
         const { username } = req.user as JwtPayload;
         const { discount } = req.body;
+        const { promote } = req.query;
 
         try {
             const discountedPrice: number =
                 await this.productService.setDiscountForProduct(
+                    username,
                     productId,
-                    discount
+                    discount,
+                    promote as boolean | undefined
                 );
             res.status(200).json({
                 discount,
@@ -325,11 +335,11 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error setting discount: ', error);
+                this.logger.error('Error setting discount: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error setting discount: ', error);
+            this.logger.error('Error setting discount: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -354,11 +364,11 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error updating product: ', error);
+                this.logger.error('Error updating product: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error updating product: ', error);
+            this.logger.error('Error updating product: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -377,11 +387,11 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'category', 'delete');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
-                console.error('Error deleting category: ', error);
+                this.logger.error('Error deleting category: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error deleting category: ', error);
+            this.logger.error('Error deleting category: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -400,11 +410,11 @@ export class ProductController {
             await this.adminLogsService!.log(username, 'product', 'delete');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
-                console.error('Error deleting product: ', error);
+                this.logger.error('Error deleting product: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error deleting product: ', error);
+            this.logger.error('Error deleting product: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -421,7 +431,7 @@ export class ProductController {
             );
             return res.status(200).json({ products });
         } catch (error) {
-            console.error('Error searching products: ', error);
+            this.logger.error('Error searching products: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

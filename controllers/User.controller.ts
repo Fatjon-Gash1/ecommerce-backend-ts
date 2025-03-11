@@ -1,22 +1,19 @@
 import { Request, Response } from 'express';
-import { UserService, NotificationService } from '../services';
+import { LoggerService, UserService } from '@/services';
 import { JwtPayload } from 'jsonwebtoken';
 import {
     UserNotFoundError,
     InvalidCredentialsError,
     UserAlreadyExistsError,
-} from '../errors';
+} from '@/errors';
 
 export class UserController {
     private userService: UserService;
-    private notificationService: NotificationService;
+    private logger: LoggerService;
 
-    constructor(
-        userService: UserService,
-        notificationService: NotificationService
-    ) {
+    constructor(userService: UserService) {
         this.userService = userService;
-        this.notificationService = notificationService;
+        this.logger = new LoggerService();
     }
 
     public async signUpCustomer(
@@ -40,20 +37,15 @@ export class UserController {
                     accessToken,
                     message: 'Customer registered successfully',
                 });
-
-            await this.notificationService.sendWelcomeEmail(
-                details.firstName,
-                details.email
-            );
         } catch (error) {
             if (error instanceof UserAlreadyExistsError) {
-                console.error('Error registering customer: ', error);
+                this.logger.error('Error registering customer: ' + error);
                 return res
                     .status(409)
                     .json({ message: 'Customer already exists' });
             }
 
-            console.error('Error registering customer: ', error);
+            this.logger.error('Error registering customer: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -64,7 +56,6 @@ export class UserController {
     ): Promise<void | Response> {
         const { username, password } = req.body;
 
-        console.log('Password:', password);
         try {
             const { refreshToken, accessToken } =
                 await this.userService.loginUser(username, password);
@@ -83,16 +74,16 @@ export class UserController {
                 });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error logging in user: ', error);
+                this.logger.error('Error logging in user: ' + error);
                 return res.status(404).json({ message: 'User not found' });
             }
 
             if (error instanceof InvalidCredentialsError) {
-                console.error('Error logging in user: ', error);
-                return res.status(400).json({ message: 'Invalid password' });
+                this.logger.error('Error logging in user: ' + error);
+                return res.status(401).json({ message: 'Invalid password' });
             }
 
-            console.error('Error logging in user: ', error);
+            this.logger.error('Error logging in user: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -114,7 +105,7 @@ export class UserController {
                 })
                 .json({ accessToken });
         } catch (error) {
-            console.error('Error generating tokens: ', error);
+            this.logger.error('Error generating tokens: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -134,7 +125,7 @@ export class UserController {
                 })
                 .json({ message: 'Refresh token deleted successfully' });
         } catch (error) {
-            console.error('Error deleting refresh token: ', error);
+            this.logger.error('Error deleting refresh token: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -165,7 +156,7 @@ export class UserController {
 
             return res.status(200).json({ availability });
         } catch (error) {
-            console.error(`Error checking ${field} availability: `, error);
+            this.logger.error(`Error checking ${field} availability: ` + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -181,11 +172,11 @@ export class UserController {
             return res.status(200).json({ customer });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error retrieving customer by ID: ', error);
+                this.logger.error('Error retrieving customer by ID: ' + error);
                 return res.status(404).json({ message: 'Customer not found' });
             }
 
-            console.error('Error retrieving customer by ID: ', error);
+            this.logger.error('Error retrieving customer by ID: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -208,18 +199,61 @@ export class UserController {
                 .json({ message: 'Password changed successfully' });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error changing password: ', error);
+                this.logger.error('Error changing password: ' + error);
                 return res.status(404).json({ message: 'User not found' });
             }
 
             if (error instanceof InvalidCredentialsError) {
-                console.error('Error changing password: ', error);
+                this.logger.error('Error changing password: ' + error);
                 return res
                     .status(400)
                     .json({ message: 'Invalid old password' });
             }
 
-            console.error('Error changing password: ', error);
+            this.logger.error('Error changing password: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async requestPasswordReset(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { email } = req.body;
+
+        try {
+            await this.userService.requestPasswordReset(email);
+            return res
+                .status(200)
+                .json({ message: 'Password reset email sent successfully' });
+        } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                this.logger.error('Error requesting password reset: ' + error);
+                return res.status(404).json({ message: error.message });
+            }
+            this.logger.error('Error requesting password reset: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async resetPassword(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const userId = (req.data as JwtPayload).id;
+        const { newPassword } = req.body;
+
+        try {
+            await this.userService.resetPassword(userId, newPassword);
+            return res
+                .status(200)
+                .json({ message: 'Password reset successfully' });
+        } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                this.logger.error('Error resetting password: ' + error);
+                return res.status(404).json({ message: error.message });
+            }
+            this.logger.error('Error resetting password: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -242,14 +276,15 @@ export class UserController {
             });
         } catch (err) {
             if (err instanceof UserNotFoundError) {
-                console.error(
-                    'Error adding shipping details to customer: ',
-                    err
+                this.logger.error(
+                    'Error adding shipping details to customer: ' + err
                 );
                 return res.status(404).json({ message: 'Customer not found' });
             }
 
-            console.error('Error adding shipping details to customer: ', err);
+            this.logger.error(
+                'Error adding shipping details to customer: ' + err
+            );
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -268,11 +303,11 @@ export class UserController {
                 .json({ message: 'User details updated successfully', user });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error updating user: ', error);
+                this.logger.error('Error updating user: ' + error);
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            console.error('Error updating user: ', error);
+            this.logger.error('Error updating user: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -290,11 +325,11 @@ export class UserController {
                 .json({ message: 'User deleted successfully' });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error deleting user: ', error);
+                this.logger.error('Error deleting user: ' + error);
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            console.error('Error deleting user: ', error);
+            this.logger.error('Error deleting user: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

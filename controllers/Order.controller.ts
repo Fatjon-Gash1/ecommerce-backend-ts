@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
-import { OrderService, AdminLogsService } from '../services';
+import { OrderService, AdminLogsService, LoggerService } from '@/services';
 import { JwtPayload } from 'jsonwebtoken';
 import {
     OrderAlreadyMarkedError,
     OrderNotFoundError,
-    ProductNotFoundError,
     UserNotFoundError,
-} from '../errors';
+} from '@/errors';
 
 export class OrderController {
     private orderService: OrderService;
     private adminLogsService?: AdminLogsService;
+    private logger: LoggerService;
 
     constructor(
         orderService: OrderService,
@@ -18,47 +18,7 @@ export class OrderController {
     ) {
         this.orderService = orderService;
         this.adminLogsService = adminLogsService;
-    }
-
-    public async createOrder(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const { userId } = req.user as JwtPayload;
-        const {
-            items,
-            paymentMethod,
-            shippingCountry,
-            shippingWeight,
-            shippingMethod,
-        } = req.body;
-
-        try {
-            const order = await this.orderService.createOrder(
-                userId,
-                items,
-                paymentMethod,
-                shippingCountry,
-                shippingWeight,
-                shippingMethod
-            );
-            return res.status(201).json({
-                message: 'Order created successfully',
-                order,
-            });
-        } catch (error) {
-            if (error instanceof UserNotFoundError) {
-                console.error('Error creating order: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-            if (error instanceof ProductNotFoundError) {
-                console.error('Error creating order: ', error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            console.error('Error creating order: ', error);
-            return res.status(500).json({ message: 'Server error' });
-        }
+        this.logger = new LoggerService();
     }
 
     public async getOrderById(
@@ -79,11 +39,11 @@ export class OrderController {
             return res.status(200).json({ order });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
-                console.error('Error getting order: ', error);
+                this.logger.error('Error getting order: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting order: ', error);
+            this.logger.error('Error getting order: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -109,11 +69,11 @@ export class OrderController {
             return res.status(200).json({ orderItems });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
-                console.error('Error getting order items: ', error);
+                this.logger.error('Error getting order items: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting order items: ', error);
+            this.logger.error('Error getting order items: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -134,14 +94,15 @@ export class OrderController {
             return res.status(200).json({ totalPrice });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
-                console.error(
-                    'Error getting total price of order items: ',
-                    error
+                this.logger.error(
+                    'Error getting total price of order items: ' + error
                 );
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting total price of order items: ', error);
+            this.logger.error(
+                'Error getting total price of order items: ' + error
+            );
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -158,7 +119,7 @@ export class OrderController {
             );
             return res.status(200).json({ total: count, orders });
         } catch (error) {
-            console.error('Error getting orders by status: ', error);
+            this.logger.error('Error getting orders by status: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -188,10 +149,12 @@ export class OrderController {
             return res.status(200).json({ total: count, orders });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error getting user orders by status: ', error);
+                this.logger.error(
+                    'Error getting user orders by status: ' + error
+                );
                 return res.status(404).json({ message: error.message });
             }
-            console.error('Error getting user orders by status: ', error);
+            this.logger.error('Error getting user orders by status: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -218,11 +181,11 @@ export class OrderController {
             return res.status(200).json({ total: count, orders });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error getting order history: ', error);
+                this.logger.error('Error getting order history: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting order history: ', error);
+            this.logger.error('Error getting order history: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -235,7 +198,7 @@ export class OrderController {
             const { count, orders } = await this.orderService.getAllOrders();
             return res.status(200).json({ total: count, orders });
         } catch (error) {
-            console.error('Error getting all orders: ', error);
+            this.logger.error('Error getting all orders: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -254,11 +217,11 @@ export class OrderController {
                 .json({ message: 'Order canceled successfully' });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
-                console.error('Error cancelling order: ', error);
+                this.logger.error('Error cancelling order: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error cancelling order: ', error);
+            this.logger.error('Error cancelling order: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -277,16 +240,16 @@ export class OrderController {
             await this.adminLogsService!.log(username, 'order', 'update');
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
-                console.error('Error marking order as delivered: ', error);
+                this.logger.error('Error marking order as delivered: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof OrderAlreadyMarkedError) {
-                console.error('Error marking order as delivered: ', error);
+                this.logger.error('Error marking order as delivered: ' + error);
                 return res.status(400).json({ message: error.message });
             }
 
-            console.error('Error marking order as delivered: ', error);
+            this.logger.error('Error marking order as delivered: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

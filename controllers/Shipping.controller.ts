@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ShippingService, AdminLogsService } from '../services';
+import { ShippingService, AdminLogsService, LoggerService } from '@/services';
 import {
     ShippingLocationNotFoundError,
     ShippingOptionNotFoundError,
@@ -7,12 +7,13 @@ import {
     CartNotFoundError,
     UserNotFoundError,
     ShippingLocationAlreadyExistsError,
-} from '../errors';
+} from '@/errors';
 import { JwtPayload } from 'jsonwebtoken';
 
 export class ShippingController {
     private shippingService: ShippingService;
     private adminLogsService?: AdminLogsService;
+    private logger: LoggerService;
 
     constructor(
         shippingService: ShippingService,
@@ -20,6 +21,7 @@ export class ShippingController {
     ) {
         this.shippingService = shippingService;
         this.adminLogsService = adminLogsService;
+        this.logger = new LoggerService();
     }
 
     public async addShippingCountry(
@@ -46,11 +48,11 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingLocationAlreadyExistsError) {
-                console.error('Error adding new country: ', error);
+                this.logger.error('Error adding new country: ' + error);
                 return res.status(400).json({ message: error.message });
             }
 
-            console.error('Error adding new country: ', error);
+            this.logger.error('Error adding new country: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -82,15 +84,15 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error adding shipping city: ', error);
+                this.logger.error('Error adding shipping city: ' + error);
                 return res.status(404).json({ message: error.message });
             }
             if (error instanceof ShippingLocationAlreadyExistsError) {
-                console.error('Error adding shipping city: ', error);
+                this.logger.error('Error adding shipping city: ' + error);
                 return res.status(400).json({ message: error.message });
             }
 
-            console.error('Error adding shipping city: ', error);
+            this.logger.error('Error adding shipping city: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -104,7 +106,7 @@ export class ShippingController {
                 await this.shippingService.getShippingCountries();
             return res.status(200).json({ shippingCountries });
         } catch (error) {
-            console.error('Error getting shipping countries: ', error);
+            this.logger.error('Error getting shipping countries: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -123,11 +125,11 @@ export class ShippingController {
             return res.status(200).json({ shippingCities });
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error getting shipping cities: ', error);
+                this.logger.error('Error getting shipping cities: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error getting shipping cities: ', error);
+            this.logger.error('Error getting shipping cities: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -149,21 +151,21 @@ export class ShippingController {
             return res.status(200).json({ shippingCost });
         } catch (error) {
             if (error instanceof CartNotFoundError) {
-                console.error('Error calculating shipping cost: ', error);
+                this.logger.error('Error calculating shipping cost: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error calculating shipping cost: ', error);
+                this.logger.error('Error calculating shipping cost: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
             if (error instanceof ShippingOptionNotFoundError) {
-                console.error('Error calculating shipping cost: ', error);
+                this.logger.error('Error calculating shipping cost: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error calculating shipping cost: ', error);
+            this.logger.error('Error calculating shipping cost: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -180,15 +182,15 @@ export class ShippingController {
             return res.status(200).json({ weight });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error determining weight range: ', error);
+                this.logger.error('Error determining weight range: ' + error);
                 return res.status(404).json({ message: error.message });
             }
             if (error instanceof EmptyCartError) {
-                console.error('Error determining weight range: ', error);
+                this.logger.error('Error determining weight range: ' + error);
                 return res.status(400).json({ message: error.message });
             }
 
-            console.error('Error determining weight range: ', error);
+            this.logger.error('Error determining weight range: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -221,11 +223,11 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error updating country: ', error);
+                this.logger.error('Error updating country: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error updating country: ', error);
+            this.logger.error('Error updating country: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -257,11 +259,11 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error updating city: ', error);
+                this.logger.error('Error updating city: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error updating city: ', error);
+            this.logger.error('Error updating city: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -292,10 +294,12 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingOptionNotFoundError) {
-                console.error('Error changing shipping method rate: ', error);
+                this.logger.error(
+                    'Error changing shipping method rate: ' + error
+                );
                 return res.status(404).json({ message: error.message });
             }
-            console.error('Error changing shipping method rate: ', error);
+            this.logger.error('Error changing shipping method rate: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -326,10 +330,12 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingOptionNotFoundError) {
-                console.error('Error changing shipping weight rate: ', error);
+                this.logger.error(
+                    'Error changing shipping weight rate: ' + error
+                );
                 return res.status(404).json({ message: error.message });
             }
-            console.error('Error changing shipping weight rate: ', error);
+            this.logger.error('Error changing shipping weight rate: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -353,11 +359,11 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error deleting country: ', error);
+                this.logger.error('Error deleting country: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error deleting country: ', error);
+            this.logger.error('Error deleting country: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -381,11 +387,11 @@ export class ShippingController {
             );
         } catch (error) {
             if (error instanceof ShippingLocationNotFoundError) {
-                console.error('Error deleting city: ', error);
+                this.logger.error('Error deleting city: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error deleting city: ', error);
+            this.logger.error('Error deleting city: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

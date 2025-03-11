@@ -2,28 +2,27 @@ import { Request, Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import {
     AdminService,
-    NotificationService,
     AdminLogsService,
     PlatformDataService,
-} from '../services';
-import { UserNotFoundError, UserAlreadyExistsError } from '../errors';
+    LoggerService,
+} from '@/services';
+import { UserNotFoundError, UserAlreadyExistsError } from '@/errors';
 
 export class AdminController {
     private adminService: AdminService;
-    private notificationService: NotificationService;
     private adminLogsService: AdminLogsService;
     private platformDataService: PlatformDataService;
+    private logger: LoggerService;
 
     constructor(
         adminService: AdminService,
-        notificationService: NotificationService,
         AdminLogsService: AdminLogsService,
         platformDataService: PlatformDataService
     ) {
         this.adminService = adminService;
-        this.notificationService = notificationService;
         this.adminLogsService = AdminLogsService;
         this.platformDataService = platformDataService;
+        this.logger = new LoggerService();
     }
 
     public async registerCustomer(
@@ -40,21 +39,16 @@ export class AdminController {
                 message: 'Customer registered successfully',
             });
 
-            await this.notificationService.sendWelcomeEmail(
-                details.firstName,
-                details.email
-            );
-
             await this.adminLogsService.log(username, 'customer', 'create');
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
-                console.error('Error registering customer:', err);
+                this.logger.error('Error registering customer:' + err);
                 return res
                     .status(409)
                     .json({ message: 'Customer already exists' });
             }
 
-            console.error('Error registering customer:', err);
+            this.logger.error('Error registering customer:' + err);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -73,13 +67,13 @@ export class AdminController {
             await this.adminLogsService.log(username, 'admin', 'create');
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
-                console.error('Error registering admin:', err);
+                this.logger.error('Error registering admin:' + err);
                 return res
                     .status(409)
                     .json({ message: 'Admin already exists' });
             }
 
-            console.error('Error registering admin:', err);
+            this.logger.error('Error registering admin:' + err);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -96,11 +90,11 @@ export class AdminController {
             return res.status(200).json({ customer });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error retrieving customer by ID: ', error);
+                this.logger.error('Error retrieving customer by ID: ' + error);
                 return res.status(404).json({ message: 'Customer not found' });
             }
 
-            console.error('Error retrieving customer by ID: ', error);
+            this.logger.error('Error retrieving customer by ID: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -114,7 +108,7 @@ export class AdminController {
                 await this.adminService.findActiveCustomers();
             return res.status(200).json({ total: count, customers });
         } catch (error) {
-            console.error('Error retrieving customers: ', error);
+            this.logger.error('Error retrieving customers: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -132,13 +126,14 @@ export class AdminController {
             return res.status(200).json({ customer });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error(
-                    'Error retrieving customer by attribute: ',
-                    error
+                this.logger.error(
+                    'Error retrieving customer by attribute: ' + error
                 );
                 return res.status(404).json({ message: error.message });
             }
-            console.error('Error retrieving customer by attribute: ', error);
+            this.logger.error(
+                'Error retrieving customer by attribute: ' + error
+            );
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -152,7 +147,7 @@ export class AdminController {
                 await this.adminService.getAllCustomers();
             return res.status(200).json({ total: count, customers });
         } catch (error) {
-            console.error('Error retrieving customers: ', error);
+            this.logger.error('Error retrieving customers: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -168,11 +163,11 @@ export class AdminController {
             return res.status(200).json({ admin });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error retrieving admin by ID: ', error);
+                this.logger.error('Error retrieving admin by ID: ' + error);
                 return res.status(404).json({ message: error.message });
             }
 
-            console.error('Error retrieving admin by ID: ', error);
+            this.logger.error('Error retrieving admin by ID: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -189,7 +184,7 @@ export class AdminController {
             );
             return res.status(200).json({ total: count, admins });
         } catch (error) {
-            console.error('Error retrieving admins by role: ', error);
+            this.logger.error('Error retrieving admins by role: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -202,7 +197,7 @@ export class AdminController {
             const { count, admins } = await this.adminService.getAllAdmins();
             return res.status(200).json({ total: count, admins });
         } catch (error) {
-            console.error('Error retrieving admins: ', error);
+            this.logger.error('Error retrieving admins: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -216,7 +211,7 @@ export class AdminController {
                 await this.platformDataService.getPlatformData();
             return res.status(200).json({ platformData });
         } catch (error) {
-            console.error('Error retrieving platform data: ', error);
+            this.logger.error('Error retrieving platform data: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -236,11 +231,11 @@ export class AdminController {
             await this.adminLogsService.log(username, 'admin', 'update');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error setting admin role: ', error);
+                this.logger.error('Error setting admin role: ' + error);
                 return res.status(404).json({ message: 'Admin not found' });
             }
 
-            console.error('Error setting admin role: ', error);
+            this.logger.error('Error setting admin role: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
@@ -260,7 +255,7 @@ export class AdminController {
                 data: updatedData,
             });
         } catch (error) {
-            console.error('Error updating platform data:', error);
+            this.logger.error('Error updating platform data:' + error);
             res.status(500).json({ message: 'Server error' });
         }
     }
@@ -278,11 +273,11 @@ export class AdminController {
             await this.adminLogsService.log(username, 'admin', 'delete');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                console.error('Error deleting user: ', error);
+                this.logger.error('Error deleting user: ' + error);
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            console.error('Error deleting user: ', error);
+            this.logger.error('Error deleting user: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
