@@ -1,11 +1,11 @@
-import { PlatformRating, ProductRating, IRating } from '../models/document';
 import { Model } from 'mongoose';
-import { User, Product, Customer } from '../models/relational';
+import { PlatformRating, ProductRating, IRating } from '@/models/document';
+import { User, Product, Customer } from '@/models/relational';
 import {
     UserNotFoundError,
     ProductNotFoundError,
     RatingNotFoundError,
-} from '../errors';
+} from '@/errors';
 
 interface RatingDetails {
     firstName: string;

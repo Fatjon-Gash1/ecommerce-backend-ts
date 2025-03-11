@@ -1,10 +1,7 @@
-import {
-    CategoryNotFoundError,
-    ProductNotFoundError,
-    InvalidStockStatusError,
-    UserNotFoundError,
-    ReportNotFoundError,
-} from '../errors';
+import { Sequelize, Op } from 'sequelize';
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 import {
     Purchase,
     Product,
@@ -12,12 +9,14 @@ import {
     Sale,
     Order,
     User,
-} from '../models/relational';
-import { Sequelize, Op } from 'sequelize';
-import PDFDocument from 'pdfkit';
-import fs from 'fs';
-import path from 'path';
-import sequelize from 'sequelize';
+} from '@/models/relational';
+import {
+    CategoryNotFoundError,
+    ProductNotFoundError,
+    InvalidStockStatusError,
+    UserNotFoundError,
+    ReportNotFoundError,
+} from '@/errors';
 
 const reportsDir = path.join(__dirname, '../reports');
 
@@ -70,7 +69,7 @@ export class AnalyticsService {
             await this.getPlatformOrdersByStatus('Cancelled');
         const deliveredOrders =
             await this.getPlatformOrdersByStatus('Delivered');
-        const categoryData = await this.getCategoryPurchases();
+        //const categoryData = await this.getCategoryPurchases();
 
         const doc = new PDFDocument();
         doc.pipe(
@@ -163,7 +162,7 @@ export class AnalyticsService {
         doc.font('Helvetica').fontSize(12);
         let yPosition = 427;
 
-        categoryData.forEach((category, index) => {
+        /*categoryData.forEach((category, index) => {
             const bgColor = index % 2 === 0 ? '#F2F2F2' : '#FFFFFF';
             doc.rect(60, yPosition, 490, 30).fill(bgColor).stroke();
             doc.fillColor('black').text(
@@ -182,8 +181,8 @@ export class AnalyticsService {
             );
             */
 
-            yPosition += 30;
-        });
+        /*yPosition += 30;
+        });*/
 
         doc.fillColor('black')
             .fontSize(12)
@@ -308,15 +307,15 @@ export class AnalyticsService {
         const foundProducts = await Purchase.findAll({
             attributes: [
                 [
-                    sequelize.cast(
-                        sequelize.fn('SUM', sequelize.col('quantity')),
+                    Sequelize.cast(
+                        Sequelize.fn('SUM', Sequelize.col('quantity')),
                         'int'
                     ),
                     'quantity',
                 ],
                 [
-                    sequelize.cast(
-                        sequelize.fn('SUM', sequelize.col('discountRate')),
+                    Sequelize.cast(
+                        Sequelize.fn('SUM', Sequelize.col('discountRate')),
                         'float'
                     ),
                     'discountRate',
@@ -366,8 +365,8 @@ export class AnalyticsService {
         const purchaseData = await Purchase.findAll({
             attributes: [
                 [
-                    sequelize.cast(
-                        sequelize.fn('SUM', sequelize.col('discountRate')),
+                    Sequelize.cast(
+                        Sequelize.fn('SUM', Sequelize.col('discountRate')),
                         'float'
                     ),
                     'discountRate',
@@ -650,7 +649,7 @@ export class AnalyticsService {
      * @returns A promise resolving to an array of objects containing
      * the category Id, name and the total purchases
      */
-    public async getCategoryPurchases(): Promise<TopCategory[]> {
+    /*public async getCategoryPurchases(): Promise<TopCategory[]> {
         const results = await Purchase.findAll({
             include: [
                 {
@@ -684,13 +683,15 @@ export class AnalyticsService {
             ],
         });
 
-        return results.map((purchase) => ({
-            categoryId: purchase.getDataValue('categoryId')!,
-            categoryName: purchase.getDataValue('categoryName')!,
-            purchaseCount: purchase.getDataValue('purchaseCount')!,
-            totalRevenue: purchase.getDataValue('totalRevenue')!,
-        }));
-    }
+        return results.map((purchase) => {
+            return {
+                categoryId: purchase.getDataValue('categoryId')!,
+                categoryName: purchase.getDataValue('categoryName')!,
+                purchaseCount: purchase.getDataValue('purchaseCount')!,
+                totalRevenue: purchase.getDataValue('totalRevenue')!,
+            };
+        });
+    }*/
 
     /**
      * Retrieves the products based on stock status.
@@ -867,9 +868,6 @@ export class AnalyticsService {
                 });
 
                 if (salesFiles.length === 0) {
-                    console.log(
-                        `No reports starting with "${type}" were found`
-                    );
                     return reject(
                         new ReportNotFoundError(
                             `No reports starting with "${type}" were found`

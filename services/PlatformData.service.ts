@@ -1,4 +1,4 @@
-import { PlatformData } from '../models/document';
+import { PlatformData } from '@/models/document';
 
 interface PlatformData {
     companyName: string;

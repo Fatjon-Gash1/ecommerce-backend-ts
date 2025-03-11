@@ -1,17 +1,22 @@
 import jwt from 'jsonwebtoken';
-import { User, Customer, Admin } from '../models/relational';
 import { type ModelStatic, type Model, Op } from 'sequelize';
+import { queue2 } from '@/jobQueues';
+import { addBirthdayJobScheduler } from '@/jobSchedulers';
 import { PaymentService } from './Payment.service';
+import { NotificationService } from './Notification.service';
+import { User, Customer, Admin } from '@/models/relational';
 import {
     UserNotFoundError,
     UserAlreadyExistsError,
     InvalidCredentialsError,
-} from '../errors';
+} from '@/errors';
+
 const {
     ACCESS_TOKEN_KEY,
     REFRESH_TOKEN_KEY,
     ACCESS_TOKEN_EXPIRY,
     REFRESH_TOKEN_EXPIRY,
+    GENERIC_TOKEN_KEY,
 } = process.env;
 
 interface UserDetails {
@@ -21,6 +26,7 @@ interface UserDetails {
     username: string;
     email: string;
     role?: string;
+    birthday?: Date;
 }
 
 export interface UserCreationDetails extends UserDetails {
@@ -56,9 +62,14 @@ export interface CustomerResponse {
  */
 export class UserService {
     protected paymentService: PaymentService;
+    protected notificationService: NotificationService;
 
-    constructor(paymentService: PaymentService) {
+    constructor(
+        paymentService: PaymentService,
+        notificationService: NotificationService
+    ) {
         this.paymentService = paymentService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -115,7 +126,18 @@ export class UserService {
             `${newCustomer.firstName} ${newCustomer.lastName}`,
             newCustomer.email
         );
+        newCustomer.loyaltyPoints = 200;
+
         await newCustomer.save();
+
+        if (newCustomer.birthday) {
+            await addBirthdayJobScheduler(newCustomer);
+        }
+
+        await this.notificationService.sendWelcomeEmail(
+            newCustomer.firstName,
+            newCustomer.email
+        );
 
         return this.generateTokens(newCustomer.userId!, newCustomer.username);
     }
@@ -139,7 +161,6 @@ export class UserService {
         if (!user) {
             throw new UserNotFoundError();
         }
-        console.log('Password in the service: ', password);
 
         const isPasswordValid = await user.validatePassword(password);
 
@@ -281,7 +302,7 @@ export class UserService {
         const valid = await user.validatePassword(oldPassword);
 
         if (valid) {
-            await user.hashPassword(newPassword);
+            await user.hashAndStorePassword(newPassword);
             await user.save();
         } else {
             throw new InvalidCredentialsError();
@@ -342,13 +363,71 @@ export class UserService {
      * Thrown if the user is not found
      */
     public async deleteUser(userId: number): Promise<void> {
+        const [user, customer] = await Promise.all([
+            User.findByPk(userId),
+            Customer.findOne({ where: { userId } }),
+        ]);
+
+        if (!user) {
+            throw new UserNotFoundError();
+        }
+
+        if (customer) {
+            await this.paymentService.deleteCustomer(customer.stripeId);
+            await queue2.removeJobScheduler(
+                'birthday:scheduler:' + user.username
+            );
+        }
+
+        await user.destroy();
+    }
+
+    /**
+     * Requests a password reset for a user.
+     *
+     * @param userEmail - The email of the user
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found
+     */
+    public async requestPasswordReset(userEmail: string): Promise<void> {
+        const user = await User.findOne({ where: { email: userEmail } });
+
+        if (!user) {
+            throw new UserNotFoundError();
+        }
+
+        const resetToken = jwt.sign({ id: user.id }, GENERIC_TOKEN_KEY!, {
+            expiresIn: '15m',
+        });
+
+        await this.notificationService.sendPasswordResetEmail(
+            user.email,
+            user.firstName,
+            resetToken
+        );
+    }
+
+    /**
+     * Resets user's password.
+     *
+     * @param userId - The ID of the user
+     * @param newPassword - The new password to set
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found
+     */
+    public async resetPassword(
+        userId: string,
+        newPassword: string
+    ): Promise<void> {
         const user = await User.findByPk(userId);
 
         if (!user) {
             throw new UserNotFoundError();
         }
 
-        await user.destroy();
+        await user.hashAndStorePassword(newPassword);
+        await user.save();
     }
 }
-// A forgot password method should be implemented.

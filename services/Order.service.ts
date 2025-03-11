@@ -1,12 +1,12 @@
-import { sequelize } from '../config/db';
+import { sequelize } from '@/config/db';
 import { Op } from 'sequelize';
 import type { Transaction } from 'sequelize';
-import { Order, Customer } from '../models/relational';
+import { Order, Customer } from '@/models/relational';
 import {
     UserNotFoundError,
     OrderNotFoundError,
     OrderAlreadyMarkedError,
-} from '../errors';
+} from '@/errors';
 
 interface OrderItemAttributes {
     productId: number;
@@ -14,14 +14,22 @@ interface OrderItemAttributes {
 }
 
 interface OrderResponse {
-    id?: number;
-    customerId?: number;
+    id: number;
+    customerId: number;
     paymentMethod: 'card' | 'wallet' | 'bank-transfer';
     shippingCountry: string;
     shippingWeight: 'light' | 'standard' | 'heavy';
     shippingMethod: 'standard' | 'express' | 'next-day';
-    status?: 'pending' | 'delivered' | 'canceled';
-    trackingNumber?: string;
+    status:
+        | 'pending'
+        | 'shipped'
+        | 'awaiting pickup'
+        | 'delivered'
+        | 'canceled'
+        | 'refunded'
+        | 'partially-refunded';
+    trackingNumber: string;
+    total: number;
     createdAt?: Date;
 }
 
@@ -48,16 +56,20 @@ export class OrderService {
      * @param shippingCountry - The shipping country for the order
      * @param shippingWeight - The shipping weight for the order
      * @param shippingMethod - The shipping method for the order
+     * @param orderTotal - The total price of the order
+     * @param paymentIntentId - The id of the payment intent which is used for refunds
      * @param [transactionObj] - An existing transaction
      * @returns A promise resolving to the created order
      */
     public async createOrder(
         userId: number,
         items: OrderItemAttributes[],
-        paymentMethod: 'card' | 'wallet' | 'bank-transfer',
+        paymentMethod: 'card',
         shippingCountry: string,
         shippingWeight: 'standard' | 'light' | 'heavy',
         shippingMethod: 'standard' | 'express' | 'next-day',
+        orderTotal: number,
+        paymentIntentId: string,
         transactionObj?: Transaction
     ): Promise<OrderResponse> {
         const transaction: Transaction =
@@ -80,6 +92,8 @@ export class OrderService {
                     shippingCountry,
                     shippingWeight,
                     shippingMethod,
+                    total: orderTotal,
+                    paymentIntentId,
                 },
                 { transaction }
             );
@@ -388,14 +402,19 @@ export class OrderService {
             where: { id: orderId },
             include: {
                 model: Customer,
-                attributes: [],
                 where: { userId },
-                required: true,
+                attributes: [],
             },
         });
 
         if (!order) {
             throw new OrderNotFoundError();
+        }
+
+        if (order.status !== 'pending') {
+            throw new Error(
+                'Cannot cancel order. It has passed the "pending" status.'
+            );
         }
 
         order.status = 'canceled';

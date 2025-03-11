@@ -3,8 +3,8 @@ import {
     UserCreationDetails,
     CustomerResponse,
 } from './User.service';
-import { User, Customer, Admin } from '../models/relational';
-import { UserNotFoundError } from '../errors';
+import { User, Customer, Admin } from '@/models/relational';
+import { UserNotFoundError } from '@/errors';
 
 interface AdminResponse {
     id?: number;

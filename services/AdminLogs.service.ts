@@ -1,5 +1,5 @@
-import { User, Admin, AdminLog } from '../models/relational';
-import { AdminLogInvalidTargetError, UserNotFoundError } from '../errors';
+import { User, Admin, AdminLog } from '@/models/relational';
+import { AdminLogInvalidTargetError, UserNotFoundError } from '@/errors';
 
 /**
  * Service responsible for logging administrative operations.
@@ -52,6 +52,7 @@ export class AdminLogsService {
             'rating',
             'sales report',
             'stock report',
+            'membership',
         ];
 
         if (!categories.includes(target)) {

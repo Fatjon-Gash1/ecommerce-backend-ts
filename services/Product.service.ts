@@ -1,14 +1,16 @@
-import { sequelize } from '../config/db';
+import { sequelize } from '@/config/db';
 import { Op } from 'sequelize';
-import { PaymentService } from './Payment.service';
-import { Category, Product } from '../models/relational';
-import client from '../config/elasticsearchClient';
+import client from '@/config/elasticsearch';
+import { connectToRedisServer } from '@/config/redis';
+import { NotificationService } from './Notification.service';
+import { Admin, Category, Product, User } from '@/models/relational';
 import {
     CategoryAlreadyExistsError,
     CategoryNotFoundError,
     ProductNotFoundError,
     ProductAlreadyExistsError,
-} from '../errors';
+} from '@/errors';
+const redisConnection = connectToRedisServer();
 
 interface ProductDetails {
     name: string;
@@ -54,14 +56,16 @@ interface ProductResponse {
     createdAt?: Date;
 }
 
+type Promotion = 'newArrival' | 'discount';
+
 /**
  * Service responsible for product-related operations.
  */
 export class ProductService {
-    private paymentService?: PaymentService;
+    private notificationService?: NotificationService;
 
-    constructor(paymentService?: PaymentService) {
-        this.paymentService = paymentService;
+    constructor(notificationService?: NotificationService) {
+        this.notificationService = notificationService;
     }
 
     /**
@@ -107,8 +111,10 @@ export class ProductService {
      * product image is already in use.
      */
     public async addProductByCategoryId(
+        username: string,
         categoryId: number,
-        details: ProductDetails
+        details: ProductDetails,
+        promote?: boolean
     ): Promise<ProductResponse> {
         const category = await Category.findByPk(categoryId);
 
@@ -129,32 +135,89 @@ export class ProductService {
             throw new ProductAlreadyExistsError('Product image already in use');
         }
 
-        /*await this.paymentService!.createProduct({
-            name: details.name,
-            currency: details.currency,
-            price: details.price,
-        });*/
-
         const newProduct = await Product.create({
             categoryId,
             ...details,
         });
 
+        if (promote) {
+            await this.handlePromotions(
+                newProduct.id!,
+                username,
+                'newArrival',
+                5
+            );
+        }
+
         return newProduct.toJSON();
     }
-    /*// Product addition threshold for sending product promotions email
-            let productsForPromotion: number = 0; // Will be converted to an array of Products in the future
-        const promotionThreshold: number = 10;
 
-    Product.afterCreate(async () => {
-        productsForPromotion++;
+    /**
+     * Handles promotions for new product arrivals and discounts
+     *
+     * @param newProductId - The id of the new product
+     * @param username - The username of the admin who added the product
+     * @param promotion - The promotion type ('newArrival' or 'discount')
+     * @param threshold - The number of products to trigger the promotion
+     */
+    private async handlePromotions(
+        newProductId: number,
+        username: string,
+        promotion: Promotion,
+        threshold: number
+    ) {
+        const keyNames = new Map<Promotion, string>([
+            ['newArrival', 'newProdArrivalsPromo'],
+            ['discount', 'prodDiscountsPromo'],
+        ]);
+        const promotionKey = `${keyNames.get(promotion)}:` + username;
 
-        if (productsForPromotion === promotionThreshold) {
-            await notificationService.sendNewPromotionsEmail();
-            productsForPromotion = 0;
+        await redisConnection.sadd(promotionKey, newProductId);
+
+        const keyLength = await redisConnection.scard(promotionKey);
+
+        if (keyLength >= threshold) {
+            const productIds = (
+                await redisConnection.smembers(promotionKey)
+            ).map(Number);
+
+            const products = (
+                await Product.findAll({
+                    where: { id: productIds },
+                    attributes: ['name', 'price', 'discount', 'imageUrl'],
+                })
+            ).map((product) => product.toJSON());
+
+            await this.notificationService!.sendPromotionsEmail(
+                products,
+                promotion
+            );
+
+            await redisConnection.del(promotionKey);
+
+            const admin = await Admin.findOne({
+                include: {
+                    model: User,
+                    as: 'user',
+                    attributes: ['username'],
+                    where: { username },
+                },
+                attributes: ['userId'],
+            });
+
+            if (!admin) {
+                throw new Error(
+                    `Could not send notification on successful product promotion email to admin with username "${username}". Admin was not found.`
+                );
+            }
+            await this.notificationService!.sendNotification(
+                admin.userId,
+                (promotion === 'newArrival'
+                    ? 'New product arrivals'
+                    : 'Discounts') + ' promotion email sent to customers.'
+            );
         }
-    });
-    */
+    }
 
     /**
      * Retrieves all top level categories.
@@ -394,13 +457,17 @@ export class ProductService {
     /**
      * Sets the discount for a product.
      *
+     * @param username - The admin username
      * @param productId - The id of the product
      * @param discount - The discount to set
+     * @param promote - A boolean indicating whether to promote the product
      * @returns A promise resolving to the discount and the new price
      */
     public async setDiscountForProduct(
+        username: string,
         productId: number,
-        discount: number
+        discount: number,
+        promote?: boolean
     ): Promise<number> {
         const product = await Product.findByPk(productId);
 
@@ -417,6 +484,10 @@ export class ProductService {
 
         const discountedPrice =
             product.price - (product.price * product.discount!) / 100;
+
+        if (promote) {
+            await this.handlePromotions(productId, username, 'discount', 5);
+        }
 
         return Math.ceil(discountedPrice) - 0.01;
     }

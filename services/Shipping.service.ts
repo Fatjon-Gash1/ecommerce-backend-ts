@@ -5,8 +5,8 @@ import {
     Customer,
     Product,
     CartItem,
-} from '../models/relational';
-import { ShippingMethod, ShippingWeight } from '../models/document';
+} from '@/models/relational';
+import { ShippingMethod, ShippingWeight } from '@/models/document';
 import {
     ShippingLocationNotFoundError,
     ShippingOptionNotFoundError,
@@ -14,7 +14,7 @@ import {
     EmptyCartError,
     CartNotFoundError,
     ProductNotFoundError,
-} from '../errors';
+} from '@/errors';
 
 interface ShippingCountryResponse {
     id?: number;
@@ -331,7 +331,7 @@ export class ShippingService {
      * @param productItems - The product items. Either cart items or order items
      * @returns A promise that resolves to a string representing the weight range
      */
-    public async determineWeightRange(
+    private async determineWeightRange(
         productItems: ProductItem[]
     ): Promise<WeightRange> {
         const orderWeight = await Promise.all(

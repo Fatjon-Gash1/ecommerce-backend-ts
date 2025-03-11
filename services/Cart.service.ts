@@ -1,10 +1,10 @@
-import { Cart, CartItem, Customer, Product } from '../models/relational';
+import { Cart, CartItem, Customer, Product } from '@/models/relational';
 import {
     CartNotFoundError,
     CartItemLimitError,
     CartItemNotFoundError,
     ProductNotFoundError,
-} from '../errors';
+} from '@/errors';
 
 const CART_ITEM_LIMIT = 100;
 
