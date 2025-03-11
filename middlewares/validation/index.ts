@@ -4,6 +4,8 @@ export {
     validateLogIn,
     validateCustomerDetails,
     validatePasswords,
+    validatePassword,
+    validateEmail,
     validateUserUpdateDetails,
 } from './userValidations';
 
@@ -53,9 +55,22 @@ export {
 } from './analyticsValidations';
 
 export {
+    validatePurchaseData,
+    validateRefundRequest,
+    validateRefundRequestHandling,
+    validateRefundRequestFiltering,
+} from './paymentValidations';
+
+export {
+    validateMembershipSubscription,
+    validateReplenishment,
+} from './subscriptionValidations';
+
+export {
     validateId,
     validateObjectId,
     validateQuery,
+    validateBoolean,
 } from './commonValidations';
 
 export { validationErrors } from './validationErrors';

@@ -34,3 +34,7 @@ export const validateQuery = (value: string = 'q'): ValidationChain[] => [
             `${value.charAt(0).toUpperCase() + value.slice(1)} must be 32 characters or less`
         ),
 ];
+
+export const validateBoolean = (value: string): ValidationChain[] => [
+    query(value).optional().toBoolean(),
+];

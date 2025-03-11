@@ -57,6 +57,7 @@ export const validateProduct = (): ValidationChain[] => [
         .withMessage(
             'Weight must be a positive number and no more than 99.9kg'
         ),
+    query('promote').optional().toBoolean(),
 ];
 
 export const validateStockStatus = (): ValidationChain[] => [
@@ -71,6 +72,8 @@ export const validateDiscount = (): ValidationChain[] => [
     body('discount')
         .isInt({ min: 0, max: 100 })
         .withMessage('Discount must be a number between 0 and 100'),
+
+    query('promote').optional().toBoolean(),
 ];
 
 export const validateCategoryUpdate = (): ValidationChain[] => [
