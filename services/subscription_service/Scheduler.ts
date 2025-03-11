@@ -1,12 +1,13 @@
 import { Queue } from 'bullmq';
-import { connectToRedisServer } from '../../config/redis';
-import type IORedis from 'ioredis';
+import { redisClient } from '@/config/redis';
 import {
     Customer,
     Replenishment,
     ReplenishmentPayment,
-} from '../../models/relational';
-import { UserNotFoundError } from '../../errors';
+} from '@/models/relational';
+import { LoggerService } from '../Logger.service';
+import { UserNotFoundError } from '@/errors';
+import type IORedis from 'ioredis';
 
 interface OrderData {
     userId: number;
@@ -31,19 +32,6 @@ interface Units {
     month: number;
     year: number;
     custom: number;
-}
-
-interface ReplenishmentResponse {
-    id?: number;
-    startDate: string;
-    lastPaymentDate?: string | null;
-    nextPaymentDate?: string | null;
-    endDate?: string;
-    times?: number;
-    unit: Unit;
-    interval: number;
-    orderId?: number;
-    replenishmentPayment?: { paymentDate: string };
 }
 
 interface ReplenishmentCreateData {
@@ -74,10 +62,12 @@ type Status = 'scheduled' | 'active' | 'finished' | 'canceled' | 'failed';
 export class Scheduler {
     private connection: IORedis;
     private queue: Queue; // A queue for scheduled recurring payments
+    private logger: LoggerService;
 
     constructor(queueName: string) {
-        this.connection = connectToRedisServer();
+        this.connection = redisClient;
         this.queue = this.createQueue(queueName);
+        this.logger = new LoggerService();
     }
 
     private createQueue(queueName: string): Queue {
@@ -94,6 +84,7 @@ export class Scheduler {
     }
 
     public async createReplenishment(
+        userId: number,
         data: ReplenishmentData,
         interval: number,
         unit: Unit,
@@ -105,7 +96,7 @@ export class Scheduler {
         const startDate = new Date().toISOString();
 
         const customer = await Customer.findOne({
-            where: { userId: data.userId },
+            where: { userId },
         });
 
         if (!customer) {
@@ -139,6 +130,8 @@ export class Scheduler {
                 name: 'replenishment-payment',
                 data: {
                     ...data,
+                    shippingMethod: 'next-day',
+                    userId,
                     period: milliseconds,
                     replenishmentId: replenishment.id,
                 },
@@ -160,81 +153,10 @@ export class Scheduler {
         });
 
         await replenishment.update({ nextJobId: `orderData:${job.id}` });
-
-        console.log(`Created replenishment`);
-        console.log('Here is the scheduler id: ', schedulerId);
-        console.log('Here is the job id: ', job.id);
-    }
-
-    public async getReplenishmentById(
-        userId: number,
-        replenishmentId: number
-    ): Promise<ReplenishmentResponse> {
-        const customer = await Customer.findOne({ where: { userId } });
-
-        if (!customer) {
-            throw new UserNotFoundError('Customer not found');
-        }
-
-        const replenishment = await Replenishment.findOne({
-            where: { id: replenishmentId, customerId: customer.id },
-            attributes: {
-                exclude: [
-                    'schedulerId',
-                    'nextJobId',
-                    'createdAt',
-                    'updatedAt',
-                    'deletedAt',
-                    'customerId',
-                ],
-            },
-            include: {
-                model: ReplenishmentPayment,
-                as: 'payments',
-                attributes: ['paymentDate'],
-            },
-        });
-
-        if (!replenishment) {
-            throw new Error('Replenishment not found');
-        }
-
-        return replenishment.toJSON();
-    }
-
-    public async getCustomerReplenishments(
-        userId: number
-    ): Promise<{ total: number; rows: ReplenishmentResponse[] }> {
-        const customer = await Customer.findOne({ where: { userId } });
-
-        if (!customer) {
-            throw new UserNotFoundError('Customer not found');
-        }
-
-        const { rows, count } = await Replenishment.findAndCountAll({
-            where: { customerId: customer.id },
-            attributes: {
-                exclude: [
-                    'schedulerId',
-                    'nextJobId',
-                    'createdAt',
-                    'updatedAt',
-                    'deletedAt',
-                    'customerId',
-                ],
-            },
-            include: {
-                model: ReplenishmentPayment,
-                as: 'payments',
-                attributes: ['paymentDate'],
-            },
-            distinct: true,
-        });
-
-        return { total: count, rows: rows.map((row) => row.toJSON()) };
     }
 
     public async updateReplenishment(
+        userId: number,
         replenishmentId: number,
         data: ReplenishmentData,
         interval: number,
@@ -244,7 +166,7 @@ export class Scheduler {
         times?: number
     ): Promise<void> {
         const customer = await Customer.findOne({
-            where: { userId: data.userId },
+            where: { userId },
         });
 
         if (!customer) {
@@ -261,7 +183,7 @@ export class Scheduler {
             case 'finished':
             case 'failed':
                 throw new Error(
-                    'Finished/Failed replenishments cannot be updated'
+                    `"${replenishment.status}" replenishments cannot be updated`
                 );
 
             case 'scheduled':
@@ -292,7 +214,6 @@ export class Scheduler {
         const paymentCount = await ReplenishmentPayment.count({
             where: { replenishmentId },
         });
-        console.log('The payment count is: ', paymentCount);
 
         const evalTimes: number | undefined =
             times && times > paymentCount ? times - paymentCount : times;
@@ -307,7 +228,6 @@ export class Scheduler {
             executions: times && (times <= paymentCount ? 0 : paymentCount),
         };
 
-        console.log('Eval times: ', evalTimes);
         const newJob = await this.queue.upsertJobScheduler(
             replenishment.schedulerId,
             {
@@ -324,11 +244,13 @@ export class Scheduler {
                         (replenishment.times &&
                             replenishment.times - paymentCount)) ??
                     undefined,
-            }, // One more job is processed sometimes here
+            },
             {
                 name: 'replenishment-payment',
                 data: {
                     ...data,
+                    shippingMethod: 'next-day',
+                    userId,
                     period: milliseconds,
                     replenishmentId,
                 },
@@ -343,11 +265,8 @@ export class Scheduler {
             throw new Error('Failed to schedule job');
         }
 
-        console.log('Prior update job id: ', replenishment.nextJobId!);
-        console.log('After update job id: ', newJob.id);
-
         await this.connection.del(replenishment.nextJobId!);
-        // If the prior job id is the same as the new job id then the below call is an update. Else its a creation, if so we need to remove the old job.
+
         await this.connection.hset(`orderData:${newJob.id}`, {
             paymentMethod: data.paymentMethod,
             shippingCountry: data.shippingCountry,
@@ -358,17 +277,21 @@ export class Scheduler {
             nextJobId: `orderData:${newJob.id}`,
             ...replenishmentData,
         });
-
-        console.log(
-            `Updated replenishment with status: ${replenishment.status}`
-        );
     }
 
     public async toggleCancelStatusOnReplenishment(
         userId: number,
         replenishmentId: number
     ): Promise<void> {
-        const replenishment = await Replenishment.findByPk(replenishmentId);
+        const customer = await Customer.findOne({ where: { userId } });
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        const replenishment = await Replenishment.findOne({
+            where: { id: replenishmentId, customerId: customer.id },
+        });
 
         if (!replenishment) {
             throw new Error('Replenishment not found');
@@ -378,7 +301,7 @@ export class Scheduler {
             case 'finished':
             case 'failed':
                 throw new Error(
-                    'Finished/Failed replenishments cannot be canceled'
+                    `"${replenishment.status}" replenishments cannot be canceled`
                 );
             case 'active':
             case 'scheduled': {
@@ -386,16 +309,16 @@ export class Scheduler {
 
                 await replenishment.update({
                     status: 'canceled',
-                    nextPaymentDate: null, // Lets see whether this is enough
+                    nextPaymentDate: null,
                 });
 
-                return console.log(`Replenishment is canceled`);
+                return;
             }
 
             case 'canceled': {
                 if (!replenishment.nextJobId) {
                     throw new Error(
-                        'Cannot revert status. Next job id is null'
+                        'Cannot revert status from canceled. Next job id is null'
                     );
                 }
 
@@ -404,8 +327,6 @@ export class Scheduler {
                 );
 
                 storedData.orderItems = JSON.parse(storedData.orderItems);
-
-                console.log('Here is the stored data: ', storedData);
 
                 const oldMilliseconds = this.convertToMilliseconds(
                     replenishment.interval,
@@ -433,12 +354,13 @@ export class Scheduler {
                     {
                         name: 'replenishment-payment',
                         data: {
-                            userId,
                             orderItems: storedData.orderItems,
                             paymentMethod: storedData.paymentMethod,
                             shippingCountry: storedData.shippingCountry,
+                            shippingMethod: 'next-day',
                             paymentMethodId: undefined, // For now
                             currency: 'eur', // For now
+                            userId,
                             period: oldMilliseconds,
                             replenishmentId,
                         },
@@ -454,6 +376,7 @@ export class Scheduler {
                 }
 
                 await this.connection.del(replenishment.nextJobId!);
+
                 await this.connection.hset(`orderData:${newJob.id}`, {
                     paymentMethod: storedData.paymentMethod,
                     shippingCountry: storedData.shippingCountry,
@@ -464,17 +387,23 @@ export class Scheduler {
                     status: currentStatus,
                     nextPaymentDate,
                 });
-
-                return console.log(
-                    'Canceled replenishment is now: ',
-                    currentStatus
-                );
             }
         }
     }
 
-    public async removeReplenishment(replenishmentId: number): Promise<void> {
-        const replenishment = await Replenishment.findByPk(replenishmentId);
+    public async removeReplenishment(
+        userId: number,
+        replenishmentId: number
+    ): Promise<void> {
+        const customer = await Customer.findOne({ where: { userId } });
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        const replenishment = await Replenishment.findOne({
+            where: { id: replenishmentId, customerId: customer.id },
+        });
 
         if (!replenishment) {
             throw new Error('Replenishment not found');
@@ -526,11 +455,11 @@ export class Scheduler {
 
     public listen() {
         this.queue.on('error', (err) => {
-            console.error('Error from queue: ', err);
+            this.logger.error('Error from queue: ' + err);
         });
 
         this.queue.on('removed', (job) => {
-            console.log(`Job with id "${job.id}" has been removed!`);
+            this.logger.log(`Job with id "${job.id}" has been removed!`);
         });
     }
 }
