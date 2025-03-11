@@ -1,28 +1,29 @@
-import { mongoose } from '../../config/db';
+import { mongoose } from '@/config/db';
 const { Schema, model } = mongoose;
 
 export interface IMembership {
-    name: string;
+    type: string;
     monthlyPrice: number;
     annualPrice: number;
     currency: string;
     stripeProductId: string;
     stripeMonthlyPriceId: string;
     stripeAnnualPriceId: string;
-    features: MembershipFeatures[];
-    discountable: boolean;
+    features: string[];
     hasTrial: boolean;
+    discounted: boolean;
+    discountData: DiscountData;
 }
 
-enum MembershipFeatures {
-    Replenishment,
-    secondFeature,
-    thirdFeature,
+interface DiscountData {
+    pricePlan: 'annual' | 'monthly';
+    oldPrice: number;
+    newPrice: number;
 }
 
 const membershipSchema = new Schema<IMembership>(
     {
-        name: { type: String, required: true },
+        type: { type: String, required: true },
         monthlyPrice: { type: Number, required: true },
         annualPrice: { type: Number, required: true },
         currency: { type: String, required: true },
@@ -30,8 +31,9 @@ const membershipSchema = new Schema<IMembership>(
         stripeMonthlyPriceId: { type: String, required: true },
         stripeAnnualPriceId: { type: String, required: true },
         features: { type: [String], required: true },
-        discountable: { type: Boolean, required: true },
-        hasTrial: { type: Boolean, required: true },
+        hasTrial: { type: Boolean, required: false },
+        discounted: { type: Boolean, required: false },
+        discountData: { type: Object, required: false },
     },
     { timestamps: true }
 );
