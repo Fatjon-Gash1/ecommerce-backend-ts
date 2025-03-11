@@ -11,6 +11,7 @@ declare namespace NodeJS {
         REFRESH_TOKEN_KEY?: string;
         ACCESS_TOKEN_EXPIRY?: string;
         REFRESH_TOKEN_EXPIRY?: string;
+        GENERIC_TOKEN_KEY?: string;
         GMAIL_USER?: string;
         GMAIL_PASS?: string;
         TEMPLATES_PATH?: string;
