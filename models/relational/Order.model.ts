@@ -1,39 +1,43 @@
-import { DataTypes, BelongsToManyGetAssociationsMixin, Model } from 'sequelize';
-import type { Transaction } from 'sequelize';
-import { sequelize } from '../../config/db';
+import { DataTypes, Model } from 'sequelize';
+import type {
+    CreationOptional,
+    ForeignKey,
+    InferAttributes,
+    InferCreationAttributes,
+    Transaction,
+    BelongsToManyGetAssociationsMixin,
+    NonAttribute,
+} from 'sequelize';
+import { sequelize } from '@/config/db';
+import { Customer } from './Customer.model';
 import { Product } from './Product.model';
-import { ProductNotFoundError } from '../../errors';
+import { RefundRequest } from './RefundRequest.model';
+import { ProductNotFoundError } from '@/errors';
 
-interface OrderAttributes {
-    id?: number;
-    customerId?: number;
-    paymentMethod: 'card' | 'wallet' | 'bank-transfer';
-    shippingCountry: string;
-    shippingWeight: 'light' | 'standard' | 'heavy';
-    shippingMethod: 'standard' | 'express' | 'next-day';
-    status?: 'pending' | 'delivered' | 'canceled';
-    trackingNumber?: string;
-    createdAt?: Date;
-}
-
-interface OrderItemAttributes {
-    id?: number;
-    orderId?: number;
-    productId?: number;
-    quantity: number;
-}
-
-export class Order extends Model<OrderAttributes> implements OrderAttributes {
-    declare id?: number;
-    declare customerId?: number;
+export class Order extends Model<
+    InferAttributes<Order>,
+    InferCreationAttributes<Order>
+> {
+    declare id: CreationOptional<number>;
+    declare customerId: ForeignKey<Customer['id']>;
     declare paymentMethod: 'card' | 'wallet' | 'bank-transfer';
     declare shippingCountry: string;
     declare shippingWeight: 'light' | 'standard' | 'heavy';
     declare shippingMethod: 'standard' | 'express' | 'next-day';
-    declare status?: 'pending' | 'delivered' | 'canceled';
-    declare trackingNumber?: string;
-    declare createdAt?: Date;
+    declare status: CreationOptional<
+        | 'pending'
+        | 'shipped'
+        | 'awaiting pickup'
+        | 'delivered'
+        | 'canceled'
+        | 'refunded'
+        | 'partially-refunded'
+    >;
+    declare trackingNumber: CreationOptional<string>;
+    declare total: number;
+    declare paymentIntentId: string;
     declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
+    declare refundRequest?: NonAttribute<RefundRequest>;
 
     public static generateTrackingNumber(): string {
         const timestamp = Date.now().toString(36);
@@ -93,6 +97,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
 
 Order.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         paymentMethod: {
             type: DataTypes.ENUM('card', 'wallet', 'bank-transfer'),
             allowNull: false,
@@ -110,7 +115,15 @@ Order.init(
             allowNull: false,
         },
         status: {
-            type: DataTypes.ENUM('pending', 'delivered', 'canceled'),
+            type: DataTypes.ENUM(
+                'pending',
+                'shipped',
+                'awaiting pickup',
+                'delivered',
+                'canceled',
+                'refunded',
+                'partially-refunded'
+            ),
             defaultValue: 'pending',
         },
         trackingNumber: {
@@ -118,22 +131,31 @@ Order.init(
             allowNull: false,
             defaultValue: () => Order.generateTrackingNumber(),
         },
+        total: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        paymentIntentId: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
     },
     { sequelize, modelName: 'Order', tableName: 'orders' }
 );
 
-export class OrderItem
-    extends Model<OrderItemAttributes>
-    implements OrderItemAttributes
-{
-    declare id?: number;
-    declare orderId?: number;
-    declare productId?: number;
-    declare quantity: number;
+export class OrderItem extends Model<
+    InferAttributes<OrderItem>,
+    InferCreationAttributes<OrderItem>
+> {
+    declare id: CreationOptional<number>;
+    declare orderId: ForeignKey<Order['id']>;
+    declare productId: ForeignKey<Product['id']>;
+    declare quantity: CreationOptional<number>;
 }
 
 OrderItem.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
     },
     { sequelize, modelName: 'OrderItem', tableName: 'order_items' }

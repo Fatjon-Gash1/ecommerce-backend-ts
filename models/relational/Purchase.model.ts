@@ -1,39 +1,35 @@
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../../config/db';
+import type {
+    CreationOptional,
+    ForeignKey,
+    InferAttributes,
+    InferCreationAttributes,
+    NonAttribute,
+} from 'sequelize';
+import { sequelize } from '@/config/db';
+import { Customer } from './Customer.model';
+import { Product } from './Product.model';
 
-interface PurchaseAttributes {
-    id?: number;
-    customerId?: number;
-    productId?: number;
-    quantity: number;
-    discountRate: number;
-
-    // Reports related
-    categoryId?: number;
-    categoryName?: string;
-    purchaseCount?: number;
-    totalRevenue?: number;
-}
-
-export class Purchase
-    extends Model<PurchaseAttributes>
-    implements PurchaseAttributes
-{
-    declare id?: number;
-    declare customerId?: number;
-    declare productId?: number;
-    declare quantity: number;
-    declare discountRate: number;
+export class Purchase extends Model<
+    InferAttributes<Purchase>,
+    InferCreationAttributes<Purchase>
+> {
+    declare id: CreationOptional<number>;
+    declare customerId: ForeignKey<Customer['id']>;
+    declare productId: ForeignKey<Product['id']>;
+    declare quantity: CreationOptional<number>;
+    declare discountRate: CreationOptional<number>;
 
     // Reports related
-    declare categoryId?: number;
-    declare categoryName?: string;
-    declare purchaseCount?: number;
-    declare totalRevenue?: number;
+    declare categoryId?: NonAttribute<number>;
+    declare categoryName?: NonAttribute<string>;
+    declare purchaseCount?: NonAttribute<number>;
+    declare totalRevenue?: NonAttribute<number>;
 }
 
 Purchase.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
         discountRate: { type: DataTypes.FLOAT, defaultValue: 1 },
     },

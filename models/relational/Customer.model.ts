@@ -1,42 +1,38 @@
 import { DataTypes, Model, BelongsToManyGetAssociationsMixin } from 'sequelize';
-import { sequelize } from '../../config/db';
+import type {
+    CreationOptional,
+    ForeignKey,
+    InferAttributes,
+    InferCreationAttributes,
+    NonAttribute,
+} from 'sequelize';
+import { sequelize } from '@/config/db';
 import { User } from './User.model';
 import { Cart } from './Cart.model';
 import { Product } from './Product.model';
+import { Order } from './Order.model';
 
-interface CustomerAttributes {
-    id?: number;
-    userId?: number;
-    stripeId: string;
-    stripePaymentMethodId?: string;
-    shippingAddress?: string;
-    billingAddress?: string;
-    isActive?: boolean;
-    firstName: string; // Virtual
-    lastName: string; // Virtual
-    username: string; // Virtual
-    email: string; // Virtual
-    password: string; // Virtual
-    user?: User;
-}
-
-export class Customer
-    extends Model<CustomerAttributes>
-    implements CustomerAttributes
-{
-    declare id?: number;
-    declare userId?: number;
+export class Customer extends Model<
+    InferAttributes<Customer>,
+    InferCreationAttributes<Customer>
+> {
+    declare id: CreationOptional<number>;
+    declare userId: ForeignKey<User['id']>;
     declare stripeId: string;
-    declare stripePaymentMethodId?: string;
-    declare shippingAddress?: string;
-    declare billingAddress?: string;
-    declare isActive?: boolean;
+    declare stripePaymentMethodId: CreationOptional<string>;
+    declare shippingAddress: CreationOptional<string>;
+    declare billingAddress: CreationOptional<string>;
+    declare isActive: CreationOptional<boolean>;
+    declare loyaltyPoints: CreationOptional<number>;
+    declare membership: CreationOptional<'free' | 'plus' | 'premium'>;
+    declare birthday: CreationOptional<Date>;
     declare firstName: string; // Virtual field
     declare lastName: string; // Virtual field
     declare username: string; // Virtual field
     declare email: string; // Virtual field
     declare password: string; // Virtual field;
     declare user?: User;
+    declare orders?: NonAttribute<Order[]>;
 
     // For reports
     declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
@@ -48,6 +44,7 @@ export class Customer
 
 Customer.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         userId: {
             type: DataTypes.INTEGER,
             unique: true,
@@ -73,6 +70,19 @@ Customer.init(
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: true,
+        },
+        loyaltyPoints: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
+        },
+        membership: {
+            type: DataTypes.ENUM('free', 'plus', 'premium'),
+            allowNull: false,
+            defaultValue: 'free',
+        },
+        birthday: {
+            type: DataTypes.DATE,
         },
         // Virtual fields
         firstName: {

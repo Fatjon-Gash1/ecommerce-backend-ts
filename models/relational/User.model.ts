@@ -1,27 +1,25 @@
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../../config/db';
+import type {
+    CreationOptional,
+    InferAttributes,
+    InferCreationAttributes,
+} from 'sequelize';
+import { sequelize } from '@/config/db';
 import bcrypt from 'bcrypt';
 
-interface UserAttributes {
-    id?: number;
-    profilePictureUrl?: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    email: string;
-    password: string;
-}
-
-export class User extends Model<UserAttributes> implements UserAttributes {
-    declare id?: number;
-    declare profilePictureUrl?: string;
+export class User extends Model<
+    InferAttributes<User>,
+    InferCreationAttributes<User>
+> {
+    declare id: CreationOptional<number>;
+    declare profilePictureUrl: CreationOptional<string>;
     declare firstName: string;
     declare lastName: string;
     declare username: string;
     declare email: string;
     declare password: string;
 
-    public async hashPassword(password: string): Promise<void> {
+    public async hashAndStorePassword(password: string): Promise<void> {
         const saltRounds = 12;
         this.password = await bcrypt.hash(password, saltRounds);
     }
@@ -33,6 +31,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
 
 User.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         profilePictureUrl: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -68,5 +67,5 @@ User.init(
 );
 
 User.beforeCreate(async (user: User) => {
-    await user.hashPassword(user.password);
+    await user.hashAndStorePassword(user.password);
 });

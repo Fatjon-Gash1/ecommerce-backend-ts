@@ -11,13 +11,21 @@ import { ShippingCountry, ShippingCity } from './ShippingCountry.model';
 import { Payment } from './Payment.model';
 import { Purchase } from './Purchase.model';
 import { Replenishment, ReplenishmentPayment } from './Replenishment.model';
+import { RefundRequest } from './RefundRequest.model';
+import { Notification } from './Notification.model';
 
-/* Model associations */
+User.hasOne(Customer, {
+    as: 'customer',
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+});
+User.hasOne(Admin, { as: 'admin', foreignKey: 'userId', onDelete: 'CASCADE' });
+User.hasMany(Notification, {
+    as: 'notifications',
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+});
 
-User.hasOne(Customer, { foreignKey: 'userId', onDelete: 'CASCADE' });
-User.hasOne(Admin, { foreignKey: 'userId', onDelete: 'CASCADE' });
-
-// Inherit from User model
 Customer.belongsTo(User, {
     as: 'user',
     foreignKey: 'userId',
@@ -25,7 +33,7 @@ Customer.belongsTo(User, {
 });
 
 Customer.hasOne(Cart, { foreignKey: 'customerId', onDelete: 'CASCADE' });
-Customer.hasMany(Order, { foreignKey: 'customerId' });
+Customer.hasMany(Order, { as: 'orders', foreignKey: 'customerId' });
 Customer.hasMany(Payment, { foreignKey: 'customerId' });
 Customer.belongsToMany(Product, {
     through: Purchase,
@@ -37,8 +45,11 @@ Customer.belongsToMany(Order, {
     foreignKey: 'customerId',
     otherKey: 'orderId',
 });
+Customer.hasMany(RefundRequest, {
+    as: 'refundRequests',
+    foreignKey: 'customerId',
+});
 
-// Inherit from User model
 Admin.belongsTo(User, {
     as: 'user',
     foreignKey: 'userId',
@@ -102,13 +113,14 @@ Order.belongsToMany(Product, {
     foreignKey: 'orderId',
     otherKey: 'productId',
 });
-Order.belongsTo(Customer, { foreignKey: 'customerId' });
+Order.belongsTo(Customer, { as: 'orders', foreignKey: 'customerId' });
 Order.hasOne(Sale, { foreignKey: 'orderId' });
 Order.belongsToMany(Customer, {
     through: Replenishment,
     foreignKey: 'orderId',
     otherKey: 'customerId',
 });
+Order.hasOne(RefundRequest, { as: 'refundRequest', foreignKey: 'orderId' });
 
 Sale.belongsTo(Order, { foreignKey: 'orderId' });
 
@@ -123,7 +135,13 @@ ReplenishmentPayment.belongsTo(Replenishment, {
     onDelete: 'CASCADE',
 });
 
-/* End of associations */
+RefundRequest.belongsTo(Customer, {
+    as: 'refundRequests',
+    foreignKey: 'customerId',
+});
+RefundRequest.belongsTo(Order, { as: 'refundRequest', foreignKey: 'orderId' });
+
+Notification.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
 
 export {
     User,
@@ -143,4 +161,6 @@ export {
     Purchase,
     Replenishment,
     ReplenishmentPayment,
+    RefundRequest,
+    Notification,
 };

@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../../config/db';
+import { sequelize } from '@/config/db';
 import { Category } from './Category.model';
-import client from '../../config/elasticsearchClient';
+import client from '@/config/elasticsearch';
 
 interface ICartItem {
     quantity: number;
