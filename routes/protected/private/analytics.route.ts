@@ -75,10 +75,10 @@ router.get(
     '/products/views',
     analyticsController.getProductViews.bind(analyticsController)
 );
-router.get(
+/*router.get(
     '/categories/purchases',
     analyticsController.getCategoryPurchases.bind(analyticsController)
-);
+);*/
 router.get(
     '/products',
     validateProductStatus(),

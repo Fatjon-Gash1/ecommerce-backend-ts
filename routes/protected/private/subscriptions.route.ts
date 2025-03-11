@@ -1,33 +1,38 @@
 import { Router } from 'express';
-import { SubscriptionController } from '../../../controllers/Subscription.controller';
+import { SubscriptionController } from '@/controllers/Subscription.controller';
 import {
     SubscriptionService,
+    ReplenishmentService,
     PaymentService,
+    NotificationService,
     AdminLogsService,
-} from '../../../services';
+} from '@/services';
 
 const router: Router = Router();
 const subscriptionService = new SubscriptionService(
-    new PaymentService(process.env.STRIPE_KEY as string)
+    new PaymentService(process.env.STRIPE_KEY as string),
+    new NotificationService()
 );
 const subscriptionController = new SubscriptionController(
     subscriptionService,
+    new ReplenishmentService('partial'),
     new AdminLogsService()
 );
 
 router.get(
     '/memberships',
-    subscriptionController.getMemberships.bind(subscriptionController)
+    subscriptionController.getMembershipSubscriptions.bind(
+        subscriptionController
+    )
+);
+router.get(
+    '/replenishments',
+    subscriptionController.getAllReplenishments.bind(subscriptionController)
 );
 
 router.patch(
-    '/memberships/:id',
-    subscriptionController.updateMembershipById.bind(subscriptionController)
-);
-
-router.put(
-    '/memberships/:id',
-    subscriptionController.updateMembershipById.bind(subscriptionController)
+    '/memberships/:id/change-price',
+    subscriptionController.changeMembershipPrice.bind(subscriptionController)
 );
 
 export default router;

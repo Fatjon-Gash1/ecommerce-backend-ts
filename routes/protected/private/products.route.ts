@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { ProductController } from '../../../controllers/Product.controller';
-import { ProductService, AdminLogsService } from '../../../services';
+import {
+    ProductService,
+    AdminLogsService,
+    NotificationService,
+} from '../../../services';
 import {
     categoryCreationRateLimiter,
     productCreationRateLimiter,
@@ -23,7 +27,7 @@ import { checkExact } from 'express-validator';
 
 const router: Router = Router();
 const productController = new ProductController(
-    new ProductService(),
+    new ProductService(new NotificationService()),
     new AdminLogsService()
 );
 

@@ -1,17 +1,17 @@
 import { Router } from 'express';
-import { AdminController } from '../../../controllers/Admin.controller';
+import { AdminController } from '@/controllers/Admin.controller';
 import {
     AdminService,
     NotificationService,
     AdminLogsService,
     PlatformDataService,
     PaymentService,
-} from '../../../services';
-import authorize from '../../../middlewares/authorization/authorize';
+} from '@/services';
+import authorize from '@/middlewares/authorization/authorize';
 import {
     registerRateLimiter,
     userDeletionRateLimiter,
-} from '../../../middlewares/rateLimiting';
+} from '@/middlewares/rateLimiting';
 import {
     validateRegistration,
     validateId,
@@ -21,10 +21,11 @@ import {
     validationErrors,
     validatePlatformData,
     validateObjectId,
-} from '../../../middlewares/validation';
+} from '@/middlewares/validation';
 import adminProducts from './products.route';
 import adminSubscriptions from './subscriptions.route';
 import adminOrders from './orders.route';
+import adminPayments from './payments.route';
 import adminShippings from './shippings.route';
 import adminRatings from './ratings.route';
 import adminAnalytics from './analytics.route';
@@ -32,11 +33,11 @@ import { checkExact } from 'express-validator';
 
 const router: Router = Router();
 const adminService = new AdminService(
-    new PaymentService(process.env.STRIPE_KEY as string)
+    new PaymentService(process.env.STRIPE_KEY as string),
+    new NotificationService()
 );
 const adminController = new AdminController(
     adminService,
-    new NotificationService(),
     new AdminLogsService(),
     new PlatformDataService()
 );
@@ -58,6 +59,19 @@ router.post(
     adminController.registerAdmin.bind(adminController)
 );
 
+/**
+ * @swagger
+ * /users/admin/customers:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - Users
+ *     description: Retrieve all customers
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved customers
+ */
 router.get('/customers', adminController.getAllCustomers.bind(adminController));
 router.get(
     '/customers/active',
@@ -130,9 +144,9 @@ router.delete(
 router.use('/products', adminProducts);
 router.use('/subscriptions', adminSubscriptions);
 router.use('/orders', adminOrders);
+router.use('/payments', adminPayments);
 router.use('/shippings', adminShippings);
 router.use('/ratings', adminRatings);
 router.use('/analytics', adminAnalytics);
-// After: ElasticSearch query methods, Payment route, redis caching, serialization, refactoring...
 
 export default router;
