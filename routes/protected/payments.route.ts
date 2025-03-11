@@ -1,9 +1,26 @@
 import { Router } from 'express';
-import { PaymentController } from '../../controllers/Payment.controller';
-import { PaymentService } from '../../services';
+import { PaymentController } from '@/controllers/Payment.controller';
+import {
+    PaymentService,
+    OrderService,
+    ShippingService,
+    NotificationService,
+} from '@/services';
+import {
+    validatePurchaseData,
+    validateId,
+    validateRefundRequest,
+    validationErrors,
+} from '@/middlewares/validation';
+import { checkExact } from 'express-validator';
 
 const router: Router = Router();
-const paymentService = new PaymentService(process.env.STRIPE_KEY as string);
+const paymentService = new PaymentService(
+    process.env.STRIPE_KEY as string,
+    new OrderService(),
+    new ShippingService(),
+    new NotificationService()
+);
 const paymentController = new PaymentController(paymentService);
 
 router.post(
@@ -12,18 +29,24 @@ router.post(
 );
 
 router.post(
-    '/payment-intent',
-    paymentController.createPaymentIntent.bind(paymentController)
+    '/set-default-payment-method',
+    paymentController.setDefaultPaymentMethod.bind(paymentController)
 );
 router.post(
-    '/payment-intent/:id/refund',
-    paymentController.refundPayment.bind(paymentController)
+    '/refunds/:orderId',
+    validateId('orderId'),
+    validateRefundRequest(),
+    validationErrors,
+    paymentController.createRefundRequest.bind(paymentController)
+);
+router.post(
+    '/orders',
+    validatePurchaseData(),
+    checkExact([]),
+    validationErrors,
+    paymentController.processPaymentAndCreateOrder.bind(paymentController)
 );
 
-router.get(
-    '/payment-intents',
-    paymentController.getPaymentIntentsForCustomer.bind(paymentController)
-);
 router.get(
     '/payment-methods',
     paymentController.getPaymentMethods.bind(paymentController)
@@ -31,6 +54,10 @@ router.get(
 router.get(
     '/payment-methods/:id',
     paymentController.getPaymentMethodById.bind(paymentController)
+);
+router.get(
+    '/refund-requests',
+    paymentController.getCustomerRefundRequests.bind(paymentController)
 );
 
 router.patch(
