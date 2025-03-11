@@ -1,11 +1,12 @@
 import mongoose, { ConnectOptions } from 'mongoose';
+import { logger } from '@/services/Logger.service';
 
 function connectToMongoDB(): void {
     mongoose
         .connect(process.env.MONGODB_URI as string, {} as ConnectOptions)
-        .then(() => console.log('Connected to MongoDB'))
+        .then(() => logger.log('Connected to MongoDB'))
         .catch((err: Error) => {
-            console.error('MongoDB connection error:', err);
+            logger.error('MongoDB connection error:' + err);
             process.exit(1);
         });
 }

@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import { logger } from '@/services/Logger.service';
 
 const sequelize = new Sequelize(
     process.env.MYSQL_DATABASE as string,
@@ -14,10 +15,10 @@ const sequelize = new Sequelize(
 sequelize
     .authenticate()
     .then(() => {
-        console.log('Connection to MySQL has been established successfully.');
+        logger.log('Connection to MySQL has been established successfully.');
     })
     .catch((err: Error) => {
-        console.error('Unable to connect to the MySQL database:', err);
+        logger.error('Unable to connect to the MySQL database:' + err);
         process.exit(1);
     });
 
