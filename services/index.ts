@@ -1,9 +1,10 @@
+export { LoggerService } from './Logger.service';
 export { AdminLogsService } from './AdminLogs.service';
 export { AnalyticsService } from './Analytics.service';
 export { CartService } from './Cart.service';
 export { NotificationService } from './Notification.service';
 export { OrderService } from './Order.service';
-export { SubscriptionService } from './Subscription.service';
+export { SubscriptionService } from './subscription_service';
 export { ReplenishmentService } from './subscription_service/Replenishment.service';
 export { PaymentService } from './Payment.service';
 export { ProductService } from './Product.service';
