@@ -2,11 +2,11 @@
 
 ***
 
-[server](../README.md) / AdminLogsService
+[server](../globals.md) / AdminLogsService
 
 # Class: AdminLogsService
 
-Defined in: [AdminLogs.service.ts:7](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/AdminLogs.service.ts#L7)
+Defined in: [AdminLogs.service.ts:7](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/AdminLogs.service.ts#L7)
 
 Service responsible for logging administrative operations.
 
@@ -26,7 +26,7 @@ Service responsible for logging administrative operations.
 
 > **log**(`username`, `target`, `operation`): `Promise`\<`void`\>
 
-Defined in: [AdminLogs.service.ts:25](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/AdminLogs.service.ts#L25)
+Defined in: [AdminLogs.service.ts:25](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/AdminLogs.service.ts#L25)
 
 Logs different administrative operations.
 

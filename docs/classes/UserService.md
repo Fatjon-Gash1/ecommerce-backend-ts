@@ -1,12 +1,12 @@
 [**server**](../README.md)
 
----
+***
 
-[server](../README.md) / UserService
+[server](../globals.md) / UserService
 
 # Class: UserService
 
-Defined in: [User.service.ts:57](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L57)
+Defined in: [User.service.ts:63](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L63)
 
 Service responsible for user-related operations.
 
@@ -18,9 +18,9 @@ Service responsible for user-related operations.
 
 ### new UserService()
 
-> **new UserService**(`paymentService`): [`UserService`](UserService.md)
+> **new UserService**(`paymentService`, `notificationService`): [`UserService`](UserService.md)
 
-Defined in: [User.service.ts:60](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L60)
+Defined in: [User.service.ts:67](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L67)
 
 #### Parameters
 
@@ -28,17 +28,29 @@ Defined in: [User.service.ts:60](https://github.com/Fatjon-Gash1/edge-tech/blob/
 
 [`PaymentService`](PaymentService.md)
 
+##### notificationService
+
+[`NotificationService`](NotificationService.md)
+
 #### Returns
 
 [`UserService`](UserService.md)
 
 ## Properties
 
+### notificationService
+
+> `protected` **notificationService**: [`NotificationService`](NotificationService.md)
+
+Defined in: [User.service.ts:65](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L65)
+
+***
+
 ### paymentService
 
 > `protected` **paymentService**: [`PaymentService`](PaymentService.md)
 
-Defined in: [User.service.ts:58](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L58)
+Defined in: [User.service.ts:64](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L64)
 
 ## Methods
 
@@ -46,7 +58,7 @@ Defined in: [User.service.ts:58](https://github.com/Fatjon-Gash1/edge-tech/blob/
 
 > **changePassword**(`userId`, `oldPassword`, `newPassword`): `Promise`\<`void`\>
 
-Defined in: [User.service.ts:264](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L264)
+Defined in: [User.service.ts:291](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L291)
 
 Changes a user's password.
 
@@ -84,13 +96,13 @@ Thrown if the user is not found.
 InvalidCredentialsError
 Thrown if the old password is invalid.
 
----
+***
 
 ### checkUserAvailability()
 
 > **checkUserAvailability**(`userField`, `value`): `Promise`\<\{ `available`: `boolean`; `message`: `string`; \}\>
 
-Defined in: [User.service.ts:190](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L190)
+Defined in: [User.service.ts:217](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L217)
 
 Checks user availability.
 
@@ -114,13 +126,13 @@ The value of the field
 
 A promise resolving to an object containing a boolean and a message
 
----
+***
 
 ### deleteUser()
 
 > **deleteUser**(`userId`): `Promise`\<`void`\>
 
-Defined in: [User.service.ts:338](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L338)
+Defined in: [User.service.ts:365](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L365)
 
 Deletes a user from the database.
 
@@ -141,13 +153,13 @@ The ID of the user to delete
 UserNotFoundError
 Thrown if the user is not found
 
----
+***
 
 ### generateTokens()
 
 > **generateTokens**(`userId`, `username`, `role`): `AuthTokens`
 
-Defined in: [User.service.ts:159](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L159)
+Defined in: [User.service.ts:186](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L186)
 
 Generates refresh and access tokens for a user.
 
@@ -177,13 +189,13 @@ The role of the user
 
 An object containing access and refresh tokens
 
----
+***
 
 ### getCustomerById()
 
 > **getCustomerById**(`customerId`): `Promise`\<`CustomerResponse`\>
 
-Defined in: [User.service.ts:218](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L218)
+Defined in: [User.service.ts:245](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L245)
 
 Retrieves Customer by its Id.
 
@@ -206,13 +218,13 @@ A promise resolving to a Customer instance
 UserNotFoundError
 Thrown if the Customer is not found
 
----
+***
 
 ### loginUser()
 
 > **loginUser**(`username`, `password`): `Promise`\<`AuthTokens`\>
 
-Defined in: [User.service.ts:126](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L126)
+Defined in: [User.service.ts:154](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L154)
 
 Logins a user and returns access and refresh tokens.
 
@@ -244,13 +256,73 @@ UserNotFoundError if the user is not found
 
 InvalidCredentialsError if the password is invalid
 
----
+***
+
+### requestPasswordReset()
+
+> **requestPasswordReset**(`userEmail`): `Promise`\<`void`\>
+
+Defined in: [User.service.ts:393](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L393)
+
+Requests a password reset for a user.
+
+#### Parameters
+
+##### userEmail
+
+`string`
+
+The email of the user
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Throws
+
+UserNotFoundError
+Thrown if the user is not found
+
+***
+
+### resetPassword()
+
+> **resetPassword**(`userId`, `newPassword`): `Promise`\<`void`\>
+
+Defined in: [User.service.ts:420](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L420)
+
+Resets user's password.
+
+#### Parameters
+
+##### userId
+
+`string`
+
+The ID of the user
+
+##### newPassword
+
+`string`
+
+The new password to set
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Throws
+
+UserNotFoundError
+Thrown if the user is not found
+
+***
 
 ### signUpCustomer()
 
 > **signUpCustomer**(`details`): `Promise`\<`AuthTokens`\>
 
-Defined in: [User.service.ts:104](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L104)
+Defined in: [User.service.ts:121](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L121)
 
 Signs-Up a new customer user type in the platform.
 
@@ -268,13 +340,13 @@ The details of the customer to sign-up
 
 A promise resolving to an object containing access and refresh tokens
 
----
+***
 
 ### updateCustomerDetails()
 
 > **updateCustomerDetails**(`userId`, `details`): `Promise`\<`Customer`\>
 
-Defined in: [User.service.ts:294](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L294)
+Defined in: [User.service.ts:321](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L321)
 
 Updates customer's shipping and billing details.
 
@@ -301,13 +373,13 @@ The shipping and billing details
 UserNotFoundError
 Thrown if the Customer is not found.
 
----
+***
 
 ### updateUser()
 
 > **updateUser**(`userId`, `details`): `Promise`\<`User`\>
 
-Defined in: [User.service.ts:317](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L317)
+Defined in: [User.service.ts:344](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L344)
 
 Updates a user in the database.
 
@@ -336,19 +408,19 @@ A promise resolving to the updated user
 UserNotFoundError
 Thrown if the user is not found
 
----
+***
 
 ### userFactory()
 
 > `protected` **userFactory**\<`T`\>(`userClass`, `details`): `Promise`\<`T`\>
 
-Defined in: [User.service.ts:78](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/User.service.ts#L78)
+Defined in: [User.service.ts:89](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L89)
 
 Creates a provided user type class instance.
 
 #### Type Parameters
 
-• **T** _extends_ `Model`
+• **T** *extends* `Model`\<`any`, `any`\>
 
 #### Parameters
 

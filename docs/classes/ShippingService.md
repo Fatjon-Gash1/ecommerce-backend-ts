@@ -2,11 +2,11 @@
 
 ***
 
-[server](../README.md) / ShippingService
+[server](../globals.md) / ShippingService
 
 # Class: ShippingService
 
-Defined in: [Shipping.service.ts:58](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L58)
+Defined in: [Shipping.service.ts:58](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L58)
 
 Service responsible for shipping-related operations
 
@@ -26,7 +26,7 @@ Service responsible for shipping-related operations
 
 > **addCityToCountry**(`countryId`, `name`, `postalCode`): `Promise`\<`ShippingCityResponse`\>
 
-Defined in: [Shipping.service.ts:90](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L90)
+Defined in: [Shipping.service.ts:90](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L90)
 
 Adds a city to a Shipping Country.
 
@@ -62,7 +62,7 @@ A promise that resolves to the created city
 
 > **addShippingCountry**(`name`, `rate`): `Promise`\<`ShippingCountryResponse`\>
 
-Defined in: [Shipping.service.ts:66](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L66)
+Defined in: [Shipping.service.ts:66](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L66)
 
 Adds a country to the Shipping Countries.
 
@@ -92,7 +92,7 @@ A promise that resolves to the created country
 
 > **calculateShippingCost**(`countryName`, `shippingMethod`, `userId`?, `orderItems`?): `Promise`\<`ShippingCostResponse`\>
 
-Defined in: [Shipping.service.ts:372](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L372)
+Defined in: [Shipping.service.ts:372](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L372)
 
 Performs the calculation of shipping cost based on the provided parameters.
 
@@ -142,7 +142,7 @@ Thrown if the provided shipping method or weight is not found.
 
 > **changeShippingMethodRate**(`method`, `rate`): `Promise`\<`ShippingMethodResponse`\>
 
-Defined in: [Shipping.service.ts:239](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L239)
+Defined in: [Shipping.service.ts:239](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L239)
 
 Changes the shipping method rate.
 
@@ -172,7 +172,7 @@ A promise that resolves to the updated shipping method rate
 
 > **changeShippingWeightRate**(`weight`, `rate`): `Promise`\<`ShippingWeightResponse`\>
 
-Defined in: [Shipping.service.ts:262](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L262)
+Defined in: [Shipping.service.ts:262](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L262)
 
 Changes the shipping weight rate.
 
@@ -202,7 +202,7 @@ A promise that resolves to the updated shipping weight rate
 
 > **deleteShippingCity**(`cityId`): `Promise`\<`void`\>
 
-Defined in: [Shipping.service.ts:222](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L222)
+Defined in: [Shipping.service.ts:222](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L222)
 
 Deletes a shipping city.
 
@@ -227,7 +227,7 @@ whether the city was deleted
 
 > **deleteShippingCountry**(`countryId`): `Promise`\<`void`\>
 
-Defined in: [Shipping.service.ts:205](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L205)
+Defined in: [Shipping.service.ts:205](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L205)
 
 Deletes a shipping country.
 
@@ -248,35 +248,11 @@ whether the country was deleted
 
 ***
 
-### determineWeightRange()
-
-> **determineWeightRange**(`productItems`): `Promise`\<`WeightRange`\>
-
-Defined in: [Shipping.service.ts:334](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L334)
-
-Determines the order items weight range.
-
-#### Parameters
-
-##### productItems
-
-`ProductItem`[]
-
-The product items. Either cart items or order items
-
-#### Returns
-
-`Promise`\<`WeightRange`\>
-
-A promise that resolves to a string representing the weight range
-
-***
-
 ### determineWeightRangeForCart()
 
 > **determineWeightRangeForCart**(`userId`): `Promise`\<`WeightRange`\>
 
-Defined in: [Shipping.service.ts:296](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L296)
+Defined in: [Shipping.service.ts:296](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L296)
 
 Determines the product(s) weight range based on the provided cart items.
 
@@ -308,7 +284,7 @@ Thrown is the provided cart has no items.
 
 > **getShippingCitiesByCountryId**(`countryId`): `Promise`\<`ShippingCityResponse`[]\>
 
-Defined in: [Shipping.service.ts:131](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L131)
+Defined in: [Shipping.service.ts:131](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L131)
 
 Returns all shipping cities of a shipping country.
 
@@ -332,7 +308,7 @@ A promise that resolves to an array of shipping cities
 
 > **getShippingCountries**(): `Promise`\<`ShippingCountryResponse`[]\>
 
-Defined in: [Shipping.service.ts:119](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L119)
+Defined in: [Shipping.service.ts:119](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L119)
 
 Returns all shipping countries.
 
@@ -348,7 +324,7 @@ A promise that resolves to an array of shipping countries
 
 > **updateShippingCity**(`cityId`, `name`, `postalCode`): `Promise`\<`ShippingCityResponse`\>
 
-Defined in: [Shipping.service.ts:180](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L180)
+Defined in: [Shipping.service.ts:180](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L180)
 
 Updates a shipping city.
 
@@ -384,7 +360,7 @@ A promise that resolves to the updated city
 
 > **updateShippingCountry**(`countryId`, `name`, `rate`): `Promise`\<`ShippingCountryResponse`\>
 
-Defined in: [Shipping.service.ts:156](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Shipping.service.ts#L156)
+Defined in: [Shipping.service.ts:156](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Shipping.service.ts#L156)
 
 Updates a shipping country.
 

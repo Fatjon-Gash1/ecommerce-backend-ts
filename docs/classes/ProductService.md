@@ -2,11 +2,11 @@
 
 ***
 
-[server](../README.md) / ProductService
+[server](../globals.md) / ProductService
 
 # Class: ProductService
 
-Defined in: [Product.service.ts:60](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L60)
+Defined in: [Product.service.ts:64](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L64)
 
 Service responsible for product-related operations.
 
@@ -14,15 +14,15 @@ Service responsible for product-related operations.
 
 ### new ProductService()
 
-> **new ProductService**(`paymentService`?): [`ProductService`](ProductService.md)
+> **new ProductService**(`notificationService`?): [`ProductService`](ProductService.md)
 
-Defined in: [Product.service.ts:63](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L63)
+Defined in: [Product.service.ts:67](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L67)
 
 #### Parameters
 
-##### paymentService?
+##### notificationService?
 
-[`PaymentService`](PaymentService.md)
+[`NotificationService`](NotificationService.md)
 
 #### Returns
 
@@ -34,7 +34,7 @@ Defined in: [Product.service.ts:63](https://github.com/Fatjon-Gash1/edge-tech/bl
 
 > **addCategory**(`name`, `description`, `parentId`): `Promise`\<`CategoryResponse`\>
 
-Defined in: [Product.service.ts:78](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L78)
+Defined in: [Product.service.ts:82](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L82)
 
 Creates a new category in the database.
 
@@ -73,13 +73,17 @@ Thrown if the category already exists.
 
 ### addProductByCategoryId()
 
-> **addProductByCategoryId**(`categoryId`, `details`): `Promise`\<`ProductResponse`\>
+> **addProductByCategoryId**(`username`, `categoryId`, `details`, `promote`?): `Promise`\<`ProductResponse`\>
 
-Defined in: [Product.service.ts:109](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L109)
+Defined in: [Product.service.ts:113](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L113)
 
 Creates a new product in a given category.
 
 #### Parameters
+
+##### username
+
+`string`
 
 ##### categoryId
 
@@ -92,6 +96,10 @@ The id of the category
 `ProductDetails`
 
 The product creation details
+
+##### promote?
+
+`boolean`
 
 #### Returns
 
@@ -116,7 +124,7 @@ product image is already in use.
 
 > **deleteCategoryById**(`categoryId`): `Promise`\<`void`\>
 
-Defined in: [Product.service.ts:459](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L459)
+Defined in: [Product.service.ts:530](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L530)
 
 Deletes a category by id.
 
@@ -143,7 +151,7 @@ Thrown if the category is not found.
 
 > **deleteProductById**(`productId`): `Promise`\<`void`\>
 
-Defined in: [Product.service.ts:487](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L487)
+Defined in: [Product.service.ts:558](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L558)
 
 Deletes a product by id.
 
@@ -170,7 +178,7 @@ Thrown if the product is not found.
 
 > **getAllCategories**(): `Promise`\<\{ `count`: `number`; `rows`: `Category`[]; \}\>
 
-Defined in: [Product.service.ts:180](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L180)
+Defined in: [Product.service.ts:243](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L243)
 
 Retrieves all categories.
 
@@ -186,7 +194,7 @@ A promise resolving to an array of Category instances
 
 > **getAllProducts**(): `Promise`\<\{ `count`: `number`; `rows`: `Product`[]; \}\>
 
-Defined in: [Product.service.ts:216](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L216)
+Defined in: [Product.service.ts:279](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L279)
 
 Retrieves all products in the database.
 
@@ -202,7 +210,7 @@ a promise resolving to an array of Product instances
 
 > **getAllTopLevelCategories**(): `Promise`\<\{ `count`: `number`; `rows`: `Category`[]; \}\>
 
-Defined in: [Product.service.ts:164](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L164)
+Defined in: [Product.service.ts:227](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L227)
 
 Retrieves all top level categories.
 
@@ -218,7 +226,7 @@ A promise resolving to an array of top level Category instances
 
 > **getDiscountedPrice**(`productId`): `Promise`\<`number`\>
 
-Defined in: [Product.service.ts:348](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L348)
+Defined in: [Product.service.ts:411](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L411)
 
 Retrieves the product's discounted price.
 
@@ -247,7 +255,7 @@ Thrown if the product is not found.
 
 > **getProductById**(`productId`): `Promise`\<`Product`\>
 
-Defined in: [Product.service.ts:253](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L253)
+Defined in: [Product.service.ts:316](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L316)
 
 Retrieves a product by ID for admins only.
 
@@ -271,7 +279,7 @@ a promise resolving to a Product instance
 
 > **getProductCategory**(`productId`): `Promise`\<`CategoryResponse`\>
 
-Defined in: [Product.service.ts:295](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L295)
+Defined in: [Product.service.ts:358](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L358)
 
 Retrieves the category of a product.
 
@@ -305,7 +313,7 @@ Thrown if the category is not found.
 
 > **getProductsByCategory**(`categoryId`): `Promise`\<\{ `count`: `number`; `rows`: `Product`[]; \}\>
 
-Defined in: [Product.service.ts:231](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L231)
+Defined in: [Product.service.ts:294](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L294)
 
 Retrieves all products of a certain category.
 
@@ -329,7 +337,7 @@ a promise resolving to an array of Product instances
 
 > **getProductsByStockStatus**(`status`): `Promise`\<\{ `count`: `number`; `products`: `ProductResponse`[]; \}\>
 
-Defined in: [Product.service.ts:321](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L321)
+Defined in: [Product.service.ts:384](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L384)
 
 Retrieves all products by stock status.
 
@@ -353,7 +361,7 @@ A promise resolving to an array of Product instances
 
 > **getSubCategoriesForCategory**(`categoryId`): `Promise`\<\{ `count`: `number`; `rows`: `Category`[]; \}\>
 
-Defined in: [Product.service.ts:195](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L195)
+Defined in: [Product.service.ts:258](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L258)
 
 Retrieves all subCategories for a category.
 
@@ -377,7 +385,7 @@ A promise resolving to an object containing the count and rows
 
 > **searchProducts**(`query`): `Promise`\<`ProductObject`[]\>
 
-Defined in: [Product.service.ts:503](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L503)
+Defined in: [Product.service.ts:574](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L574)
 
 Searches for products based on a query.
 
@@ -399,13 +407,19 @@ A promise resolving to an array of matched products
 
 ### setDiscountForProduct()
 
-> **setDiscountForProduct**(`productId`, `discount`): `Promise`\<`number`\>
+> **setDiscountForProduct**(`username`, `productId`, `discount`, `promote`?): `Promise`\<`number`\>
 
-Defined in: [Product.service.ts:401](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L401)
+Defined in: [Product.service.ts:466](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L466)
 
 Sets the discount for a product.
 
 #### Parameters
+
+##### username
+
+`string`
+
+The admin username
 
 ##### productId
 
@@ -419,6 +433,12 @@ The id of the product
 
 The discount to set
 
+##### promote?
+
+`boolean`
+
+A boolean indicating whether to promote the product
+
 #### Returns
 
 `Promise`\<`number`\>
@@ -431,7 +451,7 @@ A promise resolving to the discount and the new price
 
 > **updateCategoryById**(`categoryId`, `name`, `description`): `Promise`\<`CategoryResponse`\>
 
-Defined in: [Product.service.ts:376](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L376)
+Defined in: [Product.service.ts:439](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L439)
 
 Updates an existing category
 
@@ -472,7 +492,7 @@ Thrown if the category doesn't exist
 
 > **updateProductById**(`productId`, `details`): `Promise`\<`ProductResponse`\>
 
-Defined in: [Product.service.ts:434](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L434)
+Defined in: [Product.service.ts:505](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L505)
 
 Updates an existing product in the database.
 
@@ -507,7 +527,7 @@ Thrown if the product doesn't exist.
 
 > **viewProductById**(`productId`): `Promise`\<`Product`\>
 
-Defined in: [Product.service.ts:272](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Product.service.ts#L272)
+Defined in: [Product.service.ts:335](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Product.service.ts#L335)
 
 Retrieves a product by ID for customers only.
 

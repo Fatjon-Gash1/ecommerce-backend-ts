@@ -1,12 +1,12 @@
 [**server**](../README.md)
 
----
+***
 
-[server](../README.md) / OrderService
+[server](../globals.md) / OrderService
 
 # Class: OrderService
 
-Defined in: [Order.service.ts:38](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L38)
+Defined in: [Order.service.ts:49](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L49)
 
 Service responsible for Order-related operations.
 
@@ -26,7 +26,7 @@ Service responsible for Order-related operations.
 
 > **cancelOrder**(`userId`, `orderId`): `Promise`\<`void`\>
 
-Defined in: [Order.service.ts:388](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L388)
+Defined in: [Order.service.ts:400](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L400)
 
 Cancels a customer's order.
 
@@ -53,13 +53,13 @@ The id of the order
 OrderNotFoundError
 Thrown if the order is not found.
 
----
+***
 
 ### createOrder()
 
-> **createOrder**(`userId`, `items`, `paymentMethod`, `shippingCountry`, `shippingWeight`, `shippingMethod`, `transactionObj`?): `Promise`\<`OrderResponse`\>
+> **createOrder**(`userId`, `items`, `paymentMethod`, `shippingCountry`, `shippingWeight`, `shippingMethod`, `orderTotal`, `paymentIntentId`, `transactionObj`?): `Promise`\<`OrderResponse`\>
 
-Defined in: [Order.service.ts:51](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L51)
+Defined in: [Order.service.ts:64](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L64)
 
 Creates an order for a customer.
 
@@ -79,9 +79,9 @@ The items to add to the order
 
 ##### paymentMethod
 
-The payment method for the order
+`"card"`
 
-`"card"` | `"wallet"` | `"bank-transfer"`
+The payment method for the order
 
 ##### shippingCountry
 
@@ -101,6 +101,18 @@ The shipping method for the order
 
 `"standard"` | `"express"` | `"next-day"`
 
+##### orderTotal
+
+`number`
+
+The total price of the order
+
+##### paymentIntentId
+
+`string`
+
+The id of the payment intent which is used for refunds
+
 ##### transactionObj?
 
 `Transaction`
@@ -113,13 +125,13 @@ An existing transaction
 
 A promise resolving to the created order
 
----
+***
 
 ### getAllOrders()
 
 > **getAllOrders**(): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:334](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L334)
+Defined in: [Order.service.ts:346](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L346)
 
 Retrieves all orders in the database.
 
@@ -129,13 +141,13 @@ Retrieves all orders in the database.
 
 A promise resolving to an array of Order instances
 
----
+***
 
 ### getCustomerOrderHistory()
 
 > **getCustomerOrderHistory**(`customerId`, `userId`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:303](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L303)
+Defined in: [Order.service.ts:315](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L315)
 
 Retrieves customer's order history.
 
@@ -169,13 +181,13 @@ or their implicit id.
 UserNotFoundError
 Thrown if the user of type Customer is not found.
 
----
+***
 
 ### getCustomerOrdersByStatus()
 
 > **getCustomerOrdersByStatus**(`status`, `customerId`, `userId`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:262](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L262)
+Defined in: [Order.service.ts:274](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L274)
 
 Retrieves all orders by a given status for a customer.
 
@@ -215,13 +227,13 @@ or their implicit id.
 UserNotFoundError
 Thrown if the user of type Customer is not found.
 
----
+***
 
 ### getOrderById()
 
 > **getOrderById**(`userId`, `orderId`): `Promise`\<`OrderResponse`\>
 
-Defined in: [Order.service.ts:116](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L116)
+Defined in: [Order.service.ts:128](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L128)
 
 Retrieves a specific order by ID.
 
@@ -245,13 +257,13 @@ The ID of the order
 
 A promise resolving to the order
 
----
+***
 
 ### getOrderItemsByOrderId()
 
 > **getOrderItemsByOrderId**(`userId`, `orderId`): `Promise`\<`OrderItemResponse`[]\>
 
-Defined in: [Order.service.ts:156](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L156)
+Defined in: [Order.service.ts:168](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L168)
 
 Retrieves all items of a specific order.
 
@@ -280,13 +292,13 @@ A promise resolving to an array of OrderItem instances
 OrderNotFoundError
 Thrown if the order is not found.
 
----
+***
 
 ### getOrdersByStatus()
 
 > **getOrdersByStatus**(`status`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:235](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L235)
+Defined in: [Order.service.ts:247](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L247)
 
 Retrieves all platform orders by a given status.
 
@@ -304,13 +316,13 @@ The status of the order
 
 A promise resolving to an array of Order instances and their count
 
----
+***
 
 ### getTotalPriceOfOrderItems()
 
 > **getTotalPriceOfOrderItems**(`userId`, `orderId`): `Promise`\<`number`\>
 
-Defined in: [Order.service.ts:208](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L208)
+Defined in: [Order.service.ts:220](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L220)
 
 Calculates the total price of all items in a specific order.
 
@@ -334,13 +346,13 @@ The id of the order
 
 A promise resolving to the total price
 
----
+***
 
 ### markAsDelivered()
 
 > **markAsDelivered**(`orderId`): `Promise`\<`void`\>
 
-Defined in: [Order.service.ts:358](https://github.com/Fatjon-Gash1/edge-tech/blob/085a51adf25b768e5a328e0a366f458113cc8929/server/services/Order.service.ts#L358)
+Defined in: [Order.service.ts:370](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L370)
 
 Marks customer's order as delivered.
 

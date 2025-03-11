@@ -2,11 +2,11 @@
 
 ***
 
-[server](../README.md) / SubscriptionService
+[server](../globals.md) / SubscriptionService
 
 # Class: SubscriptionService
 
-Defined in: Subscription.service.ts:46
+Defined in: subscription\_service/index.ts:39
 
 Service related to platform subscriptions
 
@@ -14,15 +14,19 @@ Service related to platform subscriptions
 
 ### new SubscriptionService()
 
-> **new SubscriptionService**(`paymentService`): [`SubscriptionService`](SubscriptionService.md)
+> **new SubscriptionService**(`paymentService`?, `notificationService`?): [`SubscriptionService`](SubscriptionService.md)
 
-Defined in: Subscription.service.ts:49
+Defined in: subscription\_service/index.ts:43
 
 #### Parameters
 
-##### paymentService
+##### paymentService?
 
 [`PaymentService`](PaymentService.md)
+
+##### notificationService?
+
+[`NotificationService`](NotificationService.md)
 
 #### Returns
 
@@ -30,19 +34,127 @@ Defined in: Subscription.service.ts:49
 
 ## Properties
 
-### paymentService
+### notificationService?
 
-> `protected` **paymentService**: [`PaymentService`](PaymentService.md)
+> `protected` `optional` **notificationService**: [`NotificationService`](NotificationService.md)
 
-Defined in: Subscription.service.ts:47
+Defined in: subscription\_service/index.ts:41
+
+***
+
+### paymentService?
+
+> `protected` `optional` **paymentService**: [`PaymentService`](PaymentService.md)
+
+Defined in: subscription\_service/index.ts:40
 
 ## Methods
 
+### cancelMembership()
+
+> **cancelMembership**(`stripeCustomerId`): `Promise`\<`number`\>
+
+Defined in: subscription\_service/index.ts:350
+
+Cancels a customer's membership.
+
+#### Parameters
+
+##### stripeCustomerId
+
+`number`
+
+The customer's stripe id
+
+#### Returns
+
+`Promise`\<`number`\>
+
+#### Remarks
+
+This method is called automatically from scheduled jobs.
+
+***
+
+### cancelMembershipSubscription()
+
+> **cancelMembershipSubscription**(`userId`, `immediate`?): `Promise`\<`void`\>
+
+Defined in: subscription\_service/index.ts:143
+
+Cancels a customer's membership subscription.
+
+#### Parameters
+
+##### userId
+
+`number`
+
+The customer's user id
+
+##### immediate?
+
+`boolean`
+
+Whether to cancel the subscription immediately
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Throws
+
+UserNotFoundError
+Thrown if the customer does not exist.
+
+***
+
+### changeMembershipPrice()
+
+> **changeMembershipPrice**(`membershipId`, `pricePlan`, `price`): `Promise`\<`void`\>
+
+Defined in: subscription\_service/index.ts:248
+
+Changes a membership's price.
+
+#### Parameters
+
+##### membershipId
+
+`string`
+
+The membership's id
+
+##### pricePlan
+
+The type of the price (Annual or Monthly)
+
+`"annual"` | `"monthly"`
+
+##### price
+
+`number`
+
+The price of the membership
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Remarks
+
+This method creates new subscriptions to the changed price for subscribed customers automatically if the price is less than the old one (Discounted).
+If the price is higher, it sends a confirmation email to subscribed customers.
+In this scenario, the subscription is created on confirmation.
+If no action is taken from the customer, the customer's membership is canceled after the end of the period.
+
+***
+
 ### createMembershipSubscription()
 
-> **createMembershipSubscription**(`userId`, `promoCode`?): `Promise`\<`void`\>
+> **createMembershipSubscription**(`userId`, `membershipType`, `annual`?, `promoCode`?): `Promise`\<`void`\>
 
-Defined in: Subscription.service.ts:65
+Defined in: subscription\_service/index.ts:65
 
 Creates a new membership subscription.
 
@@ -53,6 +165,18 @@ Creates a new membership subscription.
 `number`
 
 The customer's user id
+
+##### membershipType
+
+The type of the membership
+
+`"plus"` | `"premium"`
+
+##### annual?
+
+`boolean`
+
+Whether to create an annual subscription
 
 ##### promoCode?
 
@@ -80,7 +204,7 @@ Thrown if the customer does not exist.
 
 > **getMemberships**(): `Promise`\<`MembershipResponse`[]\>
 
-Defined in: Subscription.service.ts:90
+Defined in: subscription\_service/index.ts:168
 
 Retrieves the membership subscription type.
 
@@ -92,44 +216,24 @@ A promise resolving to the membership subscription type
 
 ***
 
-### updateMembershipById()
+### getMembershipSubscriptions()
 
-> **updateMembershipById**(`membershipId`, `name`, `monthlyPrice`, `annualPrice`, `currency`, `otherDetails`): `Promise`\<`MembershipResponse`\>
+> **getMembershipSubscriptions**(`filters`?): `Promise`\<\{ `subscriptions`: `MembershipSubscriptionResponse`[]; `total`: `number`; \}\>
 
-Defined in: Subscription.service.ts:103
+Defined in: subscription\_service/index.ts:180
 
-Updates a membership subscription type.
+Retrieves membership subscriptions based on filtering parameters. If none passed it returns all subscriptions.
 
 #### Parameters
 
-##### membershipId
+##### filters?
 
-`string`
+`MembershipSubscriptionFilters`
 
-The membership id
-
-##### name
-
-`string`
-
-##### monthlyPrice
-
-`number`
-
-##### annualPrice
-
-`number`
-
-##### currency
-
-`string`
-
-##### otherDetails
-
-`MembershipAdditionalDetails`
+Optional filtering parameters
 
 #### Returns
 
-`Promise`\<`MembershipResponse`\>
+`Promise`\<\{ `subscriptions`: `MembershipSubscriptionResponse`[]; `total`: `number`; \}\>
 
-A promise resolving to the updated membership
+A promise resolving to all membership subscriptions
