@@ -1,33 +1,31 @@
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../../config/db';
+import type {
+    CreationOptional,
+    ForeignKey,
+    InferAttributes,
+    InferCreationAttributes,
+} from 'sequelize';
+import { sequelize } from '@/config/db';
 import { User } from './User.model';
 
-interface AdminAttributes {
-    id?: number;
-    userId?: number;
-    role?: 'admin' | 'manager';
-    firstName: string; // Virtual
-    lastName: string; // Virtual
-    username: string; // Virtual
-    email: string; // Virtual
-    password: string; // Virtual
-    user?: User;
-}
-
-export class Admin extends Model<AdminAttributes> implements AdminAttributes {
-    declare id?: number;
-    declare userId?: number;
-    declare role?: 'admin' | 'manager';
+export class Admin extends Model<
+    InferAttributes<Admin>,
+    InferCreationAttributes<Admin>
+> {
+    declare id: CreationOptional<number>;
+    declare userId: ForeignKey<User['id']>;
+    declare role: CreationOptional<'admin' | 'manager'>;
     declare firstName: string; // Virtual field
     declare lastName: string; // Virtual field
     declare username: string; // Virtual field
     declare email: string; // Virtual field
-    declare password: string; // Virtual field;
+    declare password: string; // Virtual field
     declare user?: User;
 }
 
 Admin.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         userId: {
             type: DataTypes.INTEGER,
             unique: true,
