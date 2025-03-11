@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { ShippingController } from '../../../controllers/Shipping.controller';
-import { ShippingService, AdminLogsService } from '../../../services';
-import { shippingUpdateRateLimiter } from '../../../middlewares/rateLimiting';
+import { ShippingController } from '@/controllers/Shipping.controller';
+import { ShippingService, AdminLogsService } from '@/services';
+import { shippingUpdateRateLimiter } from '@/middlewares/rateLimiting';
 import {
     validateShippingCountry,
     validateShippingCity,
@@ -11,7 +11,7 @@ import {
     validationErrors,
     validateShippingCountryUpdate,
     validateShippingCityUpdate,
-} from '../../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const shippingController = new ShippingController(

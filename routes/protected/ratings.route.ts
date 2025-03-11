@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { RatingController } from '../../controllers/Rating.controller';
-import { RatingService } from '../../services';
-import { ratingUpdateRateLimiter } from '../../middlewares/rateLimiting';
+import { RatingController } from '@/controllers/Rating.controller';
+import { RatingService } from '@/services';
+import { ratingUpdateRateLimiter } from '@/middlewares/rateLimiting';
 import {
     validatePlatformRating,
     validateProductRating,
@@ -10,7 +10,7 @@ import {
     validateId,
     validationErrors,
     validateObjectId,
-} from '../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const ratingController = new RatingController(new RatingService());

@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { ProductController } from '../../controllers/Product.controller';
-import { ProductService } from '../../services';
+import { ProductController } from '@/controllers/Product.controller';
+import { ProductService } from '@/services';
 import {
     validateId,
     validateQuery,
     validationErrors,
-} from '../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const productController = new ProductController(new ProductService());

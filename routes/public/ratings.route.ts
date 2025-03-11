@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { RatingController } from '../../controllers/Rating.controller';
-import { RatingService } from '../../services';
+import { RatingController } from '@/controllers/Rating.controller';
+import { RatingService } from '@/services';
 import {
     validateId,
     validateObjectId,
     validationErrors,
-} from '../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const ratingController = new RatingController(new RatingService());

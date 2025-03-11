@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { CartController } from '../../controllers/Cart.controller';
-import { CartService } from '../../services';
+import { CartController } from '@/controllers/Cart.controller';
+import { CartService } from '@/services';
 import {
     validateCartItemDetails,
     validateId,
     validationErrors,
-} from '../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const cartController = new CartController(new CartService());

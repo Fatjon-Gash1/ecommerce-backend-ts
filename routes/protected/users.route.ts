@@ -1,20 +1,18 @@
 import { Router } from 'express';
-import { UserController } from '../../controllers/User.controller';
-import {
-    UserService,
-    PaymentService,
-    NotificationService,
-} from '../../services';
-import authenticateRefreshToken from '../../middlewares/authentication/refreshToken';
-import authenticateAccessToken from '../../middlewares/authentication/accessToken';
-import authorize from '../../middlewares/authorization/authorize';
+import { UserController } from '@/controllers/User.controller';
+import { UserService, PaymentService, NotificationService } from '@/services';
+import authenticateRefreshToken from '@/middlewares/authentication/refreshToken';
+import authenticateAccessToken from '@/middlewares/authentication/accessToken';
+import authenticatePasswordResetToken from '@/middlewares/authentication/passwordResetToken';
+import authorize from '@/middlewares/authorization/authorize';
 import {
     signupRateLimiter,
     loginRateLimiter,
     tokenRateLimiter,
     updateRateLimiter,
     passwordChangeRateLimiter,
-} from '../../middlewares/rateLimiting';
+    passwordResetRequestRateLimiter,
+} from '@/middlewares/rateLimiting';
 import {
     validateRegistration,
     validateLogIn,
@@ -23,23 +21,63 @@ import {
     validateCustomerDetails,
     validateUserUpdateDetails,
     validationErrors,
-} from '../../middlewares/validation';
+    validatePassword,
+    validateEmail,
+} from '@/middlewares/validation';
 import cartRoutes from './carts.route';
 import paymentRoutes from './payments.route';
 import orderRoutes from './orders.route';
 import shippingRoutes from './shippings.route';
 import ratingRoutes from './ratings.route';
 import adminRoutes from './private/admins.route';
+import subscriptionRoutes from './subscriptions.route';
 
 const router: Router = Router();
 const userService = new UserService(
-    new PaymentService(process.env.STRIPE_KEY as string)
-);
-const userController = new UserController(
-    userService,
+    new PaymentService(process.env.STRIPE_KEY as string),
     new NotificationService()
 );
+const userController = new UserController(userService);
 
+/**
+ * @swagger
+ * /users/auth/signup:
+ *   post:
+ *     tags:
+ *       - Users
+ *     description: User signup
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               details:
+ *                 type: object
+ *                 properties:
+ *                   firstName:
+ *                     type: string
+ *                   lastName:
+ *                     type: string
+ *                   username:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *                   password:
+ *                     type: string
+ *     responses:
+ *       200:
+ *         description: Signup successful
+ *       400:
+ *         description: Invalid request
+ *       409:
+ *         description: Customer already exists
+ *       500:
+ *         description: Server error
+ */
 router.post(
     '/auth/signup',
     signupRateLimiter,
@@ -65,6 +103,13 @@ router.post(
     authenticateAccessToken,
     userController.logoutUser.bind(userController)
 );
+router.post(
+    '/auth/request-password-reset',
+    passwordResetRequestRateLimiter,
+    validateEmail(),
+    validationErrors,
+    userController.requestPasswordReset.bind(userController)
+);
 
 router.get(
     '/availability',
@@ -80,12 +125,19 @@ router.get(
 );
 
 router.patch(
-    '/password',
+    '/auth/change-password',
     authenticateAccessToken,
     passwordChangeRateLimiter,
     validatePasswords(),
     validationErrors,
     userController.changePassword.bind(userController)
+);
+router.patch(
+    '/auth/reset-password',
+    authenticatePasswordResetToken,
+    validatePassword(),
+    validationErrors,
+    userController.resetPassword.bind(userController)
 );
 router.patch(
     '/customers/customer-details',
@@ -130,6 +182,13 @@ router.use(
     authenticateAccessToken,
     authorize(['customer']),
     orderRoutes
+);
+
+router.use(
+    '/customers/subscriptions',
+    authenticateAccessToken,
+    authorize(['customer']),
+    subscriptionRoutes
 );
 
 router.use('/shippings', authenticateAccessToken, shippingRoutes);
