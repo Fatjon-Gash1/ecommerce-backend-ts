@@ -5,6 +5,13 @@ export class NotificationError extends Error {
     }
 }
 
+export class NotificationNotFoundError extends Error {
+    constructor(message: string = 'Notification not found') {
+        super(message);
+        this.name = 'NotificationError';
+    }
+}
+
 export class EmailNotificationError extends Error {
     constructor(message: string = 'Failed to send email') {
         super(message);

@@ -38,6 +38,7 @@ import { OrderNotFoundError, OrderAlreadyMarkedError } from './OrderErrors';
 import { RatingNotFoundError } from './RatingErrors';
 import {
     NotificationError,
+    NotificationNotFoundError,
     EmailNotificationError,
 } from './NotificationErrors';
 import { ReportNotFoundError } from './AnalyticsErrors';
@@ -71,6 +72,7 @@ export {
     OrderAlreadyMarkedError,
     RatingNotFoundError,
     NotificationError,
+    NotificationNotFoundError,
     EmailNotificationError,
     ReportNotFoundError,
 };
