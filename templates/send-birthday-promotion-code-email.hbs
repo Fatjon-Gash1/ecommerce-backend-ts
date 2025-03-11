@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Happy Birthday, {{ firstName }}!</title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+        }
+        .promo-code {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d9534f;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        .cta-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <h1>🎉 Happy Birthday, {{ firstName }}! 🎂</h1>
+            <p>
+                We heard you're turning <strong>{{ age }}</strong> today! 🥳
+            </p>
+            <p>
+                To celebrate, we're giving you an exclusive <strong>50% OFF</strong> promotion code!
+            </p>
+            <div class="promo-code">{{ promotionCode }}</div>
+            <p>Use this code at checkout and enjoy your birthday treat!</p>
+            <a href="{{ redeemUrl }}" class="cta-button">Redeem Now</a>
+            <p class="footer">This offer is valid indefinitely. Use as you wish!</p>
+        </div>
+    </body>
+</html>

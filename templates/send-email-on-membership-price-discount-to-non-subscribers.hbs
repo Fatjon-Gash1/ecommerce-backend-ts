@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ membershipType }} Membership Discount</title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header {
+            background: #0073e6;
+            color: #ffffff;
+            padding: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .content {
+            padding: 20px;
+            font-size: 16px;
+            color: #333333;
+        }
+        .discount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e60000;
+            margin: 10px 0;
+        }
+        .price-details {
+            font-size: 18px;
+            color: #555555;
+        }
+        .old-price {
+            text-decoration: line-through;
+            color: #999999;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #0073e6;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .cta-button:hover {
+            background: #005bb5;
+        }
+        .footer {
+            font-size: 14px;
+            color: #777777;
+            padding: 15px;
+            background: #f9f9f9;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">Discount on {{ membershipType }} Membership!</div>
+            <div class="content">
+                <p>Hi {{ firstName }},</p>
+                <p>We have a **new offer** on our **{{ pricePlan }} Plan** for the **{{ membershipType }} Membership**.</p>
+                <div class="discount">Save {{ discountPercentage }}% Today!</div>
+                <div class="price-details">
+                    <p>
+                        <span class="old-price">€{{ oldPrice }}</span> → <strong>€{{ discountedPrice }}</strong>
+                    </p>
+                </div>
+                <p>Don't miss out! Upgrade your membership today and enjoy exclusive benefits.</p>
+                <a href="{{ subscribeUrl }}" class="cta-button">Subscribe Now</a>
+            </div>
+            <div class="footer">
+                If you have any questions, feel free to contact our support team.
+                <br>
+                © 2024 Edge Tech. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

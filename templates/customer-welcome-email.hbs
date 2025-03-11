@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to EdgeTech!</title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: #0073e6;
+            color: #ffffff;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+            color: #333333;
+        }
+        .points {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0073e6;
+        }
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+            color: #777777;
+        }
+        .btn {
+            display: inline-block;
+            background: #0073e6;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background: #005bb5;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">Welcome to EdgeTech, {{ firstName }}!</div>
+            <div class="content">
+                <p>We’re thrilled to have you join our community!</p>
+                <p>
+                    As a token of appreciation, we’ve credited <span class="points">200 Loyalty Points</span> to your account.
+                </p>
+                <p>Start exploring our products and make the most of your rewards.</p>
+                <a href="{{ loginUrl }}" class="btn">Login to Your Account</a>
+            </div>
+            <div class="footer">
+                <p>
+                    Need help? Contact our support team at <a href="mailto:support@edgetech.com">support@edgetech.com</a>
+                </p>
+                <p>© 2025 EdgeTech. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>
