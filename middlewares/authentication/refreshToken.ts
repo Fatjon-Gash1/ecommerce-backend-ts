@@ -4,6 +4,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 declare module 'express-serve-static-core' {
     interface Request {
         user?: string | JwtPayload;
+        data?: string | JwtPayload;
     }
 }
 
@@ -13,7 +14,6 @@ export default function authenticateRefreshToken(
     next: NextFunction
 ): void | Response {
     const refreshToken = req.cookies.refreshToken as string;
-    console.log('Retrieved Refresh token:', refreshToken);
 
     if (!refreshToken) {
         return res.status(401).json({
@@ -30,16 +30,11 @@ export default function authenticateRefreshToken(
         ): void | Response => {
             if (err) {
                 if (err instanceof jwt.TokenExpiredError) {
-                    console.log(
-                        `Expired refresh token (expired at: ${err.expiredAt}): `,
-                        refreshToken
-                    );
                     return res.status(401).json({
                         message: `Refresh token expired at: ${err.expiredAt}`,
                     });
                 }
                 if (err instanceof jwt.JsonWebTokenError) {
-                    console.log('Denied refresh token: ', refreshToken);
                     return res
                         .status(403)
                         .json({ message: 'Permission denied' });

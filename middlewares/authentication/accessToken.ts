@@ -8,7 +8,6 @@ export default function authenticateAccessToken(
 ): void | Response {
     const authorizationHeader = req.header('Authorization');
     const accessToken = authorizationHeader?.split(' ')[1];
-    console.log('Access token:', accessToken);
 
     if (!accessToken) {
         return res.status(401).json({
@@ -30,7 +29,6 @@ export default function authenticateAccessToken(
                     });
                 }
                 if (err instanceof jwt.JsonWebTokenError) {
-                    console.log('Denied access token: ', accessToken);
                     return res
                         .status(403)
                         .json({ message: 'Permission denied' });
