@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { OrderController } from '../../controllers/Order.controller';
 import { OrderService } from '../../services';
 import {
-    validateOrderCreation,
     validateId,
     validationErrors,
     validateOrderStatus,
@@ -10,13 +9,6 @@ import {
 
 const router: Router = Router();
 const orderController = new OrderController(new OrderService());
-
-router.post(
-    '/',
-    validateOrderCreation(),
-    validationErrors,
-    orderController.createOrder.bind(orderController)
-);
 
 router.get(
     '/search',
