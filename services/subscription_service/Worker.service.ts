@@ -61,7 +61,7 @@ export class WorkerService {
 
     public listen() {
         this.worker.on('completed', async (job: Job, returnData) => {
-            console.log(`Job: ${job.id} has completed`);
+            this.logger.log(`Job: ${job.id} has completed`);
 
             const currentTime = Date.now();
             const paymentDate = new Date().toISOString().split('T')[0];
@@ -222,7 +222,7 @@ export class WorkerService {
                 return this.logger.error('Failed job not found!');
             }
 
-            console.log('Retry attempt: ', job.attemptsMade);
+            this.logger.log('Retry attempt: ' + job.attemptsMade);
 
             if (job.attemptsMade === 1) {
                 try {

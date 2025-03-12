@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { ProductController } from '../../../controllers/Product.controller';
+import { ProductController } from '@/controllers/Product.controller';
 import {
     ProductService,
     AdminLogsService,
     NotificationService,
-} from '../../../services';
+} from '@/services';
 import {
     categoryCreationRateLimiter,
     productCreationRateLimiter,
@@ -12,7 +12,7 @@ import {
     productUpdateRateLimiter,
     categoryDeletionRateLimiter,
     productDeletionRateLimiter,
-} from '../../../middlewares/rateLimiting';
+} from '@/middlewares/rateLimiting';
 import {
     validateCategory,
     validateProduct,
@@ -22,7 +22,7 @@ import {
     validateProductUpdate,
     validateId,
     validationErrors,
-} from '../../../middlewares/validation';
+} from '@/middlewares/validation';
 import { checkExact } from 'express-validator';
 
 const router: Router = Router();

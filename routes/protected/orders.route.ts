@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { OrderController } from '../../controllers/Order.controller';
-import { OrderService } from '../../services';
+import { OrderController } from '@/controllers/Order.controller';
+import { OrderService } from '@/services';
 import {
     validateId,
     validationErrors,
     validateOrderStatus,
-} from '../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const orderController = new OrderController(new OrderService());

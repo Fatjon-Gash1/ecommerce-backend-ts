@@ -20,7 +20,7 @@ Handlebars.registerHelper(
     }
 );
 
-const TEMPLATES_PATH = process.env.TEMPLATES_PATH as string;
+const TEMPLATES_PATH = (process.env.BASE_PATH as string) + '/templates';
 const CLIENT_URL = process.env.CLIENT_URL as string;
 
 interface EmailOptions {
