@@ -15,4 +15,5 @@ resources/.arch-internal-preview.css
 node_modules
 .env
 app.log
+automationData.json
 dist
