@@ -48,9 +48,10 @@ function getCyberMondayDate(): string {
     );
     if (!set) {
         const jsonData = await readFile(
-            path.join(BASE_PATH, 'automationData.json')
-        );
-        const holidays: HolidayData[] = JSON.parse(jsonData.toString());
+           path.join(BASE_PATH, 'automationData.json'), 'utf-8')
+        ;
+        console.log(jsonData);
+        const {holidays} = JSON.parse(jsonData.toString());
 
         const jobSchedulerPromises = holidays.map(
             async (holiday: HolidayData) => {
