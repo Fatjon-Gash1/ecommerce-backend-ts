@@ -49,7 +49,7 @@ export class PaymentController {
         res: Response
     ): Promise<Response | void> {
         const { userId } = req.user as JwtPayload;
-        const { paymentMethodId } = req.body;
+        const paymentMethodId = req.params.id;
 
         try {
             await this.paymentService.setDefaultPaymentMethod(

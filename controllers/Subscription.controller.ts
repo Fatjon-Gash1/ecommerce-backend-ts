@@ -10,13 +10,13 @@ import { UserNotFoundError } from '@/errors';
 
 export class SubscriptionController {
     private subscriptionService: SubscriptionService;
-    private replenishmentService: ReplenishmentService;
+    private replenishmentService?: ReplenishmentService;
     private adminLogsService?: AdminLogsService;
     private logger: LoggerService;
 
     constructor(
         subscriptionService: SubscriptionService,
-        replenishmentService: ReplenishmentService,
+        replenishmentService?: ReplenishmentService,
         adminLogsService?: AdminLogsService
     ) {
         this.subscriptionService = subscriptionService;
@@ -155,7 +155,7 @@ export class SubscriptionController {
         const { data, interval, unit, starting, expiry, times } = req.body;
 
         try {
-            await this.replenishmentService.scheduler!.createReplenishment(
+            await this.replenishmentService!.scheduler!.createReplenishment(
                 userId,
                 data,
                 interval,
@@ -187,7 +187,7 @@ export class SubscriptionController {
 
         try {
             const replenishment =
-                await this.replenishmentService.getReplenishmentById(
+                await this.replenishmentService!.getReplenishmentById(
                     userId,
                     replenishmentId
                 );
@@ -208,7 +208,7 @@ export class SubscriptionController {
 
         try {
             const { total, rows } =
-                await this.replenishmentService.getCustomerReplenishments(
+                await this.replenishmentService!.getCustomerReplenishments(
                     userId
                 );
             return res.status(200).json({ total, replenishments: rows });
@@ -228,7 +228,7 @@ export class SubscriptionController {
 
         try {
             const { total, replenishments } =
-                await this.replenishmentService.getAllReplenishments({
+                await this.replenishmentService!.getAllReplenishments({
                     customerId: Number(customerId),
                     unit: unit as 'day' | 'week' | 'month' | 'year' | 'custom',
                     interval: Number(interval),
@@ -257,7 +257,7 @@ export class SubscriptionController {
         const { data, interval, unit, starting, expiry, times } = req.body;
 
         try {
-            await this.replenishmentService.scheduler!.updateReplenishment(
+            await this.replenishmentService!.scheduler!.updateReplenishment(
                 userId,
                 replenishmentId,
                 data,
@@ -283,7 +283,7 @@ export class SubscriptionController {
         const replenishmentId = Number(req.params.id);
 
         try {
-            await this.replenishmentService.scheduler!.toggleCancelStatusOnReplenishment(
+            await this.replenishmentService!.scheduler!.toggleCancelStatusOnReplenishment(
                 userId,
                 replenishmentId
             );
@@ -302,7 +302,7 @@ export class SubscriptionController {
         const replenishmentId = Number(req.params.id);
 
         try {
-            await this.replenishmentService.scheduler!.removeReplenishment(
+            await this.replenishmentService!.scheduler!.removeReplenishment(
                 userId,
                 replenishmentId
             );
