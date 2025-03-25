@@ -76,11 +76,13 @@
             <div class="header">Discount on {{ membershipType }} Membership!</div>
             <div class="content">
                 <p>Hi {{ firstName }},</p>
-                <p>We have a **new offer** on our **{{ pricePlan }} Plan** for the **{{ membershipType }} Membership**.</p>
+                <p>
+                    We have a new offer on our <strong>{{ pricePlan }} Plan</strong> for the <strong>{{ membershipType }} Membership</strong>.
+                </p>
                 <div class="discount">Save {{ discountPercentage }}% Today!</div>
                 <div class="price-details">
                     <p>
-                        <span class="old-price">€{{ oldPrice }}</span> → <strong>€{{ discountedPrice }}</strong>
+                        <span class="old-price">{{ oldPrice }}</span> ➔ <strong>{{ discountedPrice }}</strong>
                     </p>
                 </div>
                 <p>Don't miss out! Upgrade your membership today and enjoy exclusive benefits.</p>
