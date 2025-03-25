@@ -54,10 +54,6 @@ router.post(
 );
 
 router.get(
-    '/memberships',
-    subscriptionController.getMemberships.bind(subscriptionController)
-);
-router.get(
     '/replenishments/:id',
     validateId(),
     validationErrors,

@@ -29,7 +29,7 @@ router.post(
 );
 
 router.post(
-    '/set-default-payment-method',
+    '/payment-methods/default/:id',
     paymentController.setDefaultPaymentMethod.bind(paymentController)
 );
 router.post(
