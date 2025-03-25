@@ -20,6 +20,11 @@ Handlebars.registerHelper(
     }
 );
 
+const formatter = new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+});
+
 const TEMPLATES_PATH = (process.env.BASE_PATH as string) + '/templates';
 const CLIENT_URL = process.env.CLIENT_URL as string;
 
@@ -211,11 +216,18 @@ export class NotificationService {
     ): Promise<void> {
         const customers = await Customer.findAll({
             where: { membership: { [Op.not]: membershipType } },
-            attributes: ['firstName', 'email'],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: ['firstName', 'email'],
+            },
+            attributes: [],
         });
 
-        const discountPercentage =
-            ((oldPrice - discountedPrice) / oldPrice) * 100;
+        const discountPercentage = (
+            ((oldPrice - discountedPrice) / oldPrice) *
+            100
+        ).toFixed(2);
 
         const failedEmails = new Set<string>();
         const limit = pLimit(100);
@@ -232,8 +244,8 @@ export class NotificationService {
                 membershipType.charAt(0).toUpperCase() +
                 membershipType.slice(1),
             pricePlan: pricePlan.charAt(0).toUpperCase() + pricePlan.slice(1),
-            oldPrice,
-            discountedPrice,
+            oldPrice: formatter.format(oldPrice),
+            discountedPrice: formatter.format(discountedPrice),
             discountPercentage,
             subscribeUrl:
                 CLIENT_URL +
@@ -265,7 +277,7 @@ export class NotificationService {
         };
 
         const creationPromises = customers.map((customer) =>
-            limit(() => sendEmailWithErrorHandling(customer))
+            limit(() => sendEmailWithErrorHandling(customer.user!))
         );
 
         await Promise.allSettled(creationPromises);
@@ -293,7 +305,12 @@ export class NotificationService {
     ): Promise<void> {
         const customers = await Customer.findAll({
             where: { stripeId: Array.from(subscriptionData.keys()) },
-            attributes: ['firstName', 'email', 'stripeId'],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: ['firstName', 'email'],
+            },
+            attributes: ['stripeId'],
         });
 
         const failedEmails = new Set<string>();
@@ -308,20 +325,22 @@ export class NotificationService {
         const template = Handlebars.compile(emailFile);
         const data = {
             membershipPlan,
-            oldPrice,
-            increasedPrice,
+            oldPrice: formatter.format(oldPrice),
+            increasedPrice: formatter.format(increasedPrice),
         };
 
-        const sendEmailWithErrorHandling = async (customer: {
-            firstName: string;
-            email: string;
-            stripeId: string;
-        }): Promise<void> => {
+        const sendEmailWithErrorHandling = async (
+            customer: {
+                firstName: string;
+                email: string;
+            },
+            customerStripeId: string
+        ): Promise<void> => {
             try {
-                const timeRemaining = subscriptionData.get(customer.stripeId)!;
+                const timeRemaining = subscriptionData.get(customerStripeId)!;
                 const htmlData = template({
                     firstName: customer.firstName,
-                    timeRemaining,
+                    timeRemaining: new Date(timeRemaining * 1000).toUTCString(),
                     acceptUrl:
                         CLIENT_URL +
                         `/confirm-membership?plan=${membershipPlan}&time_left=${timeRemaining}`,
@@ -343,7 +362,9 @@ export class NotificationService {
         };
 
         const creationPromises = customers.map((customer) =>
-            limit(() => sendEmailWithErrorHandling(customer))
+            limit(() =>
+                sendEmailWithErrorHandling(customer.user!, customer.stripeId)
+            )
         );
 
         await Promise.allSettled(creationPromises);
