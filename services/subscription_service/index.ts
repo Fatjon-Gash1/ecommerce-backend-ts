@@ -7,6 +7,11 @@ import { Customer } from '@/models/relational';
 import { Membership } from '@/models/document';
 import { UserNotFoundError } from '@/errors';
 
+const formatter = new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+});
+
 interface MembershipResponse {
     type: string;
     monthlyPrice: number;
@@ -206,20 +211,33 @@ export class SubscriptionService {
                 };
             })
         );
-        const subscriptionData = await Promise.all(subscriptionDataPromises);
-
-        const cleanedSubscriptionData = subscriptionData.filter(
-            (subscription) => subscription !== null
+        const subscriptionData = await Promise.allSettled(
+            subscriptionDataPromises
         );
 
-        if (filters) {
+        const cleanedSubscriptionData = subscriptionData
+            .filter((subscription) => subscription.status === 'fulfilled')
+            .map((subscription) => subscription.value)
+            .filter((subscription) => subscription !== null);
+
+        let isFiltered;
+        for (const filter in filters) {
+            if (filters[filter as keyof typeof filters] !== undefined) {
+                isFiltered = true;
+                break;
+            }
+        }
+
+        if (isFiltered) {
             let filteredData = cleanedSubscriptionData;
             for (const field in filters) {
-                filteredData = filteredData.filter(
-                    (subscription) =>
-                        subscription[field as keyof typeof filters] ===
-                        filters[field as keyof typeof filters]
-                );
+                if (filters[field as keyof typeof filters] !== undefined) {
+                    filteredData = filteredData.filter(
+                        (subscription) =>
+                            subscription[field as keyof typeof filters] ===
+                            filters[field as keyof typeof filters]
+                    );
+                }
             }
             return {
                 total: filteredData.length,
@@ -256,6 +274,11 @@ export class SubscriptionService {
             pricePlan === 'annual'
                 ? membership!.annualPrice
                 : membership!.monthlyPrice;
+
+        if (oldPrice === price) {
+            throw new Error('New price cannot be the same as the old one');
+        }
+
         membership![`${pricePlan}Price`] = price;
 
         const subscriptionData =
@@ -270,8 +293,11 @@ export class SubscriptionService {
             pricePlan,
             price
         );
+        membership![
+            `stripe${pricePlan === 'annual' ? 'Annual' : 'Monthly'}PriceId`
+        ] = newPriceId;
 
-        if (price <= oldPrice) {
+        if (price < oldPrice) {
             await this.paymentService!.createSubscriptionsForCustomers(
                 subscriptionData,
                 newPriceId
@@ -295,7 +321,7 @@ export class SubscriptionService {
                 limit(() =>
                     this.notificationService!.sendNotification(
                         customer.userId,
-                        `Your current ${membership!.type} membership has been discounted from €${oldPrice} to €${price}.`
+                        `Your current ${membership!.type} membership has been discounted from ${formatter.format(oldPrice)} to ${formatter.format(price)}.`
                     )
                 )
             );
@@ -304,31 +330,37 @@ export class SubscriptionService {
         } else {
             const jobPromises = Array.from(subscriptionData.entries()).map(
                 ([customerId, endOfPeriod]) =>
-                    limit(() =>
-                        queue1
-                            .add(
-                                'MCJ',
-                                {
-                                    stripeCustomerId: customerId,
-                                    membershipType: membership!.type,
-                                },
-                                { delay: endOfPeriod - Date.now() }
-                            )
-                            .then((job) => {
-                                if (job.id) {
-                                    return redisClient.hset(
-                                        'MCJRecord',
-                                        customerId,
-                                        job.id
-                                    );
-                                }
-                            })
-                    )
+                    limit(async () => {
+                        const added = await redisClient.hexists(
+                            'MCJRecord',
+                            customerId
+                        );
+
+                        if (added) return;
+
+                        const job = await queue1.add(
+                            'MCJ', // Membership cancellation job
+                            {
+                                stripeCustomerId: customerId,
+                                membershipType: membership!.type,
+                            },
+                            { delay: endOfPeriod * 1000 - Date.now() }
+                        );
+
+                        if (job.id) {
+                            return redisClient.hset(
+                                'MCJRecord',
+                                customerId,
+                                job.id
+                            );
+                        }
+                    })
             );
 
             await Promise.allSettled(jobPromises);
 
             await this.notificationService!.sendEmailOnMembershipPriceIncrease(
+                // test it again and check this method
                 subscriptionData,
                 membership!.type,
                 oldPrice,
