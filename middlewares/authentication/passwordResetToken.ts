@@ -8,7 +8,8 @@ export default async function authenticatePasswordResetToken(
     next: NextFunction
 ): Promise<void | Response> {
     try {
-        const resetToken = req.query['token']?.toString();
+        const authorizationHeader = req.header('Authorization');
+        const resetToken = authorizationHeader?.split(' ')[1];
 
         if (!resetToken) {
             return res.status(401).json({
