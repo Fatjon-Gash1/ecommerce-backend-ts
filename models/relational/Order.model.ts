@@ -22,7 +22,13 @@ export class Order extends Model<
     declare customerId: ForeignKey<Customer['id']>;
     declare paymentMethod: 'card' | 'wallet' | 'bank-transfer';
     declare shippingCountry: string;
-    declare shippingWeight: 'light' | 'standard' | 'heavy';
+    declare weightCategory:
+        | 'light'
+        | 'standard'
+        | 'heavy'
+        | 'very-heavy'
+        | 'extra-heavy';
+    declare orderWeight: number;
     declare shippingMethod: 'standard' | 'express' | 'next-day';
     declare status: CreationOptional<
         | 'pending'
@@ -106,8 +112,18 @@ Order.init(
             type: DataTypes.STRING,
             allowNull: false,
         },
-        shippingWeight: {
-            type: DataTypes.ENUM('light', 'standard', 'heavy'),
+        weightCategory: {
+            type: DataTypes.ENUM(
+                'light',
+                'standard',
+                'heavy',
+                'very-heavy',
+                'extra-heavy'
+            ),
+            allowNull: false,
+        },
+        orderWeight: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         shippingMethod: {
