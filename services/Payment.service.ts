@@ -1,8 +1,6 @@
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
 import pLimit from 'p-limit';
-import { redisClient } from '@/config/redis';
-import { queue1 } from '@/jobQueues';
 import { OrderService } from './Order.service';
 import { ShippingService } from './Shipping.service';
 import { NotificationService } from './Notification.service';
@@ -771,6 +769,7 @@ export class PaymentService {
         const subscriptions = await this.stripe.subscriptions.list({
             price: priceId,
         });
+
         const customerSubscriptionData = new Map<string, number>();
 
         subscriptions.data.forEach((subscription) =>
@@ -831,40 +830,21 @@ export class PaymentService {
     }
 
     /**
-     * Creates a new subscription to the increased membership price.
+     * Extends the customer membership subscription.
      *
-     * @remarks
-     * This method is called from the subscription service.
+     * @remarks This method is called from the subscription service.
      *
-     * @param userId - The customer's user id
-     * @param priceId - The price id of the membership plan
+     * @param customerId - The id of the customer to create a subscription for
+     * @param priceId - The membership annual or monthly priceId
      * @param endOfPeriod - The end of the subscription period
      */
-    public async subscribeToNewMembershipPrice(
-        userId: number,
+    public async extendMembershipSubscription(
+        customerId: string,
         priceId: string,
         endOfPeriod: number
     ): Promise<void> {
-        const customer = await Customer.findOne({ where: { userId } });
-
-        if (!customer) {
-            throw new Error('Customer not found');
-        }
-
-        const jobId = await redisClient.hget('MCJRecord', customer.stripeId);
-
-        if (!jobId) {
-            throw new Error(
-                `Cannot subscribe to new membership price. Membership cancellation job id missing for customer with user id: ${userId}.`
-            );
-        }
-
-        const job = await queue1.getJob(jobId);
-
-        await job.remove();
-
         await this.stripe.subscriptions.create({
-            customer: customer.stripeId,
+            customer: customerId,
             currency: 'eur',
             items: [
                 {
@@ -1140,7 +1120,13 @@ export class PaymentService {
         userId: number,
         data: PaymentProcessingData
     ): Promise<{
-        weightRange: 'standard' | 'light' | 'heavy';
+        weightCategory:
+            | 'light'
+            | 'standard'
+            | 'heavy'
+            | 'very-heavy'
+            | 'extra-heavy';
+        orderWeight: number;
         paymentIntentId: string;
         paymentAmount: number;
     }> {
@@ -1181,13 +1167,16 @@ export class PaymentService {
             })
         ).then((prices) => prices.reduce((acc, price) => acc + price, 0));
 
-        const { cost: shippingCost, weightRange } =
-            await this.shippingService!.calculateShippingCost(
-                data.shippingCountry,
-                data.shippingMethod,
-                undefined,
-                data.orderItems
-            );
+        const {
+            cost: shippingCost,
+            weightCategory,
+            orderWeight,
+        } = await this.shippingService!.calculateShippingCost(
+            data.shippingCountry,
+            data.shippingMethod,
+            undefined,
+            data.orderItems
+        );
 
         let discountedPrice: number | null = null; // Discounted from loyalty points
         if (data.loyaltyPoints) {
@@ -1221,7 +1210,12 @@ export class PaymentService {
 
         await customer.save();
 
-        return { weightRange, paymentIntentId, paymentAmount: totalAmount };
+        return {
+            weightCategory,
+            orderWeight,
+            paymentIntentId,
+            paymentAmount: totalAmount,
+        };
     }
 
     /**
@@ -1234,7 +1228,7 @@ export class PaymentService {
         userId: number,
         data: PaymentProcessingData
     ): Promise<void> {
-        const { weightRange, paymentIntentId, paymentAmount } =
+        const { weightCategory, orderWeight, paymentIntentId, paymentAmount } =
             await this.processPayment(userId, data);
 
         await this.orderService!.createOrder(
@@ -1242,7 +1236,8 @@ export class PaymentService {
             data.orderItems,
             data.paymentMethodType,
             data.shippingCountry,
-            weightRange,
+            weightCategory,
+            orderWeight,
             data.shippingMethod,
             paymentAmount,
             paymentIntentId
