@@ -47,6 +47,12 @@ router.post(
     )
 );
 router.post(
+    '/memberships/confirm',
+    subscriptionController.subscribeToNewMembershipPrice.bind(
+        subscriptionController
+    )
+);
+router.post(
     '/replenishments',
     validateReplenishment(),
     validationErrors,

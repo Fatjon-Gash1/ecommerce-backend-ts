@@ -58,6 +58,38 @@ export class SubscriptionController {
         }
     }
 
+    public async subscribeToNewMembershipPrice(
+        req: Request,
+        res: Response
+    ): Promise<Response | void> {
+        const { userId } = req.user as JwtPayload;
+        const { type, plan, ['time-left']: endOfPeriod } = req.query;
+
+        try {
+            await this.subscriptionService.subscribeToNewMembershipPrice(
+                userId,
+                type as 'plus' | 'premium',
+                plan as 'annual' | 'monthly',
+                Number(endOfPeriod)
+            );
+
+            return res.status(201).json({
+                message: 'Successfully subscribed to new membership price',
+            });
+        } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                this.logger.error(
+                    'Error subscribing to new membership price: ' + error
+                );
+                return res.status(404).json({ message: error.message });
+            }
+            this.logger.error(
+                'Error subscribing to new membership price: ' + error
+            );
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async cancelMembershipSubscription(
         req: Request,
         res: Response
