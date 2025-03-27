@@ -360,9 +360,9 @@ export class SubscriptionService {
             await Promise.allSettled(jobPromises);
 
             await this.notificationService!.sendEmailOnMembershipPriceIncrease(
-                // test it again and check this method
                 subscriptionData,
                 membership!.type,
+                pricePlan,
                 oldPrice,
                 price
             );
@@ -371,6 +371,52 @@ export class SubscriptionService {
         await membership!.save();
     }
 
+    /**
+     * Creates a new subscription to the increased membership price.
+     *
+     * @param userId - The customer's user id
+     * @param type - The membership type (plus or premium)
+     * @param plan - The membership plan (annual or monthly)
+     * @param endOfPeriod - The end of the subscription period
+     */
+    public async subscribeToNewMembershipPrice(
+        userId: number,
+        type: 'plus' | 'premium',
+        plan: 'annual' | 'monthly',
+        endOfPeriod: number
+    ): Promise<void> {
+        const customer = await Customer.findOne({ where: { userId } });
+
+        if (!customer) {
+            throw new UserNotFoundError('Customer not found');
+        }
+
+        const membership = await Membership.findOne({ type });
+        const priceId =
+            plan === 'annual'
+                ? membership!.stripeAnnualPriceId
+                : membership!.stripeMonthlyPriceId;
+
+        const jobId = await redisClient.hget('MCJRecord', customer.stripeId);
+
+        if (!jobId) {
+            throw new Error(
+                `Cannot subscribe to new membership price. Membership cancellation job id missing for customer with user id: ${userId}.`
+            );
+        }
+
+        await redisClient.hdel('MCJRecord', customer.stripeId);
+
+        const job = await queue1.getJob(jobId);
+
+        await job.remove();
+
+        await this.paymentService!.extendMembershipSubscription(
+            customer.stripeId,
+            priceId,
+            endOfPeriod
+        );
+    }
     /**
      * Cancels a customer's membership.
      *
