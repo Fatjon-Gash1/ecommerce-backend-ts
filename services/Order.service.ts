@@ -18,7 +18,12 @@ interface OrderResponse {
     customerId: number;
     paymentMethod: 'card' | 'wallet' | 'bank-transfer';
     shippingCountry: string;
-    shippingWeight: 'light' | 'standard' | 'heavy';
+    weightCategory:
+        | 'light'
+        | 'standard'
+        | 'heavy'
+        | 'very-heavy'
+        | 'extra-heavy';
     shippingMethod: 'standard' | 'express' | 'next-day';
     status:
         | 'pending'
@@ -66,7 +71,13 @@ export class OrderService {
         items: OrderItemAttributes[],
         paymentMethod: 'card',
         shippingCountry: string,
-        shippingWeight: 'standard' | 'light' | 'heavy',
+        weightCategory:
+            | 'light'
+            | 'standard'
+            | 'heavy'
+            | 'very-heavy'
+            | 'extra-heavy',
+        orderWeight: number,
         shippingMethod: 'standard' | 'express' | 'next-day',
         orderTotal: number,
         paymentIntentId: string,
@@ -90,7 +101,8 @@ export class OrderService {
                     customerId: customer.id,
                     paymentMethod,
                     shippingCountry,
-                    shippingWeight,
+                    weightCategory,
+                    orderWeight,
                     shippingMethod,
                     total: orderTotal,
                     paymentIntentId,
