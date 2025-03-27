@@ -47,10 +47,16 @@ interface ProductItem {
 
 interface ShippingCostResponse {
     cost: number;
-    weightRange: WeightRange;
+    weightCategory: WeightCategory;
+    orderWeight: number;
 }
 
-type WeightRange = 'light' | 'standard' | 'heavy';
+type WeightCategory =
+    | 'light'
+    | 'standard'
+    | 'heavy'
+    | 'very-heavy'
+    | 'extra-heavy';
 
 /**
  * Service responsible for shipping-related operations
@@ -293,9 +299,9 @@ export class ShippingService {
      * @throws {@link EmptyCartError}
      * Thrown is the provided cart has no items.
      */
-    public async determineWeightRangeForCart(
+    public async determineWeightCategoryForCart(
         userId: number
-    ): Promise<WeightRange> {
+    ): Promise<{ weightCategory: WeightCategory; orderWeight: number }> {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
@@ -322,7 +328,7 @@ export class ShippingService {
             throw new EmptyCartError();
         }
 
-        return await this.determineWeightRange(cartItems);
+        return await this.determineWeightCategory(cartItems);
     }
 
     /**
@@ -331,9 +337,9 @@ export class ShippingService {
      * @param productItems - The product items. Either cart items or order items
      * @returns A promise that resolves to a string representing the weight range
      */
-    private async determineWeightRange(
+    private async determineWeightCategory(
         productItems: ProductItem[]
-    ): Promise<WeightRange> {
+    ): Promise<{ weightCategory: WeightCategory; orderWeight: number }> {
         const orderWeight = await Promise.all(
             productItems.map(async (item) => {
                 const product = await Product.findByPk(item.productId, {
@@ -348,11 +354,15 @@ export class ShippingService {
             })
         ).then((weights) => weights.reduce((acc, weight) => acc + weight, 0));
 
-        return orderWeight > 20
-            ? 'heavy'
-            : orderWeight > 10
-              ? 'standard'
-              : 'light';
+        let weightCategory: WeightCategory;
+
+        if (orderWeight > 100) weightCategory = 'extra-heavy';
+        else if (orderWeight > 50) weightCategory = 'very-heavy';
+        else if (orderWeight > 25) weightCategory = 'heavy';
+        else if (orderWeight > 10) weightCategory = 'standard';
+        else weightCategory = 'light';
+
+        return { weightCategory, orderWeight };
     }
 
     /**
@@ -390,12 +400,12 @@ export class ShippingService {
             throw new ShippingOptionNotFoundError('Shipping method not found');
         }
 
-        const weightRange: WeightRange = orderItems
-            ? await this.determineWeightRange(orderItems)
-            : await this.determineWeightRangeForCart(userId!);
+        const { weightCategory, orderWeight } = orderItems
+            ? await this.determineWeightCategory(orderItems)
+            : await this.determineWeightCategoryForCart(userId!);
 
         const weightResult = await ShippingWeight.findOne({
-            weight: weightRange,
+            weight: weightCategory,
         }); // ODM Model
 
         if (!weightResult) {
@@ -408,7 +418,8 @@ export class ShippingService {
 
         return {
             cost,
-            weightRange,
+            weightCategory,
+            orderWeight,
         };
     }
 }
