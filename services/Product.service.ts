@@ -339,7 +339,7 @@ export class ProductService {
             throw new ProductNotFoundError();
         }
 
-        product.views! += 1;
+        product.views!++;
         return await product.save();
     }
 

@@ -293,13 +293,15 @@ export class NotificationService {
      * Sends emails to subscribed customers on membership price increase.
      *
      * @param subscriptionData - A map that contains the stripe customer id and the end date of the customer subscription
-     * @param membershipPlan - The membership plan
+     * @param membershipPlan - The membership plan (plus, premium)
+     * @param pricePlan - The price plan (Annual or Monthly)
      * @param oldPrice - The old price of the membership plan
      * @param increasedPrice - The increased price of the membership plan
      */
     public async sendEmailOnMembershipPriceIncrease(
         subscriptionData: Map<string, number>,
         membershipPlan: string,
+        pricePlan: 'annual' | 'monthly',
         oldPrice: number,
         increasedPrice: number
     ): Promise<void> {
@@ -325,6 +327,7 @@ export class NotificationService {
         const template = Handlebars.compile(emailFile);
         const data = {
             membershipPlan,
+            pricePlan,
             oldPrice: formatter.format(oldPrice),
             increasedPrice: formatter.format(increasedPrice),
         };
@@ -343,7 +346,7 @@ export class NotificationService {
                     timeRemaining: new Date(timeRemaining * 1000).toUTCString(),
                     acceptUrl:
                         CLIENT_URL +
-                        `/confirm-membership?plan=${membershipPlan}&time_left=${timeRemaining}`,
+                        `/confirm-membership?type=${membershipPlan}&plan=${pricePlan}&time_left=${timeRemaining}`,
                     ...data,
                 });
 
@@ -580,7 +583,7 @@ export class NotificationService {
         try {
             await this.sendEmail({
                 to: userEmail,
-                subject: 'Reset Your Password',
+                subject: 'Reset Your Account Password',
                 html: htmlData,
             });
         } catch (error) {
