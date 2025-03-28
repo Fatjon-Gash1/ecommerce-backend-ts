@@ -6,7 +6,7 @@
 
 # Class: AnalyticsService
 
-Defined in: [Analytics.service.ts:42](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L42)
+Defined in: [Analytics.service.ts:42](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L42)
 
 Service responsible for analytics-related operations and report generation.
 
@@ -26,7 +26,7 @@ Service responsible for analytics-related operations and report generation.
 
 > **deleteAllReportsByType**(`type`): `Promise`\<`string`\>
 
-Defined in: [Analytics.service.ts:836](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L836)
+Defined in: [Analytics.service.ts:836](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L836)
 
 Deletes all reports of a given type in the reports directory.
 
@@ -55,7 +55,7 @@ Thrown if directory reading or file deletion fails.
 
 > **deleteReport**(`reportName`): `Promise`\<`string`\>
 
-Defined in: [Analytics.service.ts:807](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L807)
+Defined in: [Analytics.service.ts:807](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L807)
 
 Deletes a report in the reports directory.
 
@@ -84,7 +84,7 @@ Thrown if the report is not found or deletion fails.
 
 > **generateSalesReport**(`username`): `Promise`\<`void`\>
 
-Defined in: [Analytics.service.ts:49](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L49)
+Defined in: [Analytics.service.ts:49](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L49)
 
 Generates a broad sales report including product sales, category sales, and total revenue.
 
@@ -108,7 +108,7 @@ A promise that resolves to void
 
 > **generateStockReport**(`username`): `Promise`\<`void`\>
 
-Defined in: [Analytics.service.ts:210](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L210)
+Defined in: [Analytics.service.ts:210](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L210)
 
 Generates a stock report based on stock quantity.
 
@@ -132,7 +132,7 @@ A promise that resolves to void
 
 > **getAverageOrderValue**(): `Promise`\<`number`\>
 
-Defined in: [Analytics.service.ts:427](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L427)
+Defined in: [Analytics.service.ts:427](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L427)
 
 Retrieves the average order value in the platform.
 
@@ -149,7 +149,7 @@ the average order value
 
 > **getCategoryWithMostPurchases**(): `Promise`\<`TopCategory`\>
 
-Defined in: [Analytics.service.ts:451](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L451)
+Defined in: [Analytics.service.ts:451](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L451)
 
 Retrieves the category with the most purchases.
 
@@ -166,7 +166,7 @@ and the count of purchases.
 
 > **getCategoryWithMostPurchasesByCustomer**(`customerId`): `Promise`\<`TopCategory`\>
 
-Defined in: [Analytics.service.ts:542](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L542)
+Defined in: [Analytics.service.ts:542](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L542)
 
 Retrieves the category with the most purchases made by customer.
 
@@ -191,7 +191,7 @@ and the count of purchases
 
 > **getPlatformOrdersByStatus**(`status`): `Promise`\<\{ `rows`: `Order`[]; `total`: `number`; \}\>
 
-Defined in: [Analytics.service.ts:788](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L788)
+Defined in: [Analytics.service.ts:788](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L788)
 
 Retrieves the total platform orders by status.
 
@@ -216,7 +216,7 @@ the count and an array of orders
 
 > **getProductsByStockStatus**(`status`): `Promise`\<\{ `rows`: `Product`[]; `total`: `number`; \}\>
 
-Defined in: [Analytics.service.ts:703](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L703)
+Defined in: [Analytics.service.ts:703](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L703)
 
 Retrieves the products based on stock status.
 
@@ -241,7 +241,7 @@ the products in stock for the given status
 
 > **getProductViews**(`productId`): `Promise`\<`number`\>
 
-Defined in: [Analytics.service.ts:636](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L636)
+Defined in: [Analytics.service.ts:636](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L636)
 
 Retrieves the total views of a product.
 
@@ -266,7 +266,7 @@ the total views of the product
 
 > **getStockDataForCategoryByStatus**(`status`): `Promise`\<`object`[]\>
 
-Defined in: [Analytics.service.ts:737](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L737)
+Defined in: [Analytics.service.ts:737](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L737)
 
 Retrieves stock data for each category.
 
@@ -290,7 +290,7 @@ A promise resolving to an array of objects containing the category name and stoc
 
 > **getTopSellingProducts**(`limit`): `Promise`\<`number`\>
 
-Defined in: [Analytics.service.ts:592](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L592)
+Defined in: [Analytics.service.ts:592](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L592)
 
 Retrieves the top selling products.
 
@@ -314,7 +314,7 @@ A promise resolving to an array of Product instances
 
 > **getTotalProductPurchases**(`filter`): `Promise`\<\{ `products`: `PurchasedProductResponse`[]; `purchasesCount`: `number`; \}\>
 
-Defined in: [Analytics.service.ts:300](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L300)
+Defined in: [Analytics.service.ts:300](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L300)
 
 Retrieves the total number of product purchases and each
 purchased product in the platform.
@@ -338,7 +338,7 @@ the total purchase count and an array of purchased products
 
 > **getTotalProductPurchasesForCustomer**(`customerId`): `Promise`\<\{ `products`: `PurchasedProductResponse`[]; `totalCount`: `number`; \}\>
 
-Defined in: [Analytics.service.ts:499](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L499)
+Defined in: [Analytics.service.ts:499](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L499)
 
 Retrieves the total product purchases for customer.
 
@@ -363,7 +363,7 @@ the count and an array of products
 
 > **getTotalProductsRevenue**(): `Promise`\<`number`\>
 
-Defined in: [Analytics.service.ts:364](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L364)
+Defined in: [Analytics.service.ts:364](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L364)
 
 Retrieves the total revenue of product sales.
 
@@ -379,7 +379,7 @@ A promise that resolves to a number of total product sales.
 
 > **getTotalRevenue**(): `Promise`\<`number`\>
 
-Defined in: [Analytics.service.ts:406](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Analytics.service.ts#L406)
+Defined in: [Analytics.service.ts:406](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Analytics.service.ts#L406)
 
 Retrieves the total revenue of the platform including shipping costs.
 

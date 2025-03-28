@@ -6,7 +6,7 @@
 
 # Class: AdminLogsService
 
-Defined in: [AdminLogs.service.ts:7](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/AdminLogs.service.ts#L7)
+Defined in: [AdminLogs.service.ts:7](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/AdminLogs.service.ts#L7)
 
 Service responsible for logging administrative operations.
 
@@ -26,7 +26,7 @@ Service responsible for logging administrative operations.
 
 > **log**(`username`, `target`, `operation`): `Promise`\<`void`\>
 
-Defined in: [AdminLogs.service.ts:25](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/AdminLogs.service.ts#L25)
+Defined in: [AdminLogs.service.ts:25](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/AdminLogs.service.ts#L25)
 
 Logs different administrative operations.
 

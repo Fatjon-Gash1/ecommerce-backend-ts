@@ -6,7 +6,7 @@
 
 # Class: LoggerService
 
-Defined in: Logger.service.ts:3
+Defined in: [Logger.service.ts:3](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Logger.service.ts#L3)
 
 ## Constructors
 
@@ -14,7 +14,7 @@ Defined in: Logger.service.ts:3
 
 > **new LoggerService**(): [`LoggerService`](LoggerService.md)
 
-Defined in: Logger.service.ts:6
+Defined in: [Logger.service.ts:6](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Logger.service.ts#L6)
 
 #### Returns
 
@@ -26,7 +26,7 @@ Defined in: Logger.service.ts:6
 
 > **error**(`message`): `void`
 
-Defined in: Logger.service.ts:26
+Defined in: [Logger.service.ts:26](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Logger.service.ts#L26)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: Logger.service.ts:26
 
 > **log**(`message`): `void`
 
-Defined in: Logger.service.ts:22
+Defined in: [Logger.service.ts:22](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Logger.service.ts#L22)
 
 #### Parameters
 

@@ -6,7 +6,7 @@
 
 # Class: RatingService
 
-Defined in: [Rating.service.ts:57](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L57)
+Defined in: [Rating.service.ts:57](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L57)
 
 Service related to platform and product ratings
 
@@ -26,7 +26,7 @@ Service related to platform and product ratings
 
 > **addPlatformRating**(`userId`, `details`): `Promise`\<`PlatformRatingResponse`\>
 
-Defined in: [Rating.service.ts:68](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L68)
+Defined in: [Rating.service.ts:68](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L68)
 
 Adds a rating to the platform.
 
@@ -61,7 +61,7 @@ Thrown if the user is not found.
 
 > **addProductRating**(`userId`, `productId`, `details`): `Promise`\<`ProductRatingResponse`\>
 
-Defined in: [Rating.service.ts:110](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L110)
+Defined in: [Rating.service.ts:110](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L110)
 
 Adds a rating & review to a product.
 
@@ -107,7 +107,7 @@ Thrown if the product is not found.
 
 > **deletePlatformRatingById**(`ratingId`, `userId`?): `Promise`\<`void`\>
 
-Defined in: [Rating.service.ts:371](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L371)
+Defined in: [Rating.service.ts:371](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L371)
 
 Removes a platform rating by id.
 
@@ -140,7 +140,7 @@ Thrown if the rating is not found.
 
 > **deleteProductRatingById**(`ratingId`, `userId`?): `Promise`\<`void`\>
 
-Defined in: [Rating.service.ts:402](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L402)
+Defined in: [Rating.service.ts:402](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L402)
 
 Removes a product rating by id.
 
@@ -173,7 +173,7 @@ Thrown if the rating is not found.
 
 > **getPlatformRatingById**(`ratingId`): `Promise`\<`PlatformRatingResponse`\>
 
-Defined in: [Rating.service.ts:166](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L166)
+Defined in: [Rating.service.ts:166](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L166)
 
 Retrieves a platform rating by object id.
 
@@ -202,7 +202,7 @@ Thrown if the rating is not found
 
 > **getPlatformRatings**(): `Promise`\<`PlatformRatingResponse`[]\>
 
-Defined in: [Rating.service.ts:151](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L151)
+Defined in: [Rating.service.ts:151](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L151)
 
 Retrieves all platform ratings.
 
@@ -218,7 +218,7 @@ A promise that resolves to all platform ratings
 
 > **getPlatformRatingsByCustomer**(`customerId`): `Promise`\<\{ `count`: `number`; `ratings`: `PlatformRatingResponse`[]; \}\>
 
-Defined in: [Rating.service.ts:186](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L186)
+Defined in: [Rating.service.ts:186](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L186)
 
 Retrieves all platform ratings by customer's id.
 
@@ -243,7 +243,7 @@ and their total count
 
 > **getProductRatingById**(`ratingId`): `Promise`\<`ProductRatingResponse`\>
 
-Defined in: [Rating.service.ts:241](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L241)
+Defined in: [Rating.service.ts:241](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L241)
 
 Retrieves a product rating & review by id.
 
@@ -272,7 +272,7 @@ Thrown if the rating is not found.
 
 > **getProductRatingsByCustomer**(`customerId`): `Promise`\<\{ `count`: `number`; `ratings`: `ProductRatingResponse`[]; \}\>
 
-Defined in: [Rating.service.ts:260](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L260)
+Defined in: [Rating.service.ts:260](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L260)
 
 Retrieves all product ratings & reviews by customer's user id.
 
@@ -294,7 +294,7 @@ A promise that resolves to the user's product ratings
 
 > **getProductRatingsByProductId**(`productId`): `Promise`\<`ProductRatingResponse`[]\>
 
-Defined in: [Rating.service.ts:214](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L214)
+Defined in: [Rating.service.ts:214](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L214)
 
 Retrieves all ratings & reviews of a product.
 
@@ -323,7 +323,7 @@ Thrown if the product is not found.
 
 > **updatePlatformRating**(`userId`, `ratingId`, `details`): `Promise`\<`PlatformRatingResponse`\>
 
-Defined in: [Rating.service.ts:325](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L325)
+Defined in: [Rating.service.ts:325](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L325)
 
 Updates a platform rating
 
@@ -364,7 +364,7 @@ Thrown if the rating is not found.
 
 > **updateProductRating**(`userId`, `ratingId`, `details`): `Promise`\<`ProductRatingResponse`\>
 
-Defined in: [Rating.service.ts:349](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L349)
+Defined in: [Rating.service.ts:349](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L349)
 
 Updates a product rating
 
@@ -405,7 +405,7 @@ Thrown if the rating is not found.
 
 > **updateRating**\<`T`\>(`ratingType`, `userId`, `ratingId`, `details`): `Promise`\<`PlatformRatingResponse` \| `ProductRatingResponse`\>
 
-Defined in: [Rating.service.ts:290](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Rating.service.ts#L290)
+Defined in: [Rating.service.ts:290](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Rating.service.ts#L290)
 
 Generic method that updates an existing rating type
 

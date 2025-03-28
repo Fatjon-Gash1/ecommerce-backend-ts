@@ -6,7 +6,7 @@
 
 # Class: AdminService
 
-Defined in: [Admin.service.ts:23](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L23)
+Defined in: [Admin.service.ts:23](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L23)
 
 Service responsible for Admin-related operations.
 
@@ -20,7 +20,7 @@ Service responsible for Admin-related operations.
 
 > **new AdminService**(`paymentService`, `notificationService`): [`AdminService`](AdminService.md)
 
-Defined in: [User.service.ts:67](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L67)
+Defined in: [User.service.ts:69](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L69)
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [User.service.ts:67](https://github.com/Fatjon-Gash1/edge-tech/blob/
 
 > `protected` **notificationService**: [`NotificationService`](NotificationService.md)
 
-Defined in: [User.service.ts:65](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L65)
+Defined in: [User.service.ts:67](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L67)
 
 #### Inherited from
 
@@ -58,7 +58,7 @@ Defined in: [User.service.ts:65](https://github.com/Fatjon-Gash1/edge-tech/blob/
 
 > `protected` **paymentService**: [`PaymentService`](PaymentService.md)
 
-Defined in: [User.service.ts:64](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L64)
+Defined in: [User.service.ts:66](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L66)
 
 #### Inherited from
 
@@ -70,7 +70,7 @@ Defined in: [User.service.ts:64](https://github.com/Fatjon-Gash1/edge-tech/blob/
 
 > **changePassword**(`userId`, `oldPassword`, `newPassword`): `Promise`\<`void`\>
 
-Defined in: [User.service.ts:291](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L291)
+Defined in: [User.service.ts:334](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L334)
 
 Changes a user's password.
 
@@ -118,7 +118,7 @@ Thrown if the old password is invalid.
 
 > **checkUserAvailability**(`userField`, `value`): `Promise`\<\{ `available`: `boolean`; `message`: `string`; \}\>
 
-Defined in: [User.service.ts:217](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L217)
+Defined in: [User.service.ts:260](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L260)
 
 Checks user availability.
 
@@ -152,7 +152,7 @@ A promise resolving to an object containing a boolean and a message
 
 > **deleteUser**(`userId`): `Promise`\<`void`\>
 
-Defined in: [User.service.ts:365](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L365)
+Defined in: [User.service.ts:408](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L408)
 
 Deletes a user from the database.
 
@@ -183,7 +183,7 @@ Thrown if the user is not found
 
 > **findActiveCustomers**(): `Promise`\<\{ `count`: `number`; `customers`: `CustomerResponse`[]; \}\>
 
-Defined in: [Admin.service.ts:53](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L53)
+Defined in: [Admin.service.ts:53](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L53)
 
 Retrieves active Customers from the database.
 
@@ -199,7 +199,7 @@ A promise resolving to an array of active Customer instances
 
 > **findCustomerByAttribute**(`attribute`, `attributeValue`): `Promise`\<`CustomerResponse`\>
 
-Defined in: [Admin.service.ts:82](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L82)
+Defined in: [Admin.service.ts:82](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L82)
 
 Retrieves a specific Customer from the provided attribute.
 
@@ -229,7 +229,7 @@ A promise resolving to a Customer instance
 
 > **generateTokens**(`userId`, `username`, `role`): `AuthTokens`
 
-Defined in: [User.service.ts:186](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L186)
+Defined in: [User.service.ts:229](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L229)
 
 Generates refresh and access tokens for a user.
 
@@ -269,7 +269,7 @@ An object containing access and refresh tokens
 
 > **getAdminById**(`adminId`): `Promise`\<`AdminResponse`\>
 
-Defined in: [Admin.service.ts:142](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L142)
+Defined in: [Admin.service.ts:142](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L142)
 
 Retrieves Admin by ID.
 
@@ -293,7 +293,7 @@ A promise resolving to an Admin instance
 
 > **getAllAdmins**(`role`?): `Promise`\<\{ `admins`: `AdminResponse`[]; `count`: `number`; \}\>
 
-Defined in: [Admin.service.ts:167](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L167)
+Defined in: [Admin.service.ts:167](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L167)
 
 Retrieves all Admins && optionally filtered by role.
 
@@ -317,7 +317,7 @@ A promise resolving to an Admin instance array
 
 > **getAllCustomers**(): `Promise`\<\{ `count`: `number`; `customers`: `CustomerResponse`[]; \}\>
 
-Defined in: [Admin.service.ts:115](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L115)
+Defined in: [Admin.service.ts:115](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L115)
 
 Retrieves all Customers in the database.
 
@@ -334,7 +334,7 @@ an array of Customer instances
 
 > **getCustomerById**(`customerId`): `Promise`\<`CustomerResponse`\>
 
-Defined in: [User.service.ts:245](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L245)
+Defined in: [User.service.ts:288](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L288)
 
 Retrieves Customer by its Id.
 
@@ -367,7 +367,7 @@ Thrown if the Customer is not found
 
 > **loginUser**(`username`, `password`): `Promise`\<`AuthTokens`\>
 
-Defined in: [User.service.ts:154](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L154)
+Defined in: [User.service.ts:197](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L197)
 
 Logins a user and returns access and refresh tokens.
 
@@ -409,7 +409,7 @@ InvalidCredentialsError if the password is invalid
 
 > **registerAdmin**(`details`): `Promise`\<`void`\>
 
-Defined in: [Admin.service.ts:43](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L43)
+Defined in: [Admin.service.ts:43](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L43)
 
 Registers a user as an Admin.
 
@@ -431,7 +431,7 @@ The details of the user to register
 
 > **registerCustomer**(`details`): `Promise`\<`void`\>
 
-Defined in: [Admin.service.ts:29](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L29)
+Defined in: [Admin.service.ts:29](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L29)
 
 Registers a user as a Customer.
 
@@ -453,7 +453,7 @@ The details of the user to register
 
 > **requestPasswordReset**(`userEmail`): `Promise`\<`void`\>
 
-Defined in: [User.service.ts:393](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L393)
+Defined in: [User.service.ts:436](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L436)
 
 Requests a password reset for a user.
 
@@ -484,7 +484,7 @@ Thrown if the user is not found
 
 > **resetPassword**(`userId`, `newPassword`): `Promise`\<`void`\>
 
-Defined in: [User.service.ts:420](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L420)
+Defined in: [User.service.ts:463](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L463)
 
 Resets user's password.
 
@@ -521,7 +521,7 @@ Thrown if the user is not found
 
 > **setAdminRole**(`adminId`, `role`): `Promise`\<`void`\>
 
-Defined in: [Admin.service.ts:195](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Admin.service.ts#L195)
+Defined in: [Admin.service.ts:195](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Admin.service.ts#L195)
 
 Sets admin role from the provided role number.
 
@@ -553,7 +553,7 @@ UserNotFoundError if the user is not found
 
 > **signUpCustomer**(`details`): `Promise`\<`AuthTokens`\>
 
-Defined in: [User.service.ts:121](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L121)
+Defined in: [User.service.ts:164](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L164)
 
 Signs-Up a new customer user type in the platform.
 
@@ -581,7 +581,7 @@ A promise resolving to an object containing access and refresh tokens
 
 > **updateCustomerDetails**(`userId`, `details`): `Promise`\<`Customer`\>
 
-Defined in: [User.service.ts:321](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L321)
+Defined in: [User.service.ts:364](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L364)
 
 Updates customer's shipping and billing details.
 
@@ -618,7 +618,7 @@ Thrown if the Customer is not found.
 
 > **updateUser**(`userId`, `details`): `Promise`\<`User`\>
 
-Defined in: [User.service.ts:344](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L344)
+Defined in: [User.service.ts:387](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L387)
 
 Updates a user in the database.
 
@@ -657,7 +657,7 @@ Thrown if the user is not found
 
 > `protected` **userFactory**\<`T`\>(`userClass`, `details`): `Promise`\<`T`\>
 
-Defined in: [User.service.ts:89](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/User.service.ts#L89)
+Defined in: [User.service.ts:91](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L91)
 
 Creates a provided user type class instance.
 
@@ -698,3 +698,29 @@ Thrown if the user already exists.
 #### Inherited from
 
 [`UserService`](UserService.md).[`userFactory`](UserService.md#userfactory)
+
+***
+
+### verifyUserEmail()
+
+> **verifyUserEmail**(`details`): `Promise`\<`void`\>
+
+Defined in: [User.service.ts:122](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/User.service.ts#L122)
+
+Verify user email
+
+#### Parameters
+
+##### details
+
+`UserCreationDetails`
+
+The details of the user to sign-up
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Inherited from
+
+[`UserService`](UserService.md).[`verifyUserEmail`](UserService.md#verifyuseremail)

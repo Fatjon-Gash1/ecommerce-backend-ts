@@ -6,7 +6,7 @@
 
 # Class: OrderService
 
-Defined in: [Order.service.ts:49](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L49)
+Defined in: [Order.service.ts:54](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L54)
 
 Service responsible for Order-related operations.
 
@@ -26,7 +26,7 @@ Service responsible for Order-related operations.
 
 > **cancelOrder**(`userId`, `orderId`): `Promise`\<`void`\>
 
-Defined in: [Order.service.ts:400](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L400)
+Defined in: [Order.service.ts:412](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L412)
 
 Cancels a customer's order.
 
@@ -57,9 +57,9 @@ Thrown if the order is not found.
 
 ### createOrder()
 
-> **createOrder**(`userId`, `items`, `paymentMethod`, `shippingCountry`, `shippingWeight`, `shippingMethod`, `orderTotal`, `paymentIntentId`, `transactionObj`?): `Promise`\<`OrderResponse`\>
+> **createOrder**(`userId`, `items`, `paymentMethod`, `shippingCountry`, `weightCategory`, `orderWeight`, `shippingMethod`, `orderTotal`, `paymentIntentId`, `transactionObj`?): `Promise`\<`OrderResponse`\>
 
-Defined in: [Order.service.ts:64](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L64)
+Defined in: [Order.service.ts:69](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L69)
 
 Creates an order for a customer.
 
@@ -89,11 +89,13 @@ The payment method for the order
 
 The shipping country for the order
 
-##### shippingWeight
+##### weightCategory
 
-The shipping weight for the order
+`"light"` | `"standard"` | `"heavy"` | `"very-heavy"` | `"extra-heavy"`
 
-`"light"` | `"standard"` | `"heavy"`
+##### orderWeight
+
+`number`
 
 ##### shippingMethod
 
@@ -131,7 +133,7 @@ A promise resolving to the created order
 
 > **getAllOrders**(): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:346](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L346)
+Defined in: [Order.service.ts:358](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L358)
 
 Retrieves all orders in the database.
 
@@ -147,7 +149,7 @@ A promise resolving to an array of Order instances
 
 > **getCustomerOrderHistory**(`customerId`, `userId`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:315](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L315)
+Defined in: [Order.service.ts:327](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L327)
 
 Retrieves customer's order history.
 
@@ -187,7 +189,7 @@ Thrown if the user of type Customer is not found.
 
 > **getCustomerOrdersByStatus**(`status`, `customerId`, `userId`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:274](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L274)
+Defined in: [Order.service.ts:286](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L286)
 
 Retrieves all orders by a given status for a customer.
 
@@ -233,7 +235,7 @@ Thrown if the user of type Customer is not found.
 
 > **getOrderById**(`userId`, `orderId`): `Promise`\<`OrderResponse`\>
 
-Defined in: [Order.service.ts:128](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L128)
+Defined in: [Order.service.ts:140](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L140)
 
 Retrieves a specific order by ID.
 
@@ -263,7 +265,7 @@ A promise resolving to the order
 
 > **getOrderItemsByOrderId**(`userId`, `orderId`): `Promise`\<`OrderItemResponse`[]\>
 
-Defined in: [Order.service.ts:168](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L168)
+Defined in: [Order.service.ts:180](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L180)
 
 Retrieves all items of a specific order.
 
@@ -298,7 +300,7 @@ Thrown if the order is not found.
 
 > **getOrdersByStatus**(`status`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:247](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L247)
+Defined in: [Order.service.ts:259](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L259)
 
 Retrieves all platform orders by a given status.
 
@@ -322,7 +324,7 @@ A promise resolving to an array of Order instances and their count
 
 > **getTotalPriceOfOrderItems**(`userId`, `orderId`): `Promise`\<`number`\>
 
-Defined in: [Order.service.ts:220](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L220)
+Defined in: [Order.service.ts:232](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L232)
 
 Calculates the total price of all items in a specific order.
 
@@ -352,7 +354,7 @@ A promise resolving to the total price
 
 > **markAsDelivered**(`orderId`): `Promise`\<`void`\>
 
-Defined in: [Order.service.ts:370](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Order.service.ts#L370)
+Defined in: [Order.service.ts:382](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L382)
 
 Marks customer's order as delivered.
 

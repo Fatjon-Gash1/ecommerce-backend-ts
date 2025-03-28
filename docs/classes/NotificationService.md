@@ -6,7 +6,7 @@
 
 # Class: NotificationService
 
-Defined in: [Notification.service.ts:77](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L77)
+Defined in: [Notification.service.ts:82](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L82)
 
 Service responsible for handling platform notifications.
 
@@ -16,7 +16,7 @@ Service responsible for handling platform notifications.
 
 > **new NotificationService**(): [`NotificationService`](NotificationService.md)
 
-Defined in: [Notification.service.ts:81](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L81)
+Defined in: [Notification.service.ts:86](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L86)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [Notification.service.ts:81](https://github.com/Fatjon-Gash1/edge-te
 
 > **markAsRead**(`userId`, `notificationId`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:602](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L602)
+Defined in: [Notification.service.ts:662](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L662)
 
 Marks user notification as read.
 
@@ -61,7 +61,7 @@ Thrown if the notification is not found
 
 > **removeNotification**(`userId`, `notificationId`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:624](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L624)
+Defined in: [Notification.service.ts:684](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L684)
 
 Removes a customer notification.
 
@@ -89,7 +89,7 @@ The notification id
 
 > **sendBirthdayPromotionCodeEmail**(`email`, `firstName`, `birthday`, `promotionCode`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:397](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L397)
+Defined in: [Notification.service.ts:421](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L421)
 
 Sends an email with a promotion code to a customer on its birthday.
 
@@ -129,7 +129,7 @@ The customer's promotion code
 
 > **sendEmail**(`options`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:93](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L93)
+Defined in: [Notification.service.ts:98](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L98)
 
 Generic email sending method.
 
@@ -151,9 +151,9 @@ Thrown if it fails to send the email
 
 ### sendEmailOnMembershipPriceIncrease()
 
-> **sendEmailOnMembershipPriceIncrease**(`subscriptionData`, `membershipPlan`, `oldPrice`, `increasedPrice`): `Promise`\<`void`\>
+> **sendEmailOnMembershipPriceIncrease**(`subscriptionData`, `membershipPlan`, `pricePlan`, `oldPrice`, `increasedPrice`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:288](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L288)
+Defined in: [Notification.service.ts:301](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L301)
 
 Sends emails to subscribed customers on membership price increase.
 
@@ -169,7 +169,13 @@ A map that contains the stripe customer id and the end date of the customer subs
 
 `string`
 
-The membership plan
+The membership plan (plus, premium)
+
+##### pricePlan
+
+The price plan (Annual or Monthly)
+
+`"annual"` | `"monthly"`
 
 ##### oldPrice
 
@@ -189,11 +195,42 @@ The increased price of the membership plan
 
 ***
 
+### sendEmailVerificationEmail()
+
+> **sendEmailVerificationEmail**(`userEmail`, `verificationToken`): `Promise`\<`void`\>
+
+Defined in: [Notification.service.ts:568](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L568)
+
+Sends an email verification email to a user.
+
+#### Parameters
+
+##### userEmail
+
+`string`
+
+The email of the user
+
+##### verificationToken
+
+`string`
+
+The email verification token
+
+Throws EmailNotificationError
+Thrown if it fails to send the email to the user.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
 ### sendHandledRefundEmail()
 
 > **sendHandledRefundEmail**(`customerEmail`, `data`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:483](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L483)
+Defined in: [Notification.service.ts:507](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L507)
 
 Sends a handled refund request email to a customer.
 
@@ -220,7 +257,7 @@ Thrown if it fails to send the email to the customer.
 
 > **sendHolidayPromotionEmail**(`email`, `firstName`, `holiday`, `loyaltyPoints`, `promotionCode`?, `percentOff`?): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:440](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L440)
+Defined in: [Notification.service.ts:464](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L464)
 
 Sends a rewarding email to a customer on a holiday.
 
@@ -272,7 +309,7 @@ The percentage of the promocode discount
 
 > **sendMembershipDiscountEmailToNonSubscribers**(`membershipType`, `pricePlan`, `oldPrice`, `discountedPrice`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:206](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L206)
+Defined in: [Notification.service.ts:211](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L211)
 
 Sends emails to non-subscribed customers on membership price discount.
 
@@ -312,7 +349,7 @@ The discounted price
 
 > **sendNotification**(`userId`, ...`messages`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:576](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L576)
+Defined in: [Notification.service.ts:636](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L636)
 
 Generic method that sends in-platfrom notifications to users.
 
@@ -340,7 +377,7 @@ The messages to send
 
 > **sendPasswordResetEmail**(`userEmail`, `firstName`, `resetToken`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:545](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L545)
+Defined in: [Notification.service.ts:605](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L605)
 
 Sends a password reset email to a user.
 
@@ -377,7 +414,7 @@ Thrown if it fails to send the email to the user.
 
 > **sendPromotionsEmail**(`products`, `promotion`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:113](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L113)
+Defined in: [Notification.service.ts:118](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L118)
 
 Sends an email to all customers about new promotions.
 
@@ -406,7 +443,7 @@ Thrown if it fails to send the email to some of the customers.
 
 > **sendReplenishmentPaymentEmail**(`userEmail`, `subject`, `emailTemplate`, `data`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:513](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L513)
+Defined in: [Notification.service.ts:537](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L537)
 
 Sends a successful or failed payment email to a customer on replenishment.
 
@@ -454,7 +491,7 @@ Sends a successful or failed payment email to a customer on replenishment.
 
 > **sendWelcomeEmail**(`firstName`, `email`): `Promise`\<`void`\>
 
-Defined in: [Notification.service.ts:364](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/Notification.service.ts#L364)
+Defined in: [Notification.service.ts:388](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Notification.service.ts#L388)
 
 Sends a welcome email to a newly registered customer.
 

@@ -6,7 +6,7 @@
 
 # Class: PlatformDataService
 
-Defined in: [PlatformData.service.ts:26](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/PlatformData.service.ts#L26)
+Defined in: [PlatformData.service.ts:26](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/PlatformData.service.ts#L26)
 
 Service responsible only for retrieval and modification of platform data
 
@@ -26,7 +26,7 @@ Service responsible only for retrieval and modification of platform data
 
 > **getPlatformData**(): `Promise`\<`PlatformDataResponse`\>
 
-Defined in: [PlatformData.service.ts:59](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/PlatformData.service.ts#L59)
+Defined in: [PlatformData.service.ts:59](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/PlatformData.service.ts#L59)
 
 Retrieves the platform data.
 
@@ -42,7 +42,7 @@ A promise that resolves to the platform data
 
 > **updatePlatformData**(`id`, `data`): `Promise`\<`PlatformDataResponse`\>
 
-Defined in: [PlatformData.service.ts:37](https://github.com/Fatjon-Gash1/edge-tech/blob/dd4dbe3ef2bb1640eb688285399d259174ec7226/services/PlatformData.service.ts#L37)
+Defined in: [PlatformData.service.ts:37](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/PlatformData.service.ts#L37)
 
 Updates the platform data.
 
