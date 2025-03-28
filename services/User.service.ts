@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { redisClient } from '@/config/redis';
 import { type ModelStatic, type Model, Op } from 'sequelize';
 import { queue2 } from '@/jobQueues';
 import { addBirthdayJobScheduler } from '@/jobSchedulers';
@@ -17,6 +18,7 @@ const {
     ACCESS_TOKEN_EXPIRY,
     REFRESH_TOKEN_EXPIRY,
     GENERIC_TOKEN_KEY,
+    REGISTRATION_LOYALTY_POINTS,
 } = process.env;
 
 interface UserDetails {
@@ -113,6 +115,47 @@ export class UserService {
     }
 
     /**
+     * Verify user email
+     *
+     * @param details - The details of the user to sign-up
+     */
+    public async verifyUserEmail(details: UserCreationDetails): Promise<void> {
+        const user = await User.findOne({ where: { email: details.email } });
+
+        if (user) {
+            throw new UserAlreadyExistsError();
+        }
+
+        const token = await redisClient.hget(
+            'emailVerification:tokens',
+            details.email
+        );
+
+        if (token) {
+            await redisClient.zadd(
+                'blacklisted:tokens',
+                Date.now() + 900000,
+                token
+            );
+        }
+
+        const verificationToken = jwt.sign({ details }, GENERIC_TOKEN_KEY, {
+            expiresIn: '15m',
+        });
+
+        await redisClient.hset(
+            'emailVerification:tokens',
+            details.email,
+            verificationToken
+        );
+
+        await this.notificationService.sendEmailVerificationEmail(
+            details.email,
+            verificationToken
+        );
+    }
+
+    /**
      * Signs-Up a new customer user type in the platform.
      *
      * @param details - The details of the customer to sign-up
@@ -126,7 +169,7 @@ export class UserService {
             `${newCustomer.firstName} ${newCustomer.lastName}`,
             newCustomer.email
         );
-        newCustomer.loyaltyPoints = 200;
+        newCustomer.loyaltyPoints = REGISTRATION_LOYALTY_POINTS;
 
         await newCustomer.save();
 
@@ -190,7 +233,7 @@ export class UserService {
     ): AuthTokens {
         const refreshToken = jwt.sign(
             { userId, username, role },
-            REFRESH_TOKEN_KEY!,
+            REFRESH_TOKEN_KEY,
             {
                 expiresIn: REFRESH_TOKEN_EXPIRY,
             }
@@ -198,7 +241,7 @@ export class UserService {
 
         const accessToken = jwt.sign(
             { userId, username, role },
-            ACCESS_TOKEN_KEY!,
+            ACCESS_TOKEN_KEY,
             {
                 expiresIn: ACCESS_TOKEN_EXPIRY,
             }
