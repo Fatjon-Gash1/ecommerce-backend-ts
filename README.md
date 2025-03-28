@@ -98,14 +98,14 @@ The backend is structured using the **MVCS (Model-View-Controller+Service)** pat
 
 - **Node.js** (v16+ recommended)
 - **Docker** (for containerized deployment)
-- **MariaDB, MongoDB, Redis** (if running without Docker)
+- **MariaDB, MongoDB, Redis, Elasticsearch** (if running without Docker)
 
 ### Steps to Run Locally
 
 1.  Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/ecommerce-backend.git
-    cd ecommerce-backend
+    git clone https://github.com/Fatjon-Gash1/ecommerce-backend-ts.git
+    cd ecommerce-backend-ts
     ```
 2.  Install Dependencies:
 
@@ -147,7 +147,7 @@ The API endpoints follow **RESTful conventions** and are categorized into:
 - **Protected APIs** (User authentication required)
 - **Admin APIs** (Restricted to platform administrators)
 
-**Full API documentation** is available in the `/docs` folder.
+**Full API documentation** is available under the `/api-docs` **swagger** endpoint.
 
 ## 🛡️ Security & Middleware
 
