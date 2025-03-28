@@ -20,7 +20,7 @@ router.get(
 router.get(
     '/weight',
     authorize(['customer']),
-    shippingController.determineWeightRangeForCart.bind(shippingController)
+    shippingController.determineWeightCategoryForCart.bind(shippingController)
 );
 router.get(
     '/cost',

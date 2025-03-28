@@ -12,6 +12,7 @@
             padding: 0;
         }
         .container {
+            font-size: 14px;
             max-width: 600px;
             margin: 20px auto;
             background-color: #ffffff;
@@ -28,7 +29,7 @@
             line-height: 1.6;
         }
         .price {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #d9534f;
         }
@@ -64,7 +65,7 @@
             <h2>Membership Price Increase</h2>
             <p>Dear {{ firstName }},</p>
             <p>
-                We wanted to inform you that the price of your <strong>{{ membershipPlan }}</strong> membership has increased.
+                We wanted to inform you that the price of your <strong>{{ membershipPlan }}</strong> membership's <strong>{{ pricePlan }}</strong> plan has increased.
             </p>
             <p>
                 The price was increased from <span class="price">{{ oldPrice }}</span>, to <span class="price">{{ increasedPrice }}</span>.

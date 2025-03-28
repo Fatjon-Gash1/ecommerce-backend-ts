@@ -170,7 +170,7 @@ export class ShippingController {
         }
     }
 
-    public async determineWeightRangeForCart(
+    public async determineWeightCategoryForCart(
         req: Request,
         res: Response
     ): Promise<void | Response> {
@@ -178,19 +178,25 @@ export class ShippingController {
 
         try {
             const weight =
-                await this.shippingService.determineWeightRangeForCart(userId);
+                await this.shippingService.determineWeightCategoryForCart(
+                    userId
+                );
             return res.status(200).json({ weight });
         } catch (error) {
             if (error instanceof UserNotFoundError) {
-                this.logger.error('Error determining weight range: ' + error);
+                this.logger.error(
+                    'Error determining weight category: ' + error
+                );
                 return res.status(404).json({ message: error.message });
             }
             if (error instanceof EmptyCartError) {
-                this.logger.error('Error determining weight range: ' + error);
+                this.logger.error(
+                    'Error determining weight category: ' + error
+                );
                 return res.status(400).json({ message: error.message });
             }
 
-            this.logger.error('Error determining weight range: ' + error);
+            this.logger.error('Error determining weight category: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
