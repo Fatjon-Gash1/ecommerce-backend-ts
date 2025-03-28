@@ -3,7 +3,7 @@ import { UserController } from '@/controllers/User.controller';
 import { UserService, PaymentService, NotificationService } from '@/services';
 import authenticateRefreshToken from '@/middlewares/authentication/refreshToken';
 import authenticateAccessToken from '@/middlewares/authentication/accessToken';
-import authenticatePasswordResetToken from '@/middlewares/authentication/passwordResetToken';
+import authenticateGenericToken from '@/middlewares/authentication/genericToken';
 import authorize from '@/middlewares/authorization/authorize';
 import {
     signupRateLimiter,
@@ -41,11 +41,11 @@ const userController = new UserController(userService);
 
 /**
  * @swagger
- * /users/auth/signup:
+ * /users/auth/verify-user:
  *   post:
  *     tags:
  *       - Users
- *     description: User signup
+ *     description: Sends an email verification to the user email
  *     requestBody:
  *       required: true
  *       content:
@@ -70,6 +70,30 @@ const userController = new UserController(userService);
  *                     type: string
  *     responses:
  *       200:
+ *         description: Verification email sent successfully
+ *       400:
+ *         description: Invalid request
+ *       409:
+ *         description: Customer already exists
+ *       500:
+ *         description: Server error
+ */
+router.post(
+    '/auth/verify-user',
+    signupRateLimiter,
+    validateRegistration(),
+    validationErrors,
+    userController.verifyUser.bind(userController)
+);
+/**
+ * @swagger
+ * /users/auth/signup:
+ *   post:
+ *     tags:
+ *       - Users
+ *     description: User signup
+ *     responses:
+ *       200:
  *         description: Signup successful
  *       400:
  *         description: Invalid request
@@ -80,9 +104,7 @@ const userController = new UserController(userService);
  */
 router.post(
     '/auth/signup',
-    signupRateLimiter,
-    validateRegistration(),
-    validationErrors,
+    authenticateGenericToken,
     userController.signUpCustomer.bind(userController)
 );
 router.post(
@@ -134,7 +156,7 @@ router.patch(
 );
 router.patch(
     '/auth/reset-password',
-    authenticatePasswordResetToken,
+    authenticateGenericToken,
     validatePassword(),
     validationErrors,
     userController.resetPassword.bind(userController)
