@@ -557,6 +557,42 @@ export class NotificationService {
     }
 
     /**
+     * Sends an email verification email to a user.
+     *
+     * @param userEmail - The email of the user
+     * @param verificationToken - The email verification token
+     *
+     * Throws {@link EmailNotificationError}
+     * Thrown if it fails to send the email to the user.
+     */
+    public async sendEmailVerificationEmail(
+        userEmail: string,
+        verificationToken: string
+    ): Promise<void> {
+        const emailFile = await readFile(
+            path.join(TEMPLATES_PATH, 'send-email-verification-email.hbs'),
+            'utf-8'
+        );
+        const template = Handlebars.compile(emailFile);
+
+        const verificationLink =
+            CLIENT_URL + `/verify-email?token=${verificationToken}`;
+        const htmlData = template({ verificationLink });
+
+        try {
+            await this.sendEmail({
+                to: userEmail,
+                subject: 'Verify your email address',
+                html: htmlData,
+            });
+        } catch (error) {
+            this.logger.error(
+                'Error sending email verification email: ' + error
+            );
+        }
+    }
+
+    /**
      * Sends a password reset email to a user.
      *
      * @param userEmail - The email of the user

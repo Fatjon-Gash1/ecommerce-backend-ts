@@ -16,11 +16,33 @@ export class UserController {
         this.logger = new LoggerService();
     }
 
-    public async signUpCustomer(
+    public async verifyUser(
         req: Request,
         res: Response
     ): Promise<void | Response> {
         const { details } = req.body;
+
+        try {
+            await this.userService.verifyUserEmail(details);
+
+            res.json({
+                message: 'Verification email sent successfully',
+            });
+        } catch (error) {
+            if (error instanceof UserAlreadyExistsError) {
+                this.logger.error('Error sending verification email: ' + error);
+                return res.status(409).json({ message: error.message });
+            }
+
+            this.logger.error('Error sending verification email: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+    public async signUpCustomer(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { details } = req.data as JwtPayload;
 
         try {
             const { refreshToken, accessToken } =
