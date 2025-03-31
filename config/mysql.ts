@@ -1,13 +1,34 @@
 import { Sequelize } from 'sequelize';
 import { logger } from '@/services/Logger.service';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const config = {
+    username: isProduction
+        ? process.env.MYSQL_PROD_USER
+        : process.env.MYSQL_USER,
+    password: isProduction
+        ? process.env.MYSQL_PROD_PASSWORD
+        : process.env.MYSQL_PASSWORD,
+    database: isProduction
+        ? process.env.MYSQL_PROD_DATABASE
+        : process.env.MYSQL_DATABASE,
+    host: isProduction ? process.env.MYSQL_PROD_HOST : process.env.MYSQL_HOST,
+    port: isProduction ? process.env.MYSQL_PROD_PORT : process.env.MYSQL_PORT,
+    dialectOptions: isProduction
+        ? { ssl: { require: true, rejectUnauthorized: false } }
+        : {},
+};
+
 const sequelize = new Sequelize(
-    process.env.MYSQL_DATABASE as string,
-    process.env.MYSQL_USER as string,
-    process.env.MYSQL_PASSWORD as string,
+    config.database,
+    config.username,
+    config.password,
     {
-        host: process.env.MYSQL_HOST,
+        host: config.host,
+        port: config.port,
         dialect: 'mysql',
+        dialectOptions: config.dialectOptions,
         logging: false,
     }
 );
@@ -15,7 +36,7 @@ const sequelize = new Sequelize(
 sequelize
     .authenticate()
     .then(() => {
-        logger.log('Connection to MySQL has been established successfully.');
+        logger.log('Connected to MySQL');
     })
     .catch((err: Error) => {
         logger.error('Unable to connect to the MySQL database:' + err);
