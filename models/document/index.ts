@@ -6,6 +6,7 @@ import ProductRating, { IProductRating } from './ProductRating.model';
 import ProductAnalytic from './ProductAnalytic.model';
 import Membership from './Membership.model';
 import PlatformData from './PlatformData.model';
+import Holiday from './Holiday.model';
 
 export {
     ShippingMethod,
@@ -21,4 +22,5 @@ export {
     ProductAnalytic,
     Membership,
     PlatformData,
+    Holiday,
 };
