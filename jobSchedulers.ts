@@ -1,10 +1,7 @@
 import { queue2, queue3 } from './jobQueues';
 import { redisClient } from './config/redis';
-import { readFile } from 'fs/promises';
-import path from 'path';
 import { Customer } from './models/relational';
-
-const BASE_PATH = process.env.BASE_PATH as string;
+import { Holiday } from './models/document';
 
 interface HolidayData {
     schedulerId: string;
@@ -47,11 +44,9 @@ function getCyberMondayDate(): string {
         'bull:holidayPromotionJobQueue:delayed'
     );
     if (!set) {
-        const jsonData = await readFile(
-           path.join(BASE_PATH, 'automationData.json'), 'utf-8')
-        ;
-        console.log(jsonData);
-        const {holidays} = JSON.parse(jsonData.toString());
+        const holidays = (await Holiday.find({}).select('-__t -__v')).map(
+            (holiday) => holiday.toObject()
+        );
 
         const jobSchedulerPromises = holidays.map(
             async (holiday: HolidayData) => {
