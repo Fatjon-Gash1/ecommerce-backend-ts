@@ -1,12 +1,19 @@
 // src/env.d.ts
 declare namespace NodeJS {
     interface ProcessEnv {
+        NODE_ENV: 'development' | 'production';
         PORT: number;
-        REDIS_HOST: string;
+        REDIS_URL: string;
         MYSQL_HOST: string;
+        MYSQL_PORT: number;
         MYSQL_USER: string;
         MYSQL_PASSWORD: string;
         MYSQL_DATABASE: string;
+        MYSQL_PROD_HOST: string;
+        MYSQL_PROD_PORT: number;
+        MYSQL_PROD_USER: string;
+        MYSQL_PROD_PASSWORD: string;
+        MYSQL_PROD_DATABASE: string;
         MONGODB_URI: string;
         ACCESS_TOKEN_KEY: string;
         REFRESH_TOKEN_KEY: string;
