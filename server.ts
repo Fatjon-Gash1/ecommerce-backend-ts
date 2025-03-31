@@ -16,8 +16,9 @@ import { logger } from './services/Logger.service';
 import { listenToSocketEvents } from '@/socketEvents';
 import './queueWorkers';
 
+const HOST = process.env.HOST;
+const PORT = process.env.PORT || 3000;
 const app: Express = express();
-const port: number = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -68,6 +69,6 @@ function gracefulShutdown() {
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 
-app.listen(port, () => {
-    logger.log(`Server is running on http://localhost:${port}`);
+app.listen(PORT, () => {
+    logger.log(`Server is running on ${HOST}:${PORT}`);
 });

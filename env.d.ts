@@ -2,6 +2,7 @@
 declare namespace NodeJS {
     interface ProcessEnv {
         NODE_ENV: 'development' | 'production';
+        HOST: string;
         PORT: number;
         REDIS_URL: string;
         MYSQL_HOST: string;
