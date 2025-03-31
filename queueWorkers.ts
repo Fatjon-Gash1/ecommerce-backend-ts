@@ -116,7 +116,7 @@ const worker3 = new Worker(
                 attributes: ['stripeId'],
             });
 
-            const count = await Customer.update(
+            await Customer.update(
                 {
                     loyaltyPoints: Sequelize.literal(
                         `loyaltyPoints + ${job.data.promotion.loyaltyPoints}`
@@ -124,7 +124,6 @@ const worker3 = new Worker(
                 },
                 { where: {} }
             );
-            logger.log('Affected count: ' + count);
 
             const holidayPromotionEmailPromises = customers.map((customer) => {
                 return limit(async () => {
