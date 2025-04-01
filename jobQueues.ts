@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq';
 import { redisClient } from '@/config/redis';
-import { logger } from '@/services/Logger.service';
+import { logger } from '@/logger';
 
 const baseJobOptions = {
     attempts: 5, // 2^(1->2->3->4->*5(-1)) * 5000 | executions: 10000ms, 10000ms, 20000ms, 40000ms, 80000ms
@@ -49,4 +49,17 @@ queue3.on('error', (err) => {
 
 queue3.on('removed', (job) => {
     logger.log(`Job with id "${job.id}" has been removed from queue3!`);
+});
+
+export const queue4 = new Queue('exclusiveProductRemovalJobQueue', {
+    defaultJobOptions: baseJobOptions,
+    connection: redisClient,
+});
+
+queue4.on('error', (err) => {
+    logger.error('Error from queue4: ' + err);
+});
+
+queue4.on('removed', (job) => {
+    logger.log(`Job with id "${job.id}" has been removed from queue4!`);
 });

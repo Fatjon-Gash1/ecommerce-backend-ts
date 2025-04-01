@@ -3,17 +3,29 @@ import pLimit from 'p-limit';
 import { Sequelize } from 'sequelize';
 import type { Job } from 'bullmq';
 import { workerRedisClient } from './config/redis';
-import { logger } from '@/services/Logger.service';
+import { logger } from '@/logger';
 import {
     SubscriptionService,
     NotificationService,
     PaymentService,
+    ProductService,
+    LoggingService
 } from './services';
 import { Customer, User } from './models/relational';
 
 const subscriptionService = new SubscriptionService();
 const notificationService = new NotificationService();
 const paymentService = new PaymentService(process.env.STRIPE_KEY as string);
+const productService = new ProductService();
+const loggingService = new LoggingService();
+
+async function failedJobHandler(job: Job, err: Error) {
+    logger.error(
+        `Job with id "${job.id}" has failed because ${err.message}`
+    );
+
+    logger.log('Retry attempt: ' + job.attemptsMade);
+}
 
 const worker1 = new Worker(
     'membershipCancellationJobQueue',
@@ -43,15 +55,10 @@ worker1.on('completed', async (job: Job, userId: number) => {
 });
 
 worker1.on('failed', async (job, err) => {
-    logger.error(
-        `Job${job ? ` with id "${job.id}"` : ''} has failed because ${err.message}`
-    );
-
     if (!job) {
         return logger.error('Failed job not found!');
     }
-
-    logger.log('Retry attempt: ' + job.attemptsMade);
+    await failedJobHandler(job, err);
 });
 
 worker1.on('error', (err) => {
@@ -87,15 +94,10 @@ const worker2 = new Worker(
 );
 
 worker2.on('failed', async (job, err) => {
-    logger.error(
-        `Job${job ? ` with id "${job.id}"` : ''} has failed because ${err.message}`
-    );
-
     if (!job) {
         return logger.error('Failed job not found!');
     }
-
-    logger.log('Retry attempt: ' + job.attemptsMade);
+    await failedJobHandler(job, err);
 });
 
 worker2.on('error', (err) => {
@@ -163,17 +165,47 @@ const worker3 = new Worker(
 );
 
 worker3.on('failed', async (job, err) => {
-    logger.error(
-        `Job${job ? ` with id "${job.id}"` : ''} has failed because ${err.message}`
-    );
-
     if (!job) {
         return logger.error('Failed job not found!');
     }
-
-    logger.log('Retry attempt: ' + job.attemptsMade);
+    await failedJobHandler(job, err);
 });
 
 worker3.on('error', (err) => {
     logger.error('Error from worker3: ' + err);
+});
+
+const worker4 = new Worker(
+    'exclusiveProductRemovalJobQueue',
+    async (job: Job) => {
+        try {
+            await productService.deleteProductById(job.data.productId);
+        } catch (error) {
+            logger.error('Error from worker4: ' + error);
+            throw new Error(
+                '"exclusiveProductRemovalJobQueue" worker couldn\'t process it.'
+            );
+        }
+    },
+    {
+        concurrency: 50,
+        connection: workerRedisClient,
+    }
+);
+
+worker4.on('completed', async (job: Job) => {
+    await loggingService.log('Exclusive Product',
+        `Exclusive product "${job.data.productName}" was removed!`
+    );
+});
+
+worker4.on('failed', async (job, err) => {
+    if (!job) {
+        return logger.error('Failed job not found!');
+    }
+    await failedJobHandler(job, err);
+});
+
+worker4.on('error', (err) => {
+    logger.error('Error from worker4: ' + err);
 });
