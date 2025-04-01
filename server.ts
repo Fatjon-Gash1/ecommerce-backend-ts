@@ -12,7 +12,7 @@ import { redisClient } from '@/config/redis';
 import EsClient from '@/config/elasticsearch';
 import { io } from '@/config/socket';
 import { transporter } from './config/transporter';
-import { logger } from './services/Logger.service';
+import { logger } from '@/logger';
 import { listenToSocketEvents } from '@/socketEvents';
 import './queueWorkers';
 
@@ -70,5 +70,9 @@ process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 
 app.listen(PORT, () => {
-    logger.log(`Server is running on ${HOST}:${PORT}`);
+    if (process.env.NODE_ENV === 'production') {
+        logger.log(`Server is running on ${HOST}`);
+    } else {
+        logger.log(`Server is running on ${HOST}:${PORT}`);
+    }
 });

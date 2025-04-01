@@ -339,7 +339,7 @@ export class SubscriptionService {
                         if (added) return;
 
                         const job = await queue1.add(
-                            'MCJ', // Membership cancellation job
+                            'membershipCancellationJob',
                             {
                                 stripeCustomerId: customerId,
                                 membershipType: membership!.type,
@@ -349,7 +349,7 @@ export class SubscriptionService {
 
                         if (job.id) {
                             return redisClient.hset(
-                                'MCJRecord',
+                                'MembershipCancellationJobs',
                                 customerId,
                                 job.id
                             );
@@ -424,6 +424,7 @@ export class SubscriptionService {
      * This method is called automatically from scheduled jobs.
      *
      * @param stripeCustomerId - The customer's stripe id
+     * @return A promise that resolves to the customer's user id
      */
     public async cancelMembership(stripeCustomerId: number): Promise<number> {
         const customer = await Customer.findOne({

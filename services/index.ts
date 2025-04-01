@@ -1,5 +1,4 @@
-export { LoggerService } from './Logger.service';
-export { AdminLogsService } from './AdminLogs.service';
+export { LoggingService } from './Logging.service';
 export { AnalyticsService } from './Analytics.service';
 export { CartService } from './Cart.service';
 export { NotificationService } from './Notification.service';

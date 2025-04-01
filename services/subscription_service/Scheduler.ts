@@ -5,7 +5,7 @@ import {
     Replenishment,
     ReplenishmentPayment,
 } from '@/models/relational';
-import { LoggerService } from '../Logger.service';
+import { Logger } from '@/logger';
 import { UserNotFoundError } from '@/errors';
 import type IORedis from 'ioredis';
 
@@ -62,12 +62,12 @@ type Status = 'scheduled' | 'active' | 'finished' | 'canceled' | 'failed';
 export class Scheduler {
     private connection: IORedis;
     private queue: Queue; // A queue for scheduled recurring payments
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor(queueName: string) {
         this.connection = redisClient;
         this.queue = this.createQueue(queueName);
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     private createQueue(queueName: string): Queue {

@@ -1,7 +1,7 @@
 import { redisClient } from './config/redis';
 import { io } from './config/socket';
 import { NotificationService } from './services';
-import { logger } from './services/Logger.service';
+import { logger } from '@/logger';
 
 const notificationService = new NotificationService();
 

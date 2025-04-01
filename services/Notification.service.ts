@@ -8,7 +8,7 @@ import { transporter } from '@/config/transporter';
 import { redisClient } from '@/config/redis';
 import { io } from '@/config/socket';
 import { Op } from 'sequelize';
-import { LoggerService } from './Logger.service';
+import { Logger } from '@/logger';
 import { Customer, User, Notification } from '@/models/relational';
 import { EmailNotificationError, NotificationNotFoundError } from '@/errors';
 dotenv.config();
@@ -81,11 +81,11 @@ interface FailedPaymentEmailData {
  */
 export class NotificationService {
     private transporter: nodemailer.Transporter;
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor() {
         this.transporter = transporter;
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     /**

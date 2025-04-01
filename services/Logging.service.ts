@@ -78,10 +78,10 @@ export class LoggingService {
     /**
      * Logs different platform events.
      *
-     * @param action - The type of event
+     * @param type - The type of event
      * @param message - The message to log
      */
-    public async log(action: string, message: string): Promise<void> {
-        await PlatformLog.create({ action, message });
+    public async log(type: string, message: string): Promise<void> {
+        await PlatformLog.create({ type, message });
     }
 }

@@ -6,11 +6,11 @@ const options = {
         info: {
             title: 'eCommerce API',
             version: '1.0.0',
-            description: 'API documentation for the eCommerce application',
+            description: 'API documentation for the eCommerce backend',
         },
         servers: [
             {
-                url: 'http://localhost:3000',
+                url: process.env.HOST,
             },
         ],
     },

@@ -6,7 +6,7 @@ import { PaymentService } from '../Payment.service';
 import { OrderService } from '../Order.service';
 import { ShippingService } from '../Shipping.service';
 import { NotificationService } from '../Notification.service';
-import { LoggerService } from '../Logger.service';
+import { Logger } from '@/logger';
 import { Replenishment, Customer, User } from '@/models/relational';
 import { PlatformData } from '@/models/document';
 import { UserNotFoundError } from '@/errors';
@@ -21,7 +21,7 @@ export class WorkerService {
     private worker: Worker;
     private paymentService: PaymentService;
     private notificationService: NotificationService;
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor(queueName: string) {
         this.connection = workerRedisClient;
@@ -33,7 +33,7 @@ export class WorkerService {
             new ShippingService()
         );
         this.notificationService = new NotificationService();
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     private instantiateWorker(): Worker {

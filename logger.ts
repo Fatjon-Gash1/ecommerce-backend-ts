@@ -1,6 +1,6 @@
 import winston from 'winston';
 
-class LoggerService {
+export class Logger {
     private logger: winston.Logger;
 
     constructor() {
@@ -28,4 +28,4 @@ class LoggerService {
     }
 }
 
-export const logger = new LoggerService();
+export const logger = new Logger();

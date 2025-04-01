@@ -2,13 +2,13 @@ import { mongoose } from '@/config/db';
 const { Schema, model } = mongoose;
 
 interface IPlatformLog {
-    action: string;
+    type: string;
     message: string;
 }
 
 const platformDataSchema = new Schema<IPlatformLog>(
     {
-        action: { type: String, required: true },
+        type: { type: String, required: true },
         message: { type: String, required: true },
     },
     { timestamps: true }
