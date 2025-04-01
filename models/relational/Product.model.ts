@@ -1,59 +1,35 @@
 import { DataTypes, Model } from 'sequelize';
+import type {
+    CreationOptional,
+    ForeignKey,
+    InferAttributes,
+    InferCreationAttributes,
+} from 'sequelize';
 import { sequelize } from '@/config/db';
 import { Category } from './Category.model';
 import client from '@/config/elasticsearch';
 
-interface ICartItem {
-    quantity: number;
-}
-
-interface ProductAttributes {
-    id?: number;
-    categoryId?: number;
-    name: string;
-    description: string;
-    currency: string;
-    price: number;
-    discount?: number;
-    imageUrl: string;
-    stockQuantity?: number;
-    weight: number;
-    views?: number;
-    purchaseCount?: number;
-    Category?: Category;
-    total?: number;
-    deletedAt?: Date | undefined;
-    CartItem?: ICartItem;
-    quantity?: number;
-    OrderItem?: Product;
-}
-
-export class Product
-    extends Model<ProductAttributes>
-    implements ProductAttributes
-{
-    declare id?: number;
-    declare categoryId?: number;
+export class Product extends Model<
+    InferAttributes<Product>,
+    InferCreationAttributes<Product>
+> {
+    declare id: CreationOptional<number>;
+    declare categoryId: ForeignKey<Category['id']>;
     declare name: string;
     declare description: string;
     declare currency: string;
     declare price: number;
-    declare discount?: number;
+    declare discount: CreationOptional<number>;
+    declare availableDue: CreationOptional<Date | null>;
     declare imageUrl: string;
-    declare stockQuantity?: number;
+    declare stockQuantity: CreationOptional<number>;
     declare weight: number;
-    declare views?: number;
-    declare purchaseCount?: number;
-    declare Category?: Category;
-    declare total?: number;
-    declare deletedAt?: Date | undefined;
-    declare CartItem?: ICartItem;
-    declare quantity?: number;
-    declare OrderItem?: Product;
+    declare views: CreationOptional<number>;
 }
 
 Product.init(
     {
+        id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -73,6 +49,9 @@ Product.init(
         discount: {
             type: DataTypes.FLOAT,
             defaultValue: 0,
+        },
+        availableDue: {
+            type: DataTypes.DATE,
         },
         imageUrl: {
             type: DataTypes.STRING,
