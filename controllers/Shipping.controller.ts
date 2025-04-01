@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { ShippingService, AdminLogsService, LoggerService } from '@/services';
+import { ShippingService, LoggingService } from '@/services';
+import { Logger } from '@/logger';
 import {
     ShippingLocationNotFoundError,
     ShippingOptionNotFoundError,
@@ -12,16 +13,16 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export class ShippingController {
     private shippingService: ShippingService;
-    private adminLogsService?: AdminLogsService;
-    private logger: LoggerService;
+    private loggingService?: LoggingService;
+    private logger: Logger;
 
     constructor(
         shippingService: ShippingService,
-        adminLogsService?: AdminLogsService
+        loggingService?: LoggingService
     ) {
         this.shippingService = shippingService;
-        this.adminLogsService = adminLogsService;
-        this.logger = new LoggerService();
+        this.loggingService = loggingService;
+        this.logger = new Logger();
     }
 
     public async addShippingCountry(
@@ -41,7 +42,7 @@ export class ShippingController {
                 country,
             });
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping country',
                 'create'
@@ -77,7 +78,7 @@ export class ShippingController {
                 shippingCity,
             });
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping city',
                 'create'
@@ -222,7 +223,7 @@ export class ShippingController {
                 updatedCountry,
             });
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping country',
                 'update'
@@ -258,7 +259,7 @@ export class ShippingController {
                 updatedCity,
             });
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping city',
                 'update'
@@ -293,7 +294,7 @@ export class ShippingController {
                 updatedRate,
             });
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping method',
                 'update'
@@ -329,7 +330,7 @@ export class ShippingController {
                 updatedRate,
             });
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping weight',
                 'update'
@@ -358,7 +359,7 @@ export class ShippingController {
 
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping country',
                 'delete'
@@ -386,7 +387,7 @@ export class ShippingController {
 
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(
+            await this.loggingService!.logOperation(
                 username,
                 'shipping city',
                 'delete'

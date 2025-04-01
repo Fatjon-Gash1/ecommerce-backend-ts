@@ -1,28 +1,24 @@
 import { Request, Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import {
-    AdminService,
-    AdminLogsService,
-    PlatformDataService,
-    LoggerService,
-} from '@/services';
+import { AdminService, LoggingService, PlatformDataService } from '@/services';
+import { Logger } from '@/logger';
 import { UserNotFoundError, UserAlreadyExistsError } from '@/errors';
 
 export class AdminController {
     private adminService: AdminService;
-    private adminLogsService: AdminLogsService;
+    private loggingService: LoggingService;
     private platformDataService: PlatformDataService;
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor(
         adminService: AdminService,
-        AdminLogsService: AdminLogsService,
+        loggingService: LoggingService,
         platformDataService: PlatformDataService
     ) {
         this.adminService = adminService;
-        this.adminLogsService = AdminLogsService;
+        this.loggingService = loggingService;
         this.platformDataService = platformDataService;
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     public async registerCustomer(
@@ -39,7 +35,11 @@ export class AdminController {
                 message: 'Customer registered successfully',
             });
 
-            await this.adminLogsService.log(username, 'customer', 'create');
+            await this.loggingService.logOperation(
+                username,
+                'customer',
+                'create'
+            );
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 this.logger.error('Error registering customer:' + err);
@@ -64,7 +64,7 @@ export class AdminController {
             await this.adminService.registerAdmin(details);
             res.status(201).json({ message: 'Admin registered successfully' });
 
-            await this.adminLogsService.log(username, 'admin', 'create');
+            await this.loggingService.logOperation(username, 'admin', 'create');
         } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
                 this.logger.error('Error registering admin:' + err);
@@ -228,7 +228,7 @@ export class AdminController {
             await this.adminService.setAdminRole(adminId, role);
             res.status(200).json({ message: 'Admin role set successfully' });
 
-            await this.adminLogsService.log(username, 'admin', 'update');
+            await this.loggingService.logOperation(username, 'admin', 'update');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 this.logger.error('Error setting admin role: ' + error);
@@ -270,7 +270,7 @@ export class AdminController {
             await this.adminService.deleteUser(userId);
             res.sendStatus(204);
 
-            await this.adminLogsService.log(username, 'admin', 'delete');
+            await this.loggingService.logOperation(username, 'admin', 'delete');
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 this.logger.error('Error deleting user: ' + error);

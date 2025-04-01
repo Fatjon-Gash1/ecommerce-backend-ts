@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { CartService, LoggerService } from '@/services';
+import { CartService } from '@/services';
+import { Logger } from '@/logger';
 import {
     CartNotFoundError,
     CartItemNotFoundError,
@@ -9,11 +10,11 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export class CartController {
     private cartService: CartService;
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor(cartService: CartService) {
         this.cartService = cartService;
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     public async addItemToCart(

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { RatingService, AdminLogsService, LoggerService } from '@/services';
+import { RatingService, LoggingService } from '@/services';
+import { Logger } from '@/logger';
 import {
     UserNotFoundError,
     ProductNotFoundError,
@@ -9,16 +10,16 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export class RatingController {
     private ratingService: RatingService;
-    private adminLogsService?: AdminLogsService;
-    private logger: LoggerService;
+    private loggingService?: LoggingService;
+    private logger: Logger;
 
     constructor(
         ratingService: RatingService,
-        adminLogsService?: AdminLogsService
+        loggingService?: LoggingService
     ) {
         this.ratingService = ratingService;
-        this.adminLogsService = adminLogsService;
-        this.logger = new LoggerService();
+        this.loggingService = loggingService;
+        this.logger = new Logger();
     }
 
     public async addPlatformRating(
@@ -289,7 +290,7 @@ export class RatingController {
             await this.ratingService.deletePlatformRatingById(ratingId);
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'rating', 'delete');
+            await this.loggingService!.logOperation(username, 'rating', 'delete');
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 this.logger.error('Error deleting rating: ' + error);
@@ -333,7 +334,7 @@ export class RatingController {
             await this.ratingService.deleteProductRatingById(ratingId);
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'rating', 'delete');
+            await this.loggingService!.logOperation(username, 'rating', 'delete');
         } catch (error) {
             if (error instanceof RatingNotFoundError) {
                 this.logger.error('Error deleting rating: ' + error);

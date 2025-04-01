@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { OrderService, AdminLogsService, LoggerService } from '@/services';
+import { OrderService, LoggingService } from '@/services';
 import { JwtPayload } from 'jsonwebtoken';
+import { Logger } from '@/logger';
 import {
     OrderAlreadyMarkedError,
     OrderNotFoundError,
@@ -9,16 +10,16 @@ import {
 
 export class OrderController {
     private orderService: OrderService;
-    private adminLogsService?: AdminLogsService;
-    private logger: LoggerService;
+    private loggingService?: LoggingService;
+    private logger: Logger;
 
     constructor(
         orderService: OrderService,
-        adminLogsService?: AdminLogsService
+        loggingService?: LoggingService
     ) {
         this.orderService = orderService;
-        this.adminLogsService = adminLogsService;
-        this.logger = new LoggerService();
+        this.loggingService = loggingService;
+        this.logger = new Logger();
     }
 
     public async getOrderById(
@@ -237,7 +238,7 @@ export class OrderController {
             await this.orderService.markAsDelivered(orderId);
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'order', 'update');
+            await this.loggingService!.logOperation(username, 'order', 'update');
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
                 this.logger.error('Error marking order as delivered: ' + error);

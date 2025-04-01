@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { AnalyticsService, AdminLogsService, LoggerService } from '@/services';
+import { AnalyticsService, LoggingService } from '@/services';
+import { Logger } from '@/logger';
 import {
     CategoryNotFoundError,
     ProductNotFoundError,
@@ -12,16 +13,16 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export class AnalyticsController {
     private analyticsService: AnalyticsService;
-    private adminLogsService: AdminLogsService;
-    private logger: LoggerService;
+    private loggingService: LoggingService;
+    private logger: Logger;
 
     constructor(
         analyticsService: AnalyticsService,
-        adminLogsService: AdminLogsService
+        loggingService: LoggingService
     ) {
         this.analyticsService = analyticsService;
-        this.adminLogsService = adminLogsService;
-        this.logger = new LoggerService();
+        this.loggingService = loggingService;
+        this.logger = new Logger();
     }
 
     public async generateSalesReport(
@@ -36,7 +37,7 @@ export class AnalyticsController {
                 message: 'Sales report generated successfully',
             });
 
-            await this.adminLogsService.log(username, 'sales report', 'create');
+            await this.loggingService.logOperation(username, 'sales report', 'create');
         } catch (error) {
             // Curious about the response delivery.. TEST
             if (error instanceof UserNotFoundError) {
@@ -65,7 +66,7 @@ export class AnalyticsController {
                 message: 'Stock report generated successfully',
             });
 
-            await this.adminLogsService.log(username, 'stock report', 'create');
+            await this.loggingService.logOperation(username, 'stock report', 'create');
         } catch (error) {
             this.logger.error('Error generating stock report: ' + error);
             return res.status(500).json({ message: 'Server error' });
@@ -333,7 +334,7 @@ export class AnalyticsController {
             await this.analyticsService.deleteReport(name);
             res.sendStatus(204);
 
-            await this.adminLogsService.log(username, 'report', 'delete');
+            await this.loggingService.logOperation(username, 'report', 'delete');
         } catch (error) {
             if (error instanceof ReportNotFoundError) {
                 this.logger.error('Error getting report by name: ' + error);
@@ -355,7 +356,7 @@ export class AnalyticsController {
             await this.analyticsService.deleteAllReportsByType(type);
             res.sendStatus(204);
 
-            await this.adminLogsService.log(username, 'report', 'delete');
+            await this.loggingService.logOperation(username, 'report', 'delete');
         } catch (error) {
             if (error instanceof ReportNotFoundError) {
                 this.logger.error('Error getting report by name: ' + error);

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { PaymentService, LoggerService } from '@/services';
+import { PaymentService } from '@/services';
 import { JwtPayload } from 'jsonwebtoken';
+import { Logger } from '@/logger';
 import {
     OrderNotFoundError,
     ProductNotFoundError,
@@ -10,11 +11,11 @@ import Stripe from 'stripe';
 
 export class PaymentController {
     private paymentService: PaymentService;
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor(paymentService: PaymentService) {
         this.paymentService = paymentService;
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     public async addPaymentDetails(

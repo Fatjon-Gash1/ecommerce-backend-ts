@@ -2,27 +2,27 @@ import { Request, Response } from 'express';
 import {
     SubscriptionService,
     ReplenishmentService,
-    AdminLogsService,
-    LoggerService,
+    LoggingService,
 } from '@/services';
+import { Logger } from '@/logger';
 import { JwtPayload } from 'jsonwebtoken';
 import { UserNotFoundError } from '@/errors';
 
 export class SubscriptionController {
     private subscriptionService: SubscriptionService;
     private replenishmentService?: ReplenishmentService;
-    private adminLogsService?: AdminLogsService;
-    private logger: LoggerService;
+    private loggingService?: LoggingService;
+    private logger: Logger;
 
     constructor(
         subscriptionService: SubscriptionService,
         replenishmentService?: ReplenishmentService,
-        adminLogsService?: AdminLogsService
+        loggingService?: LoggingService
     ) {
         this.subscriptionService = subscriptionService;
         this.replenishmentService = replenishmentService;
-        this.adminLogsService = adminLogsService;
-        this.logger = new LoggerService();
+        this.loggingService = loggingService;
+        this.logger = new Logger();
     }
 
     public async createMembershipSubscription(
@@ -137,7 +137,7 @@ export class SubscriptionController {
             res.status(200).json({
                 message: 'Membership price changed successfully',
             });
-            await this.adminLogsService!.log(username, 'membership', 'update');
+            await this.loggingService!.logOperation(username, 'membership', 'update');
         } catch (error) {
             this.logger.error('Error changing membership price: ' + error);
             return res.status(500).json({ message: 'Server error' });

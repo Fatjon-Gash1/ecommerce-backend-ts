@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { LoggerService, UserService } from '@/services';
+import { UserService } from '@/services';
 import { JwtPayload } from 'jsonwebtoken';
+import { Logger } from '@/logger';
 import {
     UserNotFoundError,
     InvalidCredentialsError,
@@ -9,11 +10,11 @@ import {
 
 export class UserController {
     private userService: UserService;
-    private logger: LoggerService;
+    private logger: Logger;
 
     constructor(userService: UserService) {
         this.userService = userService;
-        this.logger = new LoggerService();
+        this.logger = new Logger();
     }
 
     public async verifyUser(

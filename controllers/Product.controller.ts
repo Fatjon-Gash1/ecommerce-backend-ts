@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { ProductService, AdminLogsService, LoggerService } from '@/services';
+import { ProductService, LoggingService } from '@/services';
+import { Logger } from '@/logger';
 import {
     CategoryAlreadyExistsError,
     CategoryNotFoundError,
@@ -10,16 +11,16 @@ import {
 
 export class ProductController {
     private productService: ProductService;
-    private adminLogsService?: AdminLogsService;
-    private logger: LoggerService;
+    private loggingService?: LoggingService;
+    private logger: Logger;
 
     constructor(
         productService: ProductService,
-        adminLogsService?: AdminLogsService
+        loggingService?: LoggingService
     ) {
         this.productService = productService;
-        this.adminLogsService = adminLogsService;
-        this.logger = new LoggerService();
+        this.loggingService = loggingService;
+        this.logger = new Logger();
     }
 
     public async addCategory(
@@ -40,7 +41,7 @@ export class ProductController {
                 category,
             });
 
-            await this.adminLogsService!.log(username, 'category', 'create');
+            await this.loggingService!.logOperation(username, 'category', 'create');
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
                 this.logger.error('Error adding category: ' + error);
@@ -73,7 +74,7 @@ export class ProductController {
                 product,
             });
 
-            await this.adminLogsService!.log(username, 'product', 'create');
+            await this.loggingService!.logOperation(username, 'product', 'create');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 this.logger.error('Error adding product: ' + error);
@@ -298,7 +299,7 @@ export class ProductController {
             );
             res.status(200).json({ category });
 
-            await this.adminLogsService!.log(username, 'category', 'update');
+            await this.loggingService!.logOperation(username, 'category', 'update');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 this.logger.error('Error updating category: ' + error);
@@ -332,7 +333,7 @@ export class ProductController {
                 discountedPrice,
             });
 
-            await this.adminLogsService!.log(username, 'product', 'update');
+            await this.loggingService!.logOperation(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 this.logger.error('Error setting discount: ' + error);
@@ -361,7 +362,7 @@ export class ProductController {
                 updatedProduct,
             });
 
-            await this.adminLogsService!.log(username, 'product', 'update');
+            await this.loggingService!.logOperation(username, 'product', 'update');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 this.logger.error('Error updating product: ' + error);
@@ -384,7 +385,7 @@ export class ProductController {
             await this.productService.deleteCategoryById(categoryId);
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'category', 'delete');
+            await this.loggingService!.logOperation(username, 'category', 'delete');
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 this.logger.error('Error deleting category: ' + error);
@@ -407,7 +408,7 @@ export class ProductController {
             await this.productService.deleteProductById(productId);
             res.sendStatus(204);
 
-            await this.adminLogsService!.log(username, 'product', 'delete');
+            await this.loggingService!.logOperation(username, 'product', 'delete');
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 this.logger.error('Error deleting product: ' + error);
