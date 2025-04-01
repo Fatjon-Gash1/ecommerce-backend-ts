@@ -1,6 +1,6 @@
 import winston from 'winston';
 
-export class LoggerService {
+class LoggerService {
     private logger: winston.Logger;
 
     constructor() {
