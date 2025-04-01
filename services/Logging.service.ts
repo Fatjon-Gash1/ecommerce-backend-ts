@@ -1,10 +1,11 @@
 import { User, Admin, AdminLog } from '@/models/relational';
+import { PlatformLog } from '@/models/document';
 import { AdminLogInvalidTargetError, UserNotFoundError } from '@/errors';
 
 /**
- * Service responsible for logging administrative operations.
+ * Service responsible for platform logs.
  */
-export class AdminLogsService {
+export class LoggingService {
     /**
      * Logs different administrative operations.
      *
@@ -22,7 +23,7 @@ export class AdminLogsService {
      * @throws {@link AdminLogCreationError}
      * Thrown if the log cannot be created
      */
-    public async log(
+    public async logOperation(
         username: string,
         target: string,
         operation: string = 'create'
@@ -72,5 +73,15 @@ export class AdminLogsService {
             category: target,
             log: `Admin "${username}" ${op} ${target}.`,
         });
+    }
+
+    /**
+     * Logs different platform events.
+     *
+     * @param action - The type of event
+     * @param message - The message to log
+     */
+    public async log(action: string, message: string): Promise<void> {
+        await PlatformLog.create({ action, message });
     }
 }
