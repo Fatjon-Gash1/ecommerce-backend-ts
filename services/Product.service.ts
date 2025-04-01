@@ -2,6 +2,7 @@ import { sequelize } from '@/config/db';
 import { Op } from 'sequelize';
 import client from '@/config/elasticsearch';
 import { connectToRedisServer } from '@/config/redis';
+import { queue4 } from '@/jobQueues';
 import { NotificationService } from './Notification.service';
 import { Admin, Category, Product, User } from '@/models/relational';
 import {
@@ -18,6 +19,7 @@ interface ProductDetails {
     currency: string;
     price: number;
     discount?: number;
+    availableDue?: Date | null;
     imageUrl: string;
     stockQuantity?: number;
     weight: number;
@@ -140,9 +142,25 @@ export class ProductService {
             ...details,
         });
 
+        if (details.availableDue) {
+            const job = await queue4.add(
+                'exclusiveProductRemovalJob',
+                { productId: newProduct.id, productName: details.name },
+                { delay: new Date(details.availableDue).getTime() - Date.now() }
+            );
+
+            if (job.id) {
+                await redisConnection.hset(
+                    'ExclusiveProductRemovalJobs',
+                    newProduct.id,
+                    job.id
+                );
+            }
+        }
+
         if (promote) {
             await this.handlePromotions(
-                newProduct.id!,
+                newProduct.id,
                 username,
                 'newArrival',
                 5
@@ -512,6 +530,48 @@ export class ProductService {
 
         if (!product) {
             throw new ProductNotFoundError();
+        }
+
+        if (
+            details.availableDue &&
+            details.availableDue !== product.availableDue
+        ) {
+            const jobId = await redisConnection.hget(
+                'ExclusiveProductRemovalJobs',
+                productId.toString()
+            );
+
+            if (!jobId) {
+                throw new Error(
+                    'Cannot update product\'s "availabilityDue" date. "exclusiveProductRemovalJob" not found.'
+                );
+            }
+
+            const job = await queue4.getJob(jobId);
+
+            await job.changeDelay(
+                new Date(details.availableDue).getTime() - Date.now()
+            );
+        } else if (details.availableDue === null) {
+            const jobId = await redisConnection.hget(
+                'ExclusiveProductRemovalJobs',
+                productId.toString()
+            );
+
+            if (!jobId) {
+                throw new Error(
+                    'Cannot remove product\'s "availabilityDue" date. "exclusiveProductRemovalJob" not found.'
+                );
+            }
+
+            await redisConnection.hdel(
+                'ExclusiveProductRemovalJobs',
+                productId.toString()
+            );
+
+            const job = await queue4.getJob(jobId);
+
+            await job.remove();
         }
 
         await product.update(details);
