@@ -1,18 +1,18 @@
 import { Router } from 'express';
-import { RatingController } from '../../../controllers/Rating.controller';
-import { RatingService, AdminLogsService } from '../../../services';
+import { RatingController } from '@/controllers/Rating.controller';
+import { RatingService, LoggingService } from '@/services';
 import {
     validateId,
     validateObjectId,
     validationErrors,
-} from '../../../middlewares/validation';
-import { ratingDeletionRateLimiter } from '../../../middlewares/rateLimiting';
-import authorize from '../../../middlewares/authorization/authorize';
+} from '@/middlewares/validation';
+import { ratingDeletionRateLimiter } from '@/middlewares/rateLimiting';
+import authorize from '@/middlewares/authorization/authorize';
 
 const router: Router = Router();
 const ratingController = new RatingController(
     new RatingService(),
-    new AdminLogsService()
+    new LoggingService()
 );
 
 router.get(

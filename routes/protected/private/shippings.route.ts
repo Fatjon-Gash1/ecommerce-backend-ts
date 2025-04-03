@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ShippingController } from '@/controllers/Shipping.controller';
-import { ShippingService, AdminLogsService } from '@/services';
+import { ShippingService, LoggingService } from '@/services';
 import { shippingUpdateRateLimiter } from '@/middlewares/rateLimiting';
 import {
     validateShippingCountry,
@@ -16,7 +16,7 @@ import {
 const router: Router = Router();
 const shippingController = new ShippingController(
     new ShippingService(),
-    new AdminLogsService()
+    new LoggingService()
 );
 
 router.post(

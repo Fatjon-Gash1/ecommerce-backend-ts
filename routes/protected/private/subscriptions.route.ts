@@ -5,7 +5,7 @@ import {
     ReplenishmentService,
     PaymentService,
     NotificationService,
-    AdminLogsService,
+    LoggingService,
 } from '@/services';
 
 const router: Router = Router();
@@ -16,7 +16,7 @@ const subscriptionService = new SubscriptionService(
 const subscriptionController = new SubscriptionController(
     subscriptionService,
     new ReplenishmentService('partial'),
-    new AdminLogsService()
+    new LoggingService()
 );
 
 router.get(

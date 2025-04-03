@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ProductController } from '@/controllers/Product.controller';
 import {
     ProductService,
-    AdminLogsService,
+    LoggingService,
     NotificationService,
 } from '@/services';
 import {
@@ -28,7 +28,7 @@ import { checkExact } from 'express-validator';
 const router: Router = Router();
 const productController = new ProductController(
     new ProductService(new NotificationService()),
-    new AdminLogsService()
+    new LoggingService()
 );
 
 router.post(

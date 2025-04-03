@@ -39,11 +39,4 @@ router.get(
     orderController.getTotalPriceOfOrderItems.bind(orderController)
 );
 
-router.patch(
-    '/:id',
-    validateId(),
-    validationErrors,
-    orderController.cancelOrder.bind(orderController)
-);
-
 export default router;

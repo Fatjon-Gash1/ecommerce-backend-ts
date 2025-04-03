@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { AnalyticsController } from '../../../controllers/Analytics.controller';
-import { AnalyticsService, AdminLogsService } from '../../../services';
+import { AnalyticsController } from '@/controllers/Analytics.controller';
+import { AnalyticsService, LoggingService } from '@/services';
 import {
     validatePurchaseFilter,
     validatePagination,
@@ -10,12 +10,12 @@ import {
     validateReportType,
     validateId,
     validationErrors,
-} from '../../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const analyticsController = new AnalyticsController(
     new AnalyticsService(),
-    new AdminLogsService()
+    new LoggingService()
 );
 
 router.post(

@@ -3,7 +3,7 @@ import { AdminController } from '@/controllers/Admin.controller';
 import {
     AdminService,
     NotificationService,
-    AdminLogsService,
+    LoggingService,
     PlatformDataService,
     PaymentService,
 } from '@/services';
@@ -38,7 +38,7 @@ const adminService = new AdminService(
 );
 const adminController = new AdminController(
     adminService,
-    new AdminLogsService(),
+    new LoggingService(),
     new PlatformDataService()
 );
 

@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { OrderController } from '../../../controllers/Order.controller';
-import { OrderService, AdminLogsService } from '../../../services';
+import { OrderController } from '@/controllers/Order.controller';
+import { OrderService, LoggingService } from '@/services';
 import {
     validateId,
     validateOrderStatus,
     validationErrors,
-} from '../../../middlewares/validation';
+} from '@/middlewares/validation';
 
 const router: Router = Router();
 const orderController = new OrderController(
     new OrderService(),
-    new AdminLogsService()
+    new LoggingService()
 );
 
 router.get('/', orderController.getAllOrders.bind(orderController));
