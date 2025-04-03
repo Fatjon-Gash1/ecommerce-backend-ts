@@ -549,7 +549,9 @@ export class PaymentService {
         }
 
         if (order.status !== 'delivered') {
-            throw new Error('Cannot refund an order that is not delivered');
+            throw new Error(
+                'Cannot refund an order that is not delivered or pending'
+            );
         }
 
         const [request, created] = await RefundRequest.findOrCreate({

@@ -133,31 +133,30 @@ export class OrderService {
     /**
      * Retrieves a specific order by ID.
      *
-     * @param userId - The id of the user
      * @param orderId - The ID of the order
+     * @param [userId] - The ID of the user
      * @returns A promise resolving to the order
      */
     public async getOrderById(
-        userId: number | undefined,
-        orderId: number
+        orderId: number,
+        userId?: number
     ): Promise<OrderResponse> {
         let order: Order | null;
 
         if (userId) {
             order = await Order.findOne({
                 where: { id: orderId },
-                attributes: { exclude: ['updatedAt', 'customerId'] },
+                attributes: { exclude: ['customerId'] },
                 include: {
                     model: Customer,
+                    as: 'customer',
                     attributes: [],
                     where: { userId },
                     required: true,
                 },
             });
         } else {
-            order = await Order.findByPk(orderId, {
-                attributes: { exclude: ['updatedAt', 'customerId'] },
-            });
+            order = await Order.findByPk(orderId);
         }
 
         if (!order) {
@@ -170,16 +169,16 @@ export class OrderService {
     /**
      * Retrieves all items of a specific order.
      *
-     * @param userId - The id of the user
      * @param orderId - The ID of the order
+     * @param [userId] - The id of the user
      * @returns A promise resolving to an array of OrderItem instances
      *
      * @throws {@link OrderNotFoundError}
      * Thrown if the order is not found.
      */
     public async getOrderItemsByOrderId(
-        userId: number | undefined,
-        orderId: number
+        orderId: number,
+        userId?: number
     ): Promise<OrderItemResponse[]> {
         let order: Order | null;
 
@@ -188,6 +187,7 @@ export class OrderService {
                 where: { id: orderId },
                 include: {
                     model: Customer,
+                    as: 'customer',
                     attributes: [],
                     where: { userId },
                     required: true,
@@ -215,10 +215,8 @@ export class OrderService {
         });
 
         return orderItems.map((item) => {
-            const product = item.toJSON();
-            product.quantity = product.OrderItem!.quantity;
-            delete product.OrderItem;
-            return product;
+            const { ['OrderItem']: orderItem, ...product } = item.toJSON();
+            return { ...product, quantity: orderItem!.quantity };
         });
     }
 
@@ -237,6 +235,7 @@ export class OrderService {
             where: { id: orderId },
             include: {
                 model: Customer,
+                as: 'customer',
                 attributes: [],
                 where: { userId },
                 required: true,
@@ -269,80 +268,58 @@ export class OrderService {
     }
 
     /**
-     * Retrieves all orders by a given status for a customer.
+     * Retrieves all orders of a given status for a customer.
+     * If no status is provided, it returns the order history.
      *
      * @remarks
-     * The order history is retrieved for a customer either by their id
+     * The orders are retrieved for a customer either by their id
      * or their implicit id.
      *
-     * @param userId - The id of the user "Implicit customer id"
-     * @param customerId - The id of the customer
-     * @param status - The status of the order
-     * @returns A promise resolving to an array of Order instances
+     * @param [customerId] - The id of the customer
+     * @param [userId] - The id of the user "Implicit customer id"
+     * @param [status] - The status of the order
+     * @returns A promise resolving to an array of order instances
      *
      * @throws {@link UserNotFoundError}
-     * Thrown if the user of type Customer is not found.
+     * Thrown if the customer is not found.
      */
     public async getCustomerOrdersByStatus(
-        status: string,
-        customerId: number | undefined,
-        userId: number | undefined
+        customerId?: number,
+        userId?: number,
+        status?: string,
     ): Promise<{ count: number; orders: OrderResponse[] }> {
-        let customer: Customer | null | undefined;
+        let retrievedId: number;
 
         if (customerId) {
-            customer = await Customer.findByPk(customerId);
+            const customer = await Customer.findByPk(customerId);
+            if (!customer) {
+                throw new UserNotFoundError('Customer not found');
+            }
+            retrievedId = customer.id;
         } else if (userId) {
-            customer = await Customer.findOne({ where: { userId } });
+            const customer = await Customer.findOne({ where: { userId } });
+            if (!customer) {
+                throw new UserNotFoundError('Customer not found');
+            }
+            retrievedId = customer.id;
         }
 
-        if (!customer) {
-            throw new UserNotFoundError('Customer not found');
+        if (status) {
+            const { count, rows } = await Order.findAndCountAll({
+                where: { customerId: retrievedId!, status },
+            });
+            const orders = rows.map((row) => row.toJSON());
+
+            return { count, orders };
         }
 
         const { count, rows } = await Order.findAndCountAll({
-            where: { customerId: customer.id, status },
-            attributes: { exclude: ['updatedAt', 'customerId'] },
-        });
-
-        const orders = rows.map((row) => row.toJSON());
-
-        return { count, orders };
-    }
-
-    /**
-     * Retrieves customer's order history.
-     *
-     * @remarks
-     * The order history is retrieved for a customer either by their id
-     * or their implicit id.
-     *
-     * @param customerId - The customer id
-     * @param userId - The id of the user "Implicit customer id"
-     * @returns A promise resolving to an array of Order instances
-     *
-     * @throws {@link UserNotFoundError}
-     * Thrown if the user of type Customer is not found.
-     */
-    public async getCustomerOrderHistory(
-        customerId: number | undefined,
-        userId: number | undefined
-    ): Promise<{ count: number; orders: OrderResponse[] }> {
-        let customer: Customer | null | undefined;
-
-        if (customerId) {
-            customer = await Customer.findByPk(customerId);
-        } else if (userId) {
-            customer = await Customer.findOne({ where: { userId } });
-        }
-
-        if (!customer) {
-            throw new UserNotFoundError('Customer not found');
-        }
-
-        const { count, rows } = await Order.findAndCountAll({
-            where: { customerId: customer.id, status: { [Op.not]: 'pending' } },
-            attributes: { exclude: ['updatedAt', 'customerId'] },
+            where: {
+                customerId: retrievedId!,
+                status: {
+                    [Op.not]: ['pending', 'shipped', 'awaiting pickup'],
+                },
+            },
         });
 
         const orders = rows.map((row) => row.toJSON());
@@ -397,39 +374,6 @@ export class OrderService {
         }
 
         order.status = 'delivered';
-        await order.save();
-    }
-
-    /**
-     * Cancels a customer's order.
-     *
-     * @param userId - The id of the user
-     * @param orderId - The id of the order
-     *
-     * @throws {@link OrderNotFoundError}
-     * Thrown if the order is not found.
-     */
-    public async cancelOrder(userId: number, orderId: number): Promise<void> {
-        const order = await Order.findOne({
-            where: { id: orderId },
-            include: {
-                model: Customer,
-                where: { userId },
-                attributes: [],
-            },
-        });
-
-        if (!order) {
-            throw new OrderNotFoundError();
-        }
-
-        if (order.status !== 'pending') {
-            throw new Error(
-                'Cannot cancel order. It has passed the "pending" status.'
-            );
-        }
-
-        order.status = 'canceled';
         await order.save();
     }
 }

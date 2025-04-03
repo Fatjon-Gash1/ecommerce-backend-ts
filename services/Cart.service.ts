@@ -8,6 +8,14 @@ import {
 
 const CART_ITEM_LIMIT = 100;
 
+interface CartItemResponse {
+    id: number;
+    name: string;
+    imageUrl: string;
+    price: number;
+    quantity: number;
+}
+
 /**
  * Service responsible for Customer Cart-related operations.
  */
@@ -18,17 +26,17 @@ export class CartService {
      * @param userId - The user id.
      * @param productId - The id of the product to insert.
      * @param quantity - The product quantity.
-     * @returns A promise resolving to a boolean value indicating
-     * whether the item was inserted successfully.
+     * @returns A promise resolving to an array of the updated cart items
      */
     public async addItemToCart(
         userId: number,
         productId: number,
         quantity: number
-    ): Promise<object[]> {
+    ): Promise<CartItemResponse[]> {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
+                as: 'customer',
                 where: { userId },
             },
         });
@@ -43,9 +51,7 @@ export class CartService {
             throw new ProductNotFoundError();
         }
 
-        const totalCartItems = await CartItem.count({
-            where: { cartId: cart.id },
-        });
+        const totalCartItems = await cart.countProducts();
 
         if (totalCartItems >= CART_ITEM_LIMIT) {
             throw new CartItemLimitError(
@@ -67,14 +73,14 @@ export class CartService {
             await item.save();
         }
 
-        const product = await cart.getProducts({
-            where: { id: productId },
+        const products = await cart.getProducts({
             attributes: ['id', 'name', 'imageUrl', 'price'],
-            joinTableAttributes: [],
+            joinTableAttributes: ['quantity'],
         });
 
-        return product.map((product) => {
-            return { ...product.get(), quantity: item.quantity };
+        return products.map((item) => {
+            const { ['CartItem']: cartItem, ...product } = item.toJSON();
+            return { ...product, quantity: cartItem!.quantity };
         });
     }
 
@@ -82,12 +88,13 @@ export class CartService {
      * Retrieves all items in the customer's cart.
      *
      * @param userId - The user id
-     * @returns A promise resolving to an array of CartItem instances
+     * @returns A promise resolving to an array of cart items
      */
-    public async getCartItems(userId: number): Promise<object[]> {
+    public async getCartItems(userId: number): Promise<CartItemResponse[]> {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
+                as: 'customer',
                 where: { userId },
             },
         });
@@ -101,12 +108,9 @@ export class CartService {
             joinTableAttributes: ['quantity'],
         });
 
-        return products.map((product) => {
-            const { CartItem, ...productData } = product.get({ plain: true });
-            return {
-                ...productData,
-                quantity: CartItem ? CartItem.quantity : null,
-            };
+        return products.map((item) => {
+            const { ['CartItem']: cartItem, ...product } = item.toJSON();
+            return { ...product, quantity: cartItem!.quantity };
         });
     }
 
@@ -114,12 +118,13 @@ export class CartService {
      * Retrieves the total cart items amount.
      *
      * @param userId - The user ID
-     * @returns A promise resolving to the total cart items amount
+     * @returns A promise resolving to a number representing the total cart items amount
      */
     public async cartCheckout(userId: number): Promise<number> {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
+                as: 'customer',
                 where: { userId },
             },
         });
@@ -144,6 +149,7 @@ export class CartService {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
+                as: 'customer',
                 where: { userId },
             },
         });
@@ -171,12 +177,13 @@ export class CartService {
     /**
      * Clears the customer's cart.
      *
-     * @param userId - The user id
+     * @param userId - The user id of the cart owner
      */
     public async clearCart(userId: number): Promise<void> {
         const cart = await Cart.findOne({
             include: {
                 model: Customer,
+                as: 'customer',
                 where: { userId },
             },
         });
@@ -185,6 +192,6 @@ export class CartService {
             throw new CartNotFoundError();
         }
 
-        await CartItem.destroy({ where: { cartId: cart.id } });
+        await cart.removeProducts();
     }
 }

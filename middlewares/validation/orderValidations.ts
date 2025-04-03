@@ -37,6 +37,14 @@ export const validateOrderStatus = (): ValidationChain[] => [
         .notEmpty()
         .withMessage('Status is required')
         .toLowerCase()
-        .isIn(['pending', 'delivered', 'canceled'])
-        .withMessage('Status must be either pending, delivered or canceled'),
+        .isIn([
+            'pending',
+            'shipped',
+            'awaiting pickup',
+            'delivered',
+            'canceled',
+            'refunded',
+            'partially-refunded',
+        ])
+        .withMessage('Invalid order status'),
 ];

@@ -36,7 +36,7 @@ export class OrderController {
         const orderId: number = Number(req.params.id);
 
         try {
-            const order = await this.orderService.getOrderById(userId, orderId);
+            const order = await this.orderService.getOrderById( orderId,userId);
             return res.status(200).json({ order });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
@@ -64,8 +64,8 @@ export class OrderController {
 
         try {
             const orderItems = await this.orderService.getOrderItemsByOrderId(
-                userId,
-                orderId
+                orderId,
+                userId
             );
             return res.status(200).json({ orderItems });
         } catch (error) {
@@ -143,9 +143,9 @@ export class OrderController {
         try {
             const { count, orders } =
                 await this.orderService.getCustomerOrdersByStatus(
-                    status as string,
                     customerId,
-                    userId
+                    userId,
+                    status as string,
                 );
             return res.status(200).json({ total: count, orders });
         } catch (error) {
@@ -175,7 +175,7 @@ export class OrderController {
 
         try {
             const { count, orders } =
-                await this.orderService.getCustomerOrderHistory(
+                await this.orderService.getCustomerOrdersByStatus(
                     customerId,
                     userId
                 );
@@ -200,29 +200,6 @@ export class OrderController {
             return res.status(200).json({ total: count, orders });
         } catch (error) {
             this.logger.error('Error getting all orders: ' + error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
-    public async cancelOrder(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const { userId } = req.user as JwtPayload;
-        const orderId: number = Number(req.params.id);
-
-        try {
-            await this.orderService.cancelOrder(userId, orderId);
-            return res
-                .status(200)
-                .json({ message: 'Order canceled successfully' });
-        } catch (error) {
-            if (error instanceof OrderNotFoundError) {
-                this.logger.error('Error cancelling order: ' + error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            this.logger.error('Error cancelling order: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
