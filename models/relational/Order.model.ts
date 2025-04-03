@@ -89,11 +89,11 @@ export class Order extends Model<
 
         const productPriceMap: Record<number, number> = {};
         products.forEach((product) => {
-            productPriceMap[product.id!] = product.price;
+            productPriceMap[product.id] = product.price;
         });
 
         const totalPrice = orderItems.reduce((acc, item) => {
-            const price = productPriceMap[item.productId!] || 0;
+            const price = productPriceMap[item.productId] || 0;
             return acc + price * item.quantity;
         }, 0);
 

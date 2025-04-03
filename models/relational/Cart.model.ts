@@ -1,4 +1,10 @@
-import { DataTypes, BelongsToManyGetAssociationsMixin, Model } from 'sequelize';
+import {
+    DataTypes,
+    BelongsToManyGetAssociationsMixin,
+    Model,
+    BelongsToManyCountAssociationsMixin,
+    BelongsToManyRemoveAssociationsMixin,
+} from 'sequelize';
 import { sequelize } from '../../config/db';
 import { Product } from './Product.model';
 import { Customer } from './Customer.model';
@@ -18,6 +24,8 @@ export class Cart extends Model<CartAttributes> implements CartAttributes {
     declare id?: number;
     declare customerId?: number;
     declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
+    declare countProducts: BelongsToManyCountAssociationsMixin;
+    declare removeProducts: BelongsToManyRemoveAssociationsMixin<Product, number>;
 
     public async getItems(): Promise<CartItem[]> {
         return await CartItem.findAll({ where: { cartId: this.id } });

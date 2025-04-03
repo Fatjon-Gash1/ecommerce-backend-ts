@@ -32,7 +32,11 @@ Customer.belongsTo(User, {
     onDelete: 'CASCADE',
 });
 
-Customer.hasOne(Cart, { foreignKey: 'customerId', onDelete: 'CASCADE' });
+Customer.hasOne(Cart, {
+    as: 'cart',
+    foreignKey: 'customerId',
+    onDelete: 'CASCADE',
+});
 Customer.hasMany(Order, { as: 'orders', foreignKey: 'customerId' });
 Customer.hasMany(Payment, { foreignKey: 'customerId' });
 Customer.belongsToMany(Product, {
@@ -95,7 +99,11 @@ Cart.belongsToMany(Product, {
     foreignKey: 'cartId',
     otherKey: 'productId',
 });
-Cart.belongsTo(Customer, { foreignKey: 'customerId', onDelete: 'CASCADE' });
+Cart.belongsTo(Customer, {
+    as: 'customer',
+    foreignKey: 'customerId',
+    onDelete: 'CASCADE',
+});
 
 ShippingCountry.hasMany(ShippingCity, {
     foreignKey: 'countryId',
@@ -113,7 +121,7 @@ Order.belongsToMany(Product, {
     foreignKey: 'orderId',
     otherKey: 'productId',
 });
-Order.belongsTo(Customer, { as: 'orders', foreignKey: 'customerId' });
+Order.belongsTo(Customer, { as: 'customer', foreignKey: 'customerId' });
 Order.hasOne(Sale, { foreignKey: 'orderId' });
 Order.belongsToMany(Customer, {
     through: Replenishment,
@@ -130,18 +138,22 @@ Replenishment.hasMany(ReplenishmentPayment, {
     onDelete: 'CASCADE',
 });
 ReplenishmentPayment.belongsTo(Replenishment, {
-    as: 'payments',
+    as: 'replenishment',
     foreignKey: 'replenishmentId',
     onDelete: 'CASCADE',
 });
 
 RefundRequest.belongsTo(Customer, {
-    as: 'refundRequests',
+    as: 'customer',
     foreignKey: 'customerId',
 });
-RefundRequest.belongsTo(Order, { as: 'refundRequest', foreignKey: 'orderId' });
+RefundRequest.belongsTo(Order, { as: 'order', foreignKey: 'orderId' });
 
-Notification.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
+Notification.belongsTo(User, {
+    as: 'user',
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+});
 
 export {
     User,

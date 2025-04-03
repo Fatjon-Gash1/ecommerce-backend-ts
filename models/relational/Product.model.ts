@@ -25,6 +25,10 @@ export class Product extends Model<
     declare stockQuantity: CreationOptional<number>;
     declare weight: number;
     declare views: CreationOptional<number>;
+
+    // Association properties
+    declare CartItem?: {quantity: number}
+    declare OrderItem?: {quantity: number}
 }
 
 Product.init(
