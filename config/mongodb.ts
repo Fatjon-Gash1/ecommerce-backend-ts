@@ -1,5 +1,5 @@
 import mongoose, { ConnectOptions } from 'mongoose';
-import { logger } from '@/services/Logger.service';
+import { logger } from '@/logger';
 
 function connectToMongoDB(): void {
     mongoose

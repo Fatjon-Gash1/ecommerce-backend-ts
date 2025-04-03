@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { logger } from '@/services/Logger.service';
+import { logger } from '@/logger';
 
 const isProduction = process.env.NODE_ENV === 'production';
 

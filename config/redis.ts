@@ -1,5 +1,5 @@
 import IORedis from 'ioredis';
-import { logger } from '@/services/Logger.service';
+import { logger } from '@/logger';
 
 export const connectToRedisServer = (): IORedis => {
     try {
