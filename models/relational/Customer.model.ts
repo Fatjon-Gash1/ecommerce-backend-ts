@@ -22,15 +22,19 @@ export class Customer extends Model<
     declare stripePaymentMethodId: CreationOptional<string>;
     declare shippingAddress: CreationOptional<string>;
     declare billingAddress: CreationOptional<string>;
-    declare isActive: CreationOptional<boolean>;
     declare loyaltyPoints: CreationOptional<number>;
     declare membership: CreationOptional<'free' | 'plus' | 'premium'>;
     declare birthday: CreationOptional<Date>;
-    declare firstName: string; // Virtual field
-    declare lastName: string; // Virtual field
-    declare username: string; // Virtual field
-    declare email: string; // Virtual field
-    declare password: string; // Virtual field;
+
+    // Virtual fields
+    declare firstName: string;
+    declare lastName: string;
+    declare username: string;
+    declare email: string;
+    declare password: string;
+    declare isActive: CreationOptional<boolean>;
+
+    // Associations
     declare user?: User;
     declare orders?: NonAttribute<Order[]>;
 
@@ -66,11 +70,6 @@ Customer.init(
         billingAddress: {
             type: DataTypes.STRING,
         },
-        isActive: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: true,
-        },
         loyaltyPoints: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -100,6 +99,9 @@ Customer.init(
         password: {
             type: DataTypes.VIRTUAL,
         },
+        isActive: {
+            type: DataTypes.VIRTUAL,
+        },
     },
     {
         sequelize,
@@ -109,7 +111,8 @@ Customer.init(
 );
 
 Customer.beforeCreate(async (customer: Customer) => {
-    const { firstName, lastName, username, email, password } = customer;
+    const { firstName, lastName, username, email, password, isActive } =
+        customer;
 
     const user = await User.create({
         firstName,
@@ -117,6 +120,7 @@ Customer.beforeCreate(async (customer: Customer) => {
         username,
         email,
         password,
+        isActive,
     });
 
     customer.userId = user.id;
