@@ -10,13 +10,14 @@ export interface IPlatformRating extends IRating {
     updatedAt?: Date;
 }
 
-const platformRatingSchema = new Schema<IPlatformRating>({
-    numberOfPurchases: { type: Number, default: 0, required: false },
-    mostPurchasesCategory: { type: String, default: '', required: false },
-    featureHighlights: { type: String, required: false },
-    createdAt: { type: Date, required: false },
-    updatedAt: { type: Date, required: false },
-});
+const platformRatingSchema = new Schema<IPlatformRating>(
+    {
+        numberOfPurchases: { type: Number, default: 0, required: false },
+        mostPurchasesCategory: { type: String, default: '', required: false },
+        featureHighlights: { type: String, required: false },
+    },
+    { timestamps: true }
+);
 
 const PlatformRating = Rating.discriminator<IPlatformRating>(
     'PlatformRating',

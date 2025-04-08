@@ -15,11 +15,15 @@ export class Admin extends Model<
     declare id: CreationOptional<number>;
     declare userId: ForeignKey<User['id']>;
     declare role: CreationOptional<'admin' | 'manager'>;
-    declare firstName: string; // Virtual field
-    declare lastName: string; // Virtual field
-    declare username: string; // Virtual field
-    declare email: string; // Virtual field
-    declare password: string; // Virtual field
+
+    // Virtual fields
+    declare firstName: string;
+    declare lastName: string;
+    declare username: string;
+    declare email: string;
+    declare password: string;
+
+    // Association properties
     declare user?: User;
 }
 

@@ -27,9 +27,9 @@ export class OrderController {
         res: Response
     ): Promise<void | Response> {
         let userId: number | undefined;
-        const { role } = req.user as JwtPayload;
+        const { type } = req.user as JwtPayload;
 
-        if (role === 'customer') {
+        if (type === 'customer') {
             userId = Number((req.user as JwtPayload).userId);
         }
 
@@ -54,9 +54,9 @@ export class OrderController {
         res: Response
     ): Promise<void | Response> {
         let userId: number | undefined;
-        const { role } = req.user as JwtPayload;
+        const { type } = req.user as JwtPayload;
 
-        if (role === 'customer') {
+        if (type === 'customer') {
             userId = Number((req.user as JwtPayload).userId);
         }
 

@@ -8,7 +8,7 @@ export default function authorize(providedRoles: string[]) {
         next: NextFunction
     ): void | Response => {
         if (req.user && typeof req.user !== 'string') {
-            const userRole = (req.user as JwtPayload).role;
+            const userRole = (req.user as JwtPayload).type;
 
             if (!providedRoles.includes(userRole)) {
                 return res.status(403).json({ message: 'Access denied' });

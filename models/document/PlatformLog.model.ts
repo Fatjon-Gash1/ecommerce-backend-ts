@@ -4,6 +4,7 @@ const { Schema, model } = mongoose;
 interface IPlatformLog {
     type: string;
     message: string;
+    createdAt: Date;
 }
 
 const platformDataSchema = new Schema<IPlatformLog>(

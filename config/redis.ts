@@ -14,6 +14,7 @@ export const connectToRedisServer = (): IORedis => {
     }
 };
 
+// Shared clients
 export const redisClient = connectToRedisServer();
 export const workerRedisClient =
     process.env.NODE_ENV === 'production'

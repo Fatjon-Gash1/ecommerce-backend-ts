@@ -60,9 +60,9 @@ Admin.belongsTo(User, {
     onDelete: 'CASCADE',
 });
 
-Admin.hasMany(AdminLog, { foreignKey: 'adminId' });
+Admin.hasMany(AdminLog, { as: 'logs', foreignKey: 'adminId' });
 
-AdminLog.belongsTo(Admin, { foreignKey: 'adminId' });
+AdminLog.belongsTo(Admin, { as: 'admin', foreignKey: 'adminId' });
 
 Category.hasMany(Product, { foreignKey: 'categoryId', onDelete: 'CASCADE' });
 // Self-referential associations

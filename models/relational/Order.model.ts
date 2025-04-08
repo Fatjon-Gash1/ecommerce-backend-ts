@@ -35,7 +35,6 @@ export class Order extends Model<
         | 'shipped'
         | 'awaiting pickup'
         | 'delivered'
-        | 'canceled'
         | 'refunded'
         | 'partially-refunded'
     >;
@@ -136,7 +135,6 @@ Order.init(
                 'shipped',
                 'awaiting pickup',
                 'delivered',
-                'canceled',
                 'refunded',
                 'partially-refunded'
             ),

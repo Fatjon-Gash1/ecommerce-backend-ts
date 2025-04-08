@@ -15,14 +15,14 @@ export class Notification extends Model<
     declare id: CreationOptional<number>;
     declare userId: ForeignKey<User['id']>;
     declare message: string;
-    declare read: CreationOptional<boolean>;
+    declare isRead: CreationOptional<boolean>;
 }
 
 Notification.init(
     {
         id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         message: { type: DataTypes.STRING, allowNull: false },
-        read: { type: DataTypes.BOOLEAN, defaultValue: false },
+        isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
     { sequelize, tableName: 'notifications' }
 );
