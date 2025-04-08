@@ -7,6 +7,7 @@ export {
     validatePassword,
     validateEmail,
     validateUserUpdateDetails,
+    validateUserType,
 } from './userValidations';
 
 export {

@@ -192,3 +192,10 @@ export const validateUserUpdateDetails = (): ValidationChain[] => [
             'Last name must contain only letters, spaces, or apostrophes'
         ),
 ];
+
+export const validateUserType = (): ValidationChain[] => [
+    query('type')
+        .trim()
+        .isIn(['admin', 'manager', 'customer'])
+        .withMessage('Type must be a valid user type'),
+];
