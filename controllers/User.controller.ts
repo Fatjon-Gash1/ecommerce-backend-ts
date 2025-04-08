@@ -112,11 +112,11 @@ export class UserController {
     }
 
     public generateTokens(req: Request, res: Response): void | Response {
-        const { userId, username, role } = req.user as JwtPayload;
+        const { userId, username, type } = req.user as JwtPayload;
 
         try {
             const { refreshToken, accessToken } =
-                this.userService.generateTokens(userId, username, role);
+                this.userService.generateTokens(userId, username, type);
 
             return res
                 .status(200)
@@ -134,10 +134,14 @@ export class UserController {
     }
 
     public async logoutUser(
-        _req: Request,
+        req: Request,
         res: Response
     ): Promise<void | Response> {
+        const { userId, type } = req.user as JwtPayload;
+
         try {
+            await this.userService.logoutUser(userId, type);
+
             return res
                 .status(200)
                 .clearCookie('refreshToken', {
@@ -331,6 +335,50 @@ export class UserController {
             }
 
             this.logger.error('Error updating user: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async markNotificationAsRead(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { userId } = req.user as JwtPayload;
+        const notificationId = Number(req.params.id);
+        const { all } = req.query;
+
+        try {
+            await this.userService.markNotificationAsRead(
+                userId,
+                notificationId,
+                Boolean(all)
+            );
+            return res
+                .status(200)
+                .json({ message: 'Notification marked as read' });
+        } catch (error) {
+            this.logger.error('Error marking notification as read: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async deleteNotification(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { userId } = req.user as JwtPayload;
+        const notificationId = Number(req.params.id);
+        const { all } = req.query;
+
+        try {
+            await this.userService.deleteNotification(
+                userId,
+                notificationId,
+                Boolean(all)
+            );
+            return res.sendStatus(204);
+        } catch (error) {
+            this.logger.error('Error deleting notification: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

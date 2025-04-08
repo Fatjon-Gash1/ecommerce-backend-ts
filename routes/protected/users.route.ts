@@ -171,6 +171,11 @@ router.patch(
     userController.updateCustomerDetails.bind(userController)
 );
 router.patch(
+    '/notifications/:id',
+    authenticateAccessToken,
+    userController.markNotificationAsRead.bind(userController)
+);
+router.patch(
     '/',
     authenticateAccessToken,
     updateRateLimiter,
@@ -179,6 +184,11 @@ router.patch(
     userController.updateUser.bind(userController)
 );
 
+router.delete(
+    '/notifications/:id',
+    authenticateAccessToken,
+    userController.deleteNotification.bind(userController)
+);
 router.delete(
     '/',
     authenticateAccessToken,
