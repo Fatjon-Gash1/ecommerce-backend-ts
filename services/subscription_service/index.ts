@@ -1,42 +1,21 @@
 import { redisClient } from '@/config/redis';
 import { queue1 } from '@/jobQueues';
 import pLimit from 'p-limit';
-import { PaymentService } from '../Payment.service';
-import { NotificationService } from '../Notification.service';
+import { PaymentService } from '@/services/Payment.service';
+import { NotificationService } from '@/services/Notification.service';
 import { Customer } from '@/models/relational';
 import { Membership } from '@/models/document';
 import { UserNotFoundError } from '@/errors';
+import {
+    MembershipResponse,
+    MembershipSubscriptionResponse,
+    MembershipSubscriptionFilters,
+} from '@/types';
 
 const formatter = new Intl.NumberFormat('de-DE', {
     style: 'currency',
     currency: 'EUR',
 });
-
-interface MembershipResponse {
-    type: string;
-    monthlyPrice: number;
-    annualPrice: number;
-    currency: string;
-    features: string[];
-    hasTrial: boolean;
-    updatedAt?: Date;
-}
-
-interface MembershipSubscriptionResponse {
-    type: string;
-    plan: string;
-    price: number | null;
-    status: 'active' | 'canceled';
-    created: Date;
-}
-
-type Membership = 'plus' | 'premium';
-
-interface MembershipSubscriptionFilters {
-    type?: 'free' | Membership;
-    plan?: 'annual' | 'monthly';
-    status?: 'active' | 'canceled';
-}
 
 /**
  * Service related to platform subscriptions

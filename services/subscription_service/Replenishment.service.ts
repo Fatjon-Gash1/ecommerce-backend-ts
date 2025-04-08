@@ -6,35 +6,18 @@ import {
     ReplenishmentPayment,
 } from '@/models/relational';
 import { UserNotFoundError } from '@/errors';
-
-interface ReplenishmentResponse {
-    id?: number;
-    startDate: string;
-    lastPaymentDate?: string | null;
-    nextPaymentDate?: string | null;
-    endDate?: string;
-    times?: number;
-    unit: Unit;
-    interval: number;
-    orderId?: number;
-    replenishmentPayment?: { paymentDate: string };
-}
-
-type Unit = 'day' | 'week' | 'month' | 'year' | 'custom';
-type Status = 'scheduled' | 'active' | 'finished' | 'canceled' | 'failed';
-
-interface ReplenishmentFilters {
-    customerId?: number;
-    unit?: Unit;
-    interval?: number;
-    status?: Status;
-}
+import {
+    ReplenishmentResponse,
+    ReplenishmentFilters,
+    Unit,
+    Status,
+} from '@/types';
 
 /**
  * Responsible for replenishment related operations
  *
  * @remarks
- * Users two separate classes.
+ * Uses two separate classes.
  *
  * @Scheduler - Handles scheduling of replenishments
  * @WorkerService - Handles processing of replenishments

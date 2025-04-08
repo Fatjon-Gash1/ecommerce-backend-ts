@@ -1,5 +1,4 @@
 import { Worker } from 'bullmq';
-import IORedis from 'ioredis';
 import { sequelize } from '@/config/db';
 import { workerRedisClient } from '@/config/redis';
 import { PaymentService } from '../Payment.service';
@@ -10,6 +9,7 @@ import { Logger } from '@/logger';
 import { Replenishment, Customer, User } from '@/models/relational';
 import { PlatformData } from '@/models/document';
 import { UserNotFoundError } from '@/errors';
+import type IORedis from 'ioredis';
 import type { Transaction } from 'sequelize';
 import type { Job } from 'bullmq';
 

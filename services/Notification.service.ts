@@ -5,12 +5,20 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import * as Handlebars from 'handlebars';
 import { transporter } from '@/config/transporter';
-import { redisClient } from '@/config/redis';
-import { io } from '@/config/socket';
+import { io } from '@/socket';
 import { Op } from 'sequelize';
 import { Logger } from '@/logger';
 import { Customer, User, Notification } from '@/models/relational';
 import { EmailNotificationError, NotificationNotFoundError } from '@/errors';
+import {
+    EmailOptions,
+    NewProduct,
+    Promotion,
+    PromotionData,
+    HandledRefundEmailData,
+    SuccessfulPaymentEmailData,
+    FailedPaymentEmailData,
+} from '@/types';
 dotenv.config();
 
 Handlebars.registerHelper(
@@ -27,54 +35,6 @@ const formatter = new Intl.NumberFormat('de-DE', {
 
 const TEMPLATES_PATH = (process.env.BASE_PATH as string) + '/templates';
 const CLIENT_URL = process.env.CLIENT_URL as string;
-
-interface EmailOptions {
-    to: string;
-    subject: string;
-    text?: string;
-    html?: string;
-}
-
-interface NewProduct {
-    name: string;
-    price: number;
-    discount?: number;
-    imageUrl: string;
-}
-
-type Promotion = 'newArrival' | 'discount';
-
-interface PromotionData {
-    file: string;
-    shopRoute: string;
-    subject: string;
-}
-
-interface HandledRefundEmailData {
-    status: 'approved' | 'denied';
-    orderTrackingNumber: string;
-    orderTotal: string;
-    refundAmount: string | null;
-    rejectionReason?: string;
-}
-
-interface SuccessfulPaymentEmailData {
-    customerName: string;
-    orderTrackingNumber: string;
-    deliveryDate: string;
-    paymentAmount: string;
-    deliveryAddress: string;
-    subscriptionStateInfo: string;
-    manageSubscriptionLink: string;
-    customerSupportEmail: string;
-    customerSupportPhoneNumber: string;
-}
-
-interface FailedPaymentEmailData {
-    manageSubscriptionLink: string;
-    customerSupportEmail: string;
-    customerSupportPhoneNumber: string;
-}
 
 /**
  * Service responsible for handling platform notifications.
@@ -638,15 +598,15 @@ export class NotificationService {
         ...messages: string[]
     ): Promise<void> {
         for (const message of messages) {
-            const notification = await Notification.create({ userId, message });
+            const notification = await Notification.create({
+                userId,
+                message,
+            });
 
-            const socketId = await redisClient.hget(
-                'onlineUsers',
-                userId.toString()
+            io.in(`notifications:${userId}`).emit(
+                'notification',
+                notification.toJSON()
             );
-            if (socketId) {
-                io.to(socketId).emit('notification', notification);
-            }
         }
     }
 
@@ -654,43 +614,55 @@ export class NotificationService {
      * Marks user notification as read.
      *
      * @param userId - The user id
-     * @param notificationId - The notification id
+     * @param [notificationId] - The notification id
+     * @param [all] - Whether to mark all notifications as read
      *
      * @throws Error
      * Thrown if the notification is not found
      */
     public async markAsRead(
         userId: number,
-        notificationId: number
+        notificationId?: number,
+        all?: boolean
     ): Promise<void> {
-        const notification = await Notification.findOne({
-            where: { id: notificationId, userId },
-        });
+        if (all) {
+            await Notification.update({ isRead: true }, { where: { userId } });
+        } else if (notificationId) {
+            const notification = await Notification.findOne({
+                where: { id: notificationId, userId },
+            });
 
-        if (!notification) {
-            throw new Error('Notification not found');
+            if (!notification) {
+                throw new Error('Notification not found');
+            }
+
+            notification.isRead = true;
+            await notification.save();
         }
-
-        notification.read = true;
-        await notification.save();
     }
 
     /**
-     * Removes a customer notification.
+     * Removes a customer notification/s.
      *
      * @param userId - The customer's user id
-     * @param notificationId - The notification id
+     * @param [notificationId] - The notification id
+     * @param [all] - Whether to remove all notifications
      */
     public async removeNotification(
         userId: number,
-        notificationId: number
+        notificationId?: number,
+        all?: boolean
     ): Promise<void> {
-        const notification = await Notification.destroy({
-            where: { id: notificationId, userId },
-        });
+        if (all) {
+            await Notification.destroy({ where: { userId } });
+        } else if (notificationId) {
+            const notification = await Notification.destroy({
+                where: { id: notificationId, userId },
+            });
 
-        if (!notification) {
-            throw new NotificationNotFoundError();
+            if (!notification) {
+                throw new NotificationNotFoundError();
+            }
         }
     }
 }

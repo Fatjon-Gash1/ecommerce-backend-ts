@@ -7,46 +7,7 @@ import {
     OrderNotFoundError,
     OrderAlreadyMarkedError,
 } from '@/errors';
-
-interface OrderItemAttributes {
-    productId: number;
-    quantity: number;
-}
-
-interface OrderResponse {
-    id: number;
-    customerId: number;
-    paymentMethod: 'card' | 'wallet' | 'bank-transfer';
-    shippingCountry: string;
-    weightCategory:
-        | 'light'
-        | 'standard'
-        | 'heavy'
-        | 'very-heavy'
-        | 'extra-heavy';
-    shippingMethod: 'standard' | 'express' | 'next-day';
-    status:
-        | 'pending'
-        | 'shipped'
-        | 'awaiting pickup'
-        | 'delivered'
-        | 'canceled'
-        | 'refunded'
-        | 'partially-refunded';
-    trackingNumber: string;
-    total: number;
-    createdAt?: Date;
-}
-
-interface OrderItemResponse {
-    id?: number;
-    name: string;
-    description: string;
-    imageUrl: string;
-    weight: number;
-    price: number;
-    quantity?: number;
-}
+import { OrderItemAttributes, OrderResponse, OrderItemResponse } from '@/types';
 
 /**
  * Service responsible for Order-related operations.
@@ -286,7 +247,7 @@ export class OrderService {
     public async getCustomerOrdersByStatus(
         customerId?: number,
         userId?: number,
-        status?: string,
+        status?: string
     ): Promise<{ count: number; orders: OrderResponse[] }> {
         let retrievedId: number;
 
@@ -354,7 +315,10 @@ export class OrderService {
      * Thrown if the order is not found.
      *
      * @throws {@link OrderAlreadyMarkedError}
-     * Thrown if the order is already marked as delivered or canceled.
+     * Thrown if the order is already marked as delivered.
+     *
+     * @throws Error
+     * Thrown if the order status is not "awaiting pickup".
      */
     public async markAsDelivered(orderId: number): Promise<void> {
         const order = await Order.findByPk(orderId);
@@ -367,9 +331,10 @@ export class OrderService {
             throw new OrderAlreadyMarkedError();
         }
 
-        if (order.status === 'canceled') {
+        if (order.status !== 'awaiting pickup') {
             throw new OrderAlreadyMarkedError(
-                'Cannot mark a canceled order as delivered'
+                'Cannot mark order as delivered. Order status is: ' +
+                    order.status
             );
         }
 

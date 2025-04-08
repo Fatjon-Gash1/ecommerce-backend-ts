@@ -12,53 +12,13 @@ import {
     ProductAlreadyExistsError,
 } from '@/errors';
 const redisConnection = connectToRedisServer();
-
-interface ProductDetails {
-    name: string;
-    description: string;
-    currency: string;
-    price: number;
-    discount?: number;
-    availableDue?: Date | null;
-    imageUrl: string;
-    stockQuantity?: number;
-    weight: number;
-    views?: number;
-}
-
-interface ProductObject {
-    name: string;
-    description: string;
-    price: number;
-}
-
-interface CategoryResponse {
-    id?: number;
-    name: string;
-    description: string;
-    hasProducts?: boolean;
-    parentId?: number | null;
-    createdAt?: Date;
-    updatedAt?: Date;
-}
-
-interface ProductResponse {
-    id?: number;
-    categoryId?: number;
-    name: string;
-    description: string;
-    currency: string;
-    price: number;
-    discount?: number;
-    imageUrl: string;
-    stockQuantity?: number;
-    weight: number;
-    views?: number;
-    updatedAt?: Date;
-    createdAt?: Date;
-}
-
-type Promotion = 'newArrival' | 'discount';
+import {
+    ProductDetails,
+    ProductObject,
+    CategoryResponse,
+    ProductResponse,
+    Promotion,
+} from '@/types';
 
 /**
  * Service responsible for product-related operations.

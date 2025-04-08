@@ -1,17 +1,13 @@
 import util from 'node:util';
 import { exec } from 'node:child_process';
 import { redisClient } from '@/config/redis';
+import { Message } from '@/types';
 
 const pExec = util.promisify(exec);
 
 const LLM_API_KEY = process.env.LLM_API_KEY;
 const MODEL_NAME = process.env.LLM_NAME;
 const LLM_PROVIDER_API = process.env.LLM_PROVIDER_API as string;
-
-interface Message {
-    role: 'user' | 'assistant';
-    content: string;
-}
 
 /**
  * Service that provides AI capabilities.

@@ -16,6 +16,16 @@ import {
     ProductNotFoundError,
     UserNotFoundError,
 } from '@/errors';
+import {
+    PaymentMethodResponse,
+    SetupIntentResponse,
+    MembershipSubscribeDetails,
+    PaymentProductDetails,
+    PaymentProcessingData,
+    OrderItem,
+    RefundRequestResponse,
+    SubscriptionFormattedResponse,
+} from '@/types';
 
 dotenv.config();
 
@@ -24,72 +34,9 @@ const formatter = new Intl.NumberFormat('de-DE', {
     currency: 'EUR',
 });
 
-interface PaymentMethodResponse {
-    id: string;
-    type: string;
-    card?: CardPaymentMethod;
-    created: number;
-}
-
-interface CardPaymentMethod {
-    brand?: string;
-    country?: string | null;
-    exp_month?: number;
-    exp_year?: number;
-    funding?: string;
-    last4?: string;
-}
-
-interface SetupIntentResponse {
-    customer: string;
-    payment_method: string;
-}
-
-interface MembershipSubscribeDetails {
-    currency: string;
-    stripeMonthlyPriceId: string;
-    stripeAnnualPriceId: string;
-    hasTrial: boolean;
-}
-
-interface ProductDetails {
-    name: string;
-    currency: string;
-    price: number;
-}
-
-interface PaymentProcessingData {
-    orderItems: OrderItem[];
-    shippingCountry: string;
-    shippingMethod: 'standard' | 'express' | 'next-day';
-    currency: 'usd' | 'eur';
-    paymentMethodType: 'card';
-    paymentMethodId: string;
-    loyaltyPoints?: number;
-}
-
-interface OrderItem {
-    productId: number;
-    quantity: number;
-}
-
-interface RefundRequestResponse {
-    id: number;
-    customerId: number;
-    orderId: number;
-    reason: string;
-    amount: number | null;
-    status: 'pending' | 'approved' | 'denied';
-    createdAt: Date;
-}
-
-interface SubscriptionFormattedResponse {
-    plan: string;
-    price: number | null;
-    status: 'active' | 'canceled';
-    created: Date;
-}
-
+/**
+ * Service responsible for all payment related tasks.
+ */
 export class PaymentService {
     private stripe: Stripe;
     private orderService?: OrderService;
@@ -731,7 +678,7 @@ export class PaymentService {
     }
 
     // Not Used
-    public async createProduct(details: ProductDetails): Promise<{
+    public async createProduct(details: PaymentProductDetails): Promise<{
         productId: string;
         priceId: string;
     }> {

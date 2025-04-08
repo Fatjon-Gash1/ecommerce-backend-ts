@@ -1,21 +1,7 @@
-import {
-    UserService,
-    UserCreationDetails,
-    CustomerResponse,
-} from './User.service';
+import { UserService } from './User.service';
 import { User, Customer, Admin } from '@/models/relational';
 import { UserNotFoundError } from '@/errors';
-
-interface AdminResponse {
-    id?: number;
-    role?: 'admin' | 'manager';
-    createdAt?: Date;
-    profilePictureUrl?: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    email: string;
-}
+import { UserCreationDetails, CustomerResponse, AdminResponse } from '@/types';
 
 /**
  * Service responsible for Admin-related operations.

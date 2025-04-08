@@ -1,24 +1,6 @@
 import { PlatformData } from '@/models/document';
-
-interface PlatformData {
-    companyName: string;
-    headquartersAddress: string;
-    customerSupportEmail: string;
-    customerSupportPhoneNumber: string;
-    operatingHours: string;
-    faq: Faq[];
-}
-
-interface Faq {
-    question: string;
-    answer: string;
-}
-
-interface PlatformDataResponse extends PlatformData {
-    _id: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { Admin, Customer, User } from '@/models/relational';
+import { PlatformDataObject, PlatformDataResponse, UserType } from '@/types';
 
 /**
  * Service responsible only for retrieval and modification of platform data
@@ -36,7 +18,7 @@ export class PlatformDataService {
      */
     public async updatePlatformData(
         id: string,
-        data: PlatformData
+        data: PlatformDataObject
     ): Promise<PlatformDataResponse> {
         const platformData = await PlatformData.findByIdAndUpdate(id, data, {
             new: true,
@@ -64,5 +46,42 @@ export class PlatformDataService {
         )[0];
 
         return platformData;
+    }
+
+    /**
+     * Retrieves the number of active users of a given type.
+     *
+     * @param type - The type of user ('admin', 'manager', 'customer')
+     * @returns A promise resolving to the number of active users
+     */
+    public async getActiveUsers(type: UserType): Promise<number> {
+        const filteringObject = {
+            include: {
+                model: User,
+                as: 'user',
+                where: { isActive: true },
+                attributes: [],
+            },
+            attributes: [],
+        };
+
+        switch (type) {
+            case 'customer':
+                return await Customer.count(filteringObject);
+            case 'admin':
+                return await Admin.count(filteringObject);
+            case 'manager':
+                return await Admin.count({
+                    include: {
+                        model: User,
+                        as: 'user',
+                        where: { isActive: true, role: 'manager' },
+                        attributes: [],
+                    },
+                    attributes: [],
+                });
+            default:
+                throw new Error('Invalid type');
+        }
     }
 }

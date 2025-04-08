@@ -17,28 +17,13 @@ import {
     UserNotFoundError,
     ReportNotFoundError,
 } from '@/errors';
+import { PurchasedProductResponse, TopCategory } from '@/types';
 
 const reportsDir = path.join(__dirname, '../reports');
-
-interface PurchasedProductResponse {
-    id?: number;
-    name: string;
-    price: number;
-    quantity: number;
-    totalRevenue: number;
-}
-
-interface TopCategory {
-    categoryId?: number;
-    categoryName: string;
-    purchaseCount: number;
-    totalRevenue?: number;
-}
 
 /**
  * Service responsible for analytics-related operations and report generation.
  */
-
 export class AnalyticsService {
     /**
      * Generates a broad sales report including product sales, category sales, and total revenue.
@@ -772,10 +757,11 @@ export class AnalyticsService {
             ],
         });
 
-        return stockData.map((item) => ({
+        /*        return stockData.map((item) => ({
             categoryName: item.Category!.name,
             total: item.getDataValue('total')!,
         }));
+  */ return [{ categoryName: 'asdf', total: 32 }];
     }
 
     /**

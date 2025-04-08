@@ -6,50 +6,12 @@ import {
     ProductNotFoundError,
     RatingNotFoundError,
 } from '@/errors';
-
-interface RatingDetails {
-    firstName: string;
-    lastName: string;
-    userProfession: string;
-    rating: number;
-    review: string;
-    anonymous: boolean;
-}
-
-interface PlatformRatingDetails extends RatingDetails {
-    featureHighlights: string;
-}
-
-interface ProductRatingDetails extends RatingDetails {
-    productHighlights: string;
-    alternatives: number[];
-}
-
-interface RatingResponse {
-    userId: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    userProfession?: string;
-    rating: number;
-    review: string;
-    anonymous?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-    _id: unknown;
-}
-
-interface PlatformRatingResponse extends RatingResponse {
-    featureHighlights: string;
-    numberOfPurchases?: number;
-    mostPurchasesCategory?: string;
-}
-
-interface ProductRatingResponse extends RatingResponse {
-    productId: number;
-    productHighlights?: string;
-    alternatives?: number[];
-}
+import {
+    PlatformRatingDetails,
+    ProductRatingDetails,
+    PlatformRatingResponse,
+    ProductRatingResponse,
+} from '@/types';
 
 /**
  * Service related to platform and product ratings

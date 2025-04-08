@@ -8,56 +8,14 @@ import {
 import { Logger } from '@/logger';
 import { UserNotFoundError } from '@/errors';
 import type IORedis from 'ioredis';
-
-interface OrderData {
-    userId: number;
-    orderItems: IOrderItem[];
-    paymentMethod: 'card' | 'wallet' | 'bank-transfer';
-    shippingCountry: string;
-}
-
-interface IOrderItem {
-    productId: number;
-    quantity: number;
-}
-
-interface ReplenishmentData extends OrderData {
-    paymentMethodId: string;
-    currency: 'usd' | 'eur';
-}
-
-interface Units {
-    day: number;
-    week: number;
-    month: number;
-    year: number;
-    custom: number;
-}
-
-interface ReplenishmentCreateData {
-    schedulerId: string;
-    customerId: number;
-    unit: Unit;
-    interval: number;
-    startDate: string;
-    endDate?: string;
-    times?: number;
-    status: Status;
-}
-
-interface ReplenishmentUpdateData {
-    unit: Unit;
-    interval: number;
-    startDate?: string;
-    endDate?: string;
-    times?: number;
-    executions?: number;
-    status?: Status;
-    nextPaymentDate?: string | null;
-}
-
-type Unit = 'day' | 'week' | 'month' | 'year' | 'custom';
-type Status = 'scheduled' | 'active' | 'finished' | 'canceled' | 'failed';
+import {
+    ReplenishmentData,
+    Units,
+    ReplenishmentCreateData,
+    ReplenishmentUpdateData,
+    Unit,
+    Status,
+} from '@/types';
 
 export class Scheduler {
     private connection: IORedis;

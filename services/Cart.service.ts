@@ -5,16 +5,9 @@ import {
     CartItemNotFoundError,
     ProductNotFoundError,
 } from '@/errors';
+import { CartItemResponse } from '@/types';
 
 const CART_ITEM_LIMIT = 100;
-
-interface CartItemResponse {
-    id: number;
-    name: string;
-    imageUrl: string;
-    price: number;
-    quantity: number;
-}
 
 /**
  * Service responsible for Customer Cart-related operations.

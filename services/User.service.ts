@@ -11,6 +11,15 @@ import {
     UserAlreadyExistsError,
     InvalidCredentialsError,
 } from '@/errors';
+import { adminNamespace } from '@/socket/admin';
+import {
+    UserDetails,
+    UserCreationDetails,
+    CustomerDetails,
+    AuthTokens,
+    CustomerResponse,
+    UserType,
+} from '@/types';
 
 const {
     ACCESS_TOKEN_KEY,
@@ -20,44 +29,6 @@ const {
     GENERIC_TOKEN_KEY,
     REGISTRATION_LOYALTY_POINTS,
 } = process.env;
-
-interface UserDetails {
-    profilePictureUrl?: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    email: string;
-    role?: string;
-    birthday?: Date;
-}
-
-export interface UserCreationDetails extends UserDetails {
-    password: string;
-}
-
-interface CustomerDetails {
-    shippingAddress: string;
-    billingAddress: string;
-}
-
-interface AuthTokens {
-    refreshToken: string;
-    accessToken: string;
-}
-
-export interface CustomerResponse {
-    id?: number;
-    stripeId?: string;
-    shippingAddress?: string;
-    billingAddress?: string;
-    isActive?: boolean;
-    createdAt?: Date;
-    profilePictureUrl?: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    email: string;
-}
 
 /**
  * Service responsible for user-related operations.
@@ -72,6 +43,38 @@ export class UserService {
     ) {
         this.paymentService = paymentService;
         this.notificationService = notificationService;
+    }
+
+    /**
+     * Streams active users of a given type.
+     *
+     * @param type - The user type
+     */
+    private async streamActiveUsers(type: UserType): Promise<void> {
+        const filteringObject = {
+            include: {
+                model: User,
+                as: 'user',
+                where: { isActive: true },
+                attributes: [],
+            },
+            attributes: [],
+        };
+
+        switch (type) {
+            case 'admin':
+            case 'manager': {
+                const { count } = await Admin.findAndCountAll(filteringObject);
+                adminNamespace.emit('activeAdmins', count);
+                break;
+            }
+            case 'customer': {
+                const { count } =
+                    await Customer.findAndCountAll(filteringObject);
+                adminNamespace.emit('activeCustomers', count);
+                break;
+            }
+        }
     }
 
     /**
@@ -164,7 +167,10 @@ export class UserService {
     public async signUpCustomer(
         details: UserCreationDetails
     ): Promise<AuthTokens> {
-        const newCustomer = await this.userFactory(Customer, details);
+        const newCustomer = await this.userFactory(Customer, {
+            ...details,
+            isActive: true,
+        });
         newCustomer.stripeId = await this.paymentService.createCustomer(
             `${newCustomer.firstName} ${newCustomer.lastName}`,
             newCustomer.email
@@ -172,6 +178,8 @@ export class UserService {
         newCustomer.loyaltyPoints = REGISTRATION_LOYALTY_POINTS;
 
         await newCustomer.save();
+
+        await this.streamActiveUsers('customer');
 
         if (newCustomer.birthday) {
             await addBirthdayJobScheduler(newCustomer);
@@ -198,7 +206,7 @@ export class UserService {
         username: string,
         password: string
     ): Promise<AuthTokens> {
-        let role: 'admin' | 'manager' | 'customer' | null = null;
+        let type: UserType | null = null;
         const user = await User.findOne({ where: { username } });
 
         if (!user) {
@@ -213,9 +221,14 @@ export class UserService {
 
         const admin = await Admin.findOne({ where: { userId: user.id } });
 
-        role = admin ? admin.role! : 'customer';
+        type = admin ? admin.role! : 'customer';
 
-        return this.generateTokens(user.id!, user.username, role);
+        user.isActive = true;
+        await user.save();
+
+        await this.streamActiveUsers(type);
+
+        return this.generateTokens(user.id!, user.username, type);
     }
 
     /**
@@ -223,16 +236,16 @@ export class UserService {
      *
      * @param userId - The ID of the user to generate tokens for
      * @param username - The username of the user
-     * @param role - The role of the user
+     * @param type - The type of the user
      * @returns An object containing access and refresh tokens
      */
     public generateTokens(
         userId: number,
         username: string,
-        role: string = 'customer'
+        type: string = 'customer'
     ): AuthTokens {
         const refreshToken = jwt.sign(
-            { userId, username, role },
+            { userId, username, type },
             REFRESH_TOKEN_KEY,
             {
                 expiresIn: REFRESH_TOKEN_EXPIRY,
@@ -240,7 +253,7 @@ export class UserService {
         );
 
         const accessToken = jwt.sign(
-            { userId, username, role },
+            { userId, username, type },
             ACCESS_TOKEN_KEY,
             {
                 expiresIn: ACCESS_TOKEN_EXPIRY,
@@ -398,6 +411,40 @@ export class UserService {
     }
 
     /**
+     * Marks user notification as read.
+     *
+     * @param userId - The ID of the user
+     * @param [notificationId] - The ID of the notification
+     * @param [all] - Whether to mark all notifications as read
+     */
+    public async markNotificationAsRead(
+        userId: number,
+        notificationId?: number,
+        all?: boolean
+    ) {
+        await this.notificationService.markAsRead(userId, notificationId, all);
+    }
+
+    /**
+     * Logs a user out.
+     *
+     * @param userId - The ID of the user to log out
+     * @param type - The type of the user ('admin', 'manager', 'customer')
+     */
+    public async logoutUser(userId: number, type: UserType): Promise<void> {
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            throw new UserNotFoundError();
+        }
+
+        user.isActive = false;
+        await user.save();
+
+        await this.streamActiveUsers(type);
+    }
+
+    /**
      * Deletes a user from the database.
      *
      * @param userId - The ID of the user to delete
@@ -423,6 +470,25 @@ export class UserService {
         }
 
         await user.destroy();
+    }
+
+    /**
+     * Removes user notification/s.
+     *
+     * @param userId - The ID of the user
+     * @param [notificationId] - The ID of the notification
+     * @param [all] - Whether to remove all notifications
+     */
+    public async deleteNotification(
+        userId: number,
+        notificationId?: number,
+        all?: boolean
+    ): Promise<void> {
+        await this.notificationService.removeNotification(
+            userId,
+            notificationId,
+            all
+        );
     }
 
     /**

@@ -1,6 +1,8 @@
 import { User, Admin, AdminLog } from '@/models/relational';
 import { PlatformLog } from '@/models/document';
 import { AdminLogInvalidTargetError, UserNotFoundError } from '@/errors';
+import { adminNamespace } from '@/socket/admin';
+import { AdminLogResponse, PlatformLogResponse } from '@/types';
 
 /**
  * Service responsible for platform logs.
@@ -68,11 +70,13 @@ export class LoggingService {
 
         const op = opMap[operation];
 
-        await AdminLog.create({
+        const log = await AdminLog.create({
             adminId: admin.id,
             category: target,
             log: `Admin "${username}" ${op} ${target}.`,
         });
+
+        adminNamespace.emit('adminLog', log.toJSON());
     }
 
     /**
@@ -82,6 +86,73 @@ export class LoggingService {
      * @param message - The message to log
      */
     public async log(type: string, message: string): Promise<void> {
-        await PlatformLog.create({ type, message });
+        const log = await PlatformLog.create({ type, message });
+        adminNamespace.emit('platformLog', log.toObject());
+    }
+
+    /**
+     * Retrieves all or filtered administrative logs.
+     *
+     * @param [category] - The operation category
+     * @param [username] - Operation performer
+     * @returns A promise resolving to all or filtered administrative logs
+     */
+    public async getAdminLogs(
+        category?: string,
+        username?: string
+    ): Promise<AdminLogResponse[]> {
+        const nestedLoad = {
+            attributes: ['id', 'category', 'log', 'createdAt', 'adminId'],
+            include: [
+                {
+                    model: Admin,
+                    as: 'admin',
+                    attributes: [],
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: [],
+                            where: { username },
+                        },
+                    ],
+                },
+            ],
+        };
+
+        if (category && username) {
+            const logs = await AdminLog.findAll({
+                where: { category },
+                ...nestedLoad,
+            });
+            return logs.map((log) => log.toJSON());
+        } else if (category) {
+            const logs = await AdminLog.findAll({
+                where: { category },
+            });
+            return logs.map((log) => log.toJSON());
+        } else if (username) {
+            const logs = await AdminLog.findAll(nestedLoad);
+            return logs.map((log) => log.toJSON());
+        } else {
+            const logs = await AdminLog.findAll();
+            return logs.map((log) => log.toJSON());
+        }
+    }
+
+    /**
+     * Retrieves all or filtered platform logs.
+     *
+     * @param [type] - The type of the event
+     * @returns A promise resolving to all or filtered platform logs
+     */
+    public async getPlatformLogs(
+        type?: string
+    ): Promise<PlatformLogResponse[]> {
+        const logs = await PlatformLog.find(type ? { type } : {}).select(
+            '-__t -__v'
+        );
+
+        return logs.map((log) => log.toObject());
     }
 }

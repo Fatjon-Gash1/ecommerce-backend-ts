@@ -15,48 +15,15 @@ import {
     CartNotFoundError,
     ProductNotFoundError,
 } from '@/errors';
-
-interface ShippingCountryResponse {
-    id?: number;
-    name: string;
-    rate: number;
-}
-
-interface ShippingCityResponse {
-    id?: number;
-    name: string;
-    postalCode: number;
-}
-
-interface ShippingMethodResponse {
-    id?: number;
-    method: string;
-    rate: number;
-}
-
-interface ShippingWeightResponse {
-    id?: number;
-    weight: string;
-    rate: number;
-}
-
-interface ProductItem {
-    productId: number;
-    quantity: number;
-}
-
-interface ShippingCostResponse {
-    cost: number;
-    weightCategory: WeightCategory;
-    orderWeight: number;
-}
-
-type WeightCategory =
-    | 'light'
-    | 'standard'
-    | 'heavy'
-    | 'very-heavy'
-    | 'extra-heavy';
+import {
+    ShippingCountryResponse,
+    ShippingCityResponse,
+    ShippingMethodResponse,
+    ShippingWeightResponse,
+    ProductItem,
+    ShippingCostResponse,
+    WeightCategory,
+} from '@/types';
 
 /**
  * Service responsible for shipping-related operations
