@@ -21,6 +21,7 @@ import {
     validationErrors,
     validatePlatformData,
     validateObjectId,
+    validateUserType,
 } from '@/middlewares/validation';
 import adminProducts from './products.route';
 import adminSubscriptions from './subscriptions.route';
@@ -90,11 +91,6 @@ router.get(
     adminController.getCustomerById.bind(adminController)
 );
 router.get(
-    '/admins',
-    authorize(['admin']),
-    adminController.getAllAdmins.bind(adminController)
-);
-router.get(
     '/admins/search',
     authorize(['admin']),
     validateAdminRole(),
@@ -109,9 +105,21 @@ router.get(
     adminController.getAdminById.bind(adminController)
 );
 router.get(
+    '/admins',
+    authorize(['admin']),
+    adminController.getAllAdmins.bind(adminController)
+);
+router.get(
     '/platform-data',
     authorize(['admin']),
     adminController.getPlatformData.bind(adminController)
+);
+router.get(
+    '/platform-data/active-users',
+    authorize(['admin']),
+    validateUserType(),
+    validationErrors,
+    adminController.getActiveUsers.bind(adminController)
 );
 
 router.patch(

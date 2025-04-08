@@ -3,6 +3,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import { AdminService, LoggingService, PlatformDataService } from '@/services';
 import { Logger } from '@/logger';
 import { UserNotFoundError, UserAlreadyExistsError } from '@/errors';
+import { UserType } from '@/types';
 
 export class AdminController {
     private adminService: AdminService;
@@ -212,6 +213,23 @@ export class AdminController {
             return res.status(200).json({ platformData });
         } catch (error) {
             this.logger.error('Error retrieving platform data: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getActiveUsers(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { type } = req.query;
+
+        try {
+            const total = await this.platformDataService.getActiveUsers(
+                type as UserType
+            );
+            return res.status(200).json({ total });
+        } catch (error) {
+            this.logger.error('Error retrieving active users: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
