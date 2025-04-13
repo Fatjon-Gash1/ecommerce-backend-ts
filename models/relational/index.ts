@@ -13,6 +13,7 @@ import { Purchase } from './Purchase.model';
 import { Replenishment, ReplenishmentPayment } from './Replenishment.model';
 import { RefundRequest } from './RefundRequest.model';
 import { Notification } from './Notification.model';
+import { Chatroom, Message, UserChatroom } from './Chatroom.model';
 
 User.hasOne(Customer, {
     as: 'customer',
@@ -25,6 +26,12 @@ User.hasMany(Notification, {
     foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
+User.belongsToMany(Chatroom, {
+    through: UserChatroom,
+    foreignKey: 'userId',
+    otherKey: 'chatroomId',
+});
+User.hasMany(Message, { as: 'messages', foreignKey: 'senderId' });
 
 Customer.belongsTo(User, {
     as: 'user',
@@ -154,6 +161,16 @@ Notification.belongsTo(User, {
     foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
+
+Chatroom.belongsToMany(User, {
+    through: UserChatroom,
+    foreignKey: 'chatroomId',
+    otherKey: 'userId',
+});
+Chatroom.hasMany(Message, { as: 'messages', foreignKey: 'chatroomId' });
+
+Message.belongsTo(Chatroom, {as: 'chatroom', foreignKey: 'chatroomId'});
+Message.belongsTo(User, { as: 'sender', foreignKey: 'senderId' });
 
 export {
     User,
