@@ -30,8 +30,11 @@ export default function authenticateRefreshToken(
         ): void | Response => {
             if (err) {
                 if (err instanceof jwt.TokenExpiredError) {
+                    const expiredAtDate = err.expiredAt
+                        .toISOString()
+                        .split('T')[0];
                     return res.status(401).json({
-                        message: `Refresh token expired at: ${err.expiredAt}`,
+                        message: `Refresh token expired at: ${expiredAtDate}`,
                     });
                 }
                 if (err instanceof jwt.JsonWebTokenError) {

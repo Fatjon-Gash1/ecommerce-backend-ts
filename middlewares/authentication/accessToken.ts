@@ -24,8 +24,11 @@ export default function authenticateAccessToken(
         ): void | Response => {
             if (err) {
                 if (err instanceof jwt.TokenExpiredError) {
+                    const expiredAtDate = err.expiredAt
+                        .toISOString()
+                        .split('T')[0];
                     return res.status(401).json({
-                        message: `Access token expired at: ${err.expiredAt}`,
+                        message: `Access token expired at: ${expiredAtDate}`,
                     });
                 }
                 if (err instanceof jwt.JsonWebTokenError) {

@@ -50,8 +50,9 @@ export default async function authenticateGenericToken(
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
+            const expiredAtDate = error.expiredAt.toISOString().split('T')[0];
             return res.status(401).json({
-                message: `Token expired at: ${error.expiredAt}`,
+                message: `Token expired at: ${expiredAtDate}`,
             });
         }
         if (error instanceof jwt.JsonWebTokenError) {
