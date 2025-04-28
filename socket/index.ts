@@ -9,6 +9,7 @@ import {
     InterServerEvents,
     UserData,
 } from '@/types';
+import { ChattingService, LoggingService } from '@/services';
 
 export let io: SocketServer<
     ClientToServerEvents,
@@ -17,10 +18,12 @@ export let io: SocketServer<
     UserData
 >;
 
+const clientUrl = process.env.CLIENT_URL;
+
 export default (httpServer: HttpServer): SocketServer => {
     io = new SocketServer(httpServer, {
         cors: {
-            origin: ['http://localhost:3001'], // or "*" for public testing
+            origin: clientUrl,
         },
     });
 
@@ -28,10 +31,14 @@ export default (httpServer: HttpServer): SocketServer => {
 
     setupAdminNamespace(io);
 
-    io.on('connection', (socket) => {
-        logger.log('Client connected:' + socket.id);
-        const { userId, type } = socket.data;
+    const chattingService = new ChattingService(io, new LoggingService());
 
+    io.on('connection', async (socket) => {
+        logger.log('Client connected:' + socket.id);
+
+        await chattingService.init(socket);
+
+        const { userId, type } = socket.data;
         socket.join(`notifications:${userId}`);
         if (type === 'customer') {
             socket.join(`orders:${userId}`);

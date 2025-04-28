@@ -12,3 +12,4 @@ export { ShippingService } from './Shipping.service';
 export { UserService } from './User.service';
 export { AdminService } from './Admin.service';
 export { PlatformDataService } from './PlatformData.service';
+export { ChattingService } from './Chatting.service';
