@@ -19,6 +19,7 @@ export class User extends Model<
     declare email: string;
     declare password: string;
     declare isActive: CreationOptional<boolean>;
+    declare lastLogin: Date | string;
 
     public async hashAndStorePassword(password: string): Promise<void> {
         const saltRounds = 12;
@@ -62,6 +63,9 @@ User.init(
         isActive: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
+        },
+        lastLogin: {
+            type: DataTypes.DATE,
         },
     },
     {
