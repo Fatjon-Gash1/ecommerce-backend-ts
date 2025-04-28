@@ -5,6 +5,7 @@ export interface UserDetails {
     username: string;
     email: string;
     isActive?: boolean;
+    lastLogin?: Date | string;
     role?: string;
     birthday?: Date;
 }
