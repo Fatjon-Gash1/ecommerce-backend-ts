@@ -311,7 +311,7 @@ export class SubscriptionService {
                 ([customerId, endOfPeriod]) =>
                     limit(async () => {
                         const added = await redisClient.hexists(
-                            'MCJRecord',
+                            'MembershipCancellationJobs',
                             customerId
                         );
 
@@ -376,7 +376,7 @@ export class SubscriptionService {
                 ? membership!.stripeAnnualPriceId
                 : membership!.stripeMonthlyPriceId;
 
-        const jobId = await redisClient.hget('MCJRecord', customer.stripeId);
+        const jobId = await redisClient.hget('MembershipCancellationJobs', customer.stripeId);
 
         if (!jobId) {
             throw new Error(
@@ -384,7 +384,7 @@ export class SubscriptionService {
             );
         }
 
-        await redisClient.hdel('MCJRecord', customer.stripeId);
+        await redisClient.hdel('MembershipCancellationJobs', customer.stripeId);
 
         const job = await queue1.getJob(jobId);
 
