@@ -170,6 +170,7 @@ export class UserService {
         const newCustomer = await this.userFactory(Customer, {
             ...details,
             isActive: true,
+            lastLogin: new Date().toISOString()
         });
         newCustomer.stripeId = await this.paymentService.createCustomer(
             `${newCustomer.firstName} ${newCustomer.lastName}`,
@@ -224,6 +225,7 @@ export class UserService {
         type = admin ? admin.role! : 'customer';
 
         user.isActive = true;
+        user.lastLogin = new Date().toISOString();
         await user.save();
 
         await this.streamActiveUsers(type);
