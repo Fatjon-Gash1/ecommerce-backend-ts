@@ -9,9 +9,9 @@ import {
     NotificationService,
     PaymentService,
     ProductService,
-    LoggingService
+    LoggingService,
 } from './services';
-import { Customer, User } from './models/relational';
+import { Customer, SupportAgent, User } from './models/relational';
 
 const subscriptionService = new SubscriptionService();
 const notificationService = new NotificationService();
@@ -20,9 +20,7 @@ const productService = new ProductService();
 const loggingService = new LoggingService();
 
 async function failedJobHandler(job: Job, err: Error) {
-    logger.error(
-        `Job with id "${job.id}" has failed because ${err.message}`
-    );
+    logger.error(`Job with id "${job.id}" has failed because ${err.message}`);
 
     logger.log('Retry attempt: ' + job.attemptsMade);
 }
@@ -194,7 +192,8 @@ const worker4 = new Worker(
 );
 
 worker4.on('completed', async (job: Job) => {
-    await loggingService.log('Exclusive Product',
+    await loggingService.log(
+        'Exclusive Product',
         `Exclusive product "${job.data.productName}" was removed!`
     );
 });
@@ -208,4 +207,48 @@ worker4.on('failed', async (job, err) => {
 
 worker4.on('error', (err) => {
     logger.error('Error from worker4: ' + err);
+});
+
+const worker5 = new Worker(
+    'supportAgentDetachmentJobQueue',
+    async (job: Job) => {
+        try {
+            const agent = await SupportAgent.findOne({
+                where: { userId: job.data.agentUserId },
+            });
+            if (!agent) {
+                throw new Error('Support agent not found');
+            }
+            agent.status = 'available';
+            await agent.save();
+            return agent.id;
+        } catch (error) {
+            logger.error('Error from worker5: ' + error);
+            throw new Error(
+                '"supportAgentDetachmentJobQueue" worker couldn\'t process it.'
+            );
+        }
+    },
+    {
+        concurrency: 50,
+        connection: workerRedisClient,
+    }
+);
+
+worker5.on('completed', async (_job: Job, agentId: number) => {
+    await loggingService.log(
+        'Support Agent Detachment',
+        `Support Agent "${agentId}" is now available`,
+    );
+});
+
+worker5.on('failed', async (job, err) => {
+    if (!job) {
+        return logger.error('Failed job not found!');
+    }
+    await failedJobHandler(job, err);
+});
+
+worker5.on('error', (err) => {
+    logger.error('Error from worker5: ' + err);
 });

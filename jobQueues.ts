@@ -63,3 +63,16 @@ queue4.on('error', (err) => {
 queue4.on('removed', (job) => {
     logger.log(`Job with id "${job.id}" has been removed from queue4!`);
 });
+
+export const queue5 = new Queue('supportAgentDetachmentJobQueue', {
+    defaultJobOptions: baseJobOptions,
+    connection: redisClient,
+});
+
+queue5.on('error', (err) => {
+    logger.error('Error from queue5: ' + err);
+});
+
+queue5.on('removed', (job) => {
+    logger.log(`Job with id "${job.id}" has been removed from queue5!`);
+});
