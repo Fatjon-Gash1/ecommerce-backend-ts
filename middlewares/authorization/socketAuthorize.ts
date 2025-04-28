@@ -1,3 +1,4 @@
+import { logger } from '@/logger';
 import type { Socket, ExtendedError } from 'socket.io';
 import {
     ClientToServerEvents,
@@ -18,10 +19,9 @@ export default (
     const role = socket.data.type;
 
     if (role === 'admin' || role === 'manager') {
-        console.log('passed the authorization middleware. IS ADMIN');
         next();
     } else {
-        console.log('permission denied');
-        next(new Error('Permission denied'));
+        logger.log('Cannot connect to admin socket. Permission denied');
+        next(new Error('Cannot connect to admin socket. Permission denied'));
     }
 };

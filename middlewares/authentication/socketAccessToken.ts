@@ -1,3 +1,4 @@
+import { logger } from '@/logger';
 import jwt from 'jsonwebtoken';
 import type { Socket, ExtendedError } from 'socket.io';
 import {
@@ -6,6 +7,8 @@ import {
     InterServerEvents,
     UserData,
 } from '@/types';
+
+const socketErrorMessage = 'Cannot connect to users socket. ';
 
 export default (
     socket: Socket<
@@ -19,26 +22,36 @@ export default (
     const { accessToken } = socket.handshake.auth;
 
     if (!accessToken) {
-        console.log('Access token missing');
-        return next(new Error('Access denied. Access token missing'));
+        logger.log(socketErrorMessage + 'Access denied. Access token missing');
+        return next(
+            new Error(
+                socketErrorMessage + 'Access denied. Access token missing'
+            )
+        );
     }
 
     try {
         const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY);
         socket.data = decoded as UserData;
-        console.log('passed the authentication middleware');
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
-        console.log('expired token error');
-            return next(new Error(`Token expired at: ${error.expiredAt}`));
+            const expiredAtDate = error.expiredAt.toISOString().split('T')[0];
+            logger.log(
+                socketErrorMessage + `Token expired at: ${expiredAtDate}`
+            );
+            return next(
+                new Error(
+                    socketErrorMessage + `Token expired at: ${expiredAtDate}`
+                )
+            );
         }
         if (error instanceof jwt.JsonWebTokenError) {
-        console.log('jwt token error');
-            return next(new Error('Permission denied'));
+            logger.log(socketErrorMessage + 'Permission denied');
+            return next(new Error(socketErrorMessage + 'Permission denied'));
         }
 
-        console.log('internal server error from token');
-        return next(new Error('Internal server error'));
+        logger.log(socketErrorMessage + 'Internal server error');
+        return next(new Error(socketErrorMessage + 'Internal server error'));
     }
 };
