@@ -14,6 +14,8 @@ import { Replenishment, ReplenishmentPayment } from './Replenishment.model';
 import { RefundRequest } from './RefundRequest.model';
 import { Notification } from './Notification.model';
 import { Chatroom, Message, UserChatroom } from './Chatroom.model';
+import { SupportAgent } from './SupportAgent.model';
+import { SupportTicket } from './SupportTicket.model';
 
 User.hasOne(Customer, {
     as: 'customer',
@@ -21,15 +23,22 @@ User.hasOne(Customer, {
     onDelete: 'CASCADE',
 });
 User.hasOne(Admin, { as: 'admin', foreignKey: 'userId', onDelete: 'CASCADE' });
+User.hasOne(SupportAgent, {
+    as: 'agent',
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+});
 User.hasMany(Notification, {
     as: 'notifications',
     foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
+User.hasMany(Chatroom, { as: 'groups', foreignKey: 'groupAdmin' });
 User.belongsToMany(Chatroom, {
     through: UserChatroom,
     foreignKey: 'userId',
     otherKey: 'chatroomId',
+    onDelete: 'CASCADE',
 });
 User.hasMany(Message, { as: 'messages', foreignKey: 'senderId' });
 
@@ -68,6 +77,17 @@ Admin.belongsTo(User, {
 });
 
 Admin.hasMany(AdminLog, { as: 'logs', foreignKey: 'adminId' });
+
+SupportAgent.belongsTo(User, {
+    as: 'user',
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+});
+SupportAgent.hasMany(SupportTicket, {
+    as: 'tickets',
+    foreignKey: 'agentId',
+    onDelete: 'CASCADE',
+});
 
 AdminLog.belongsTo(Admin, { as: 'admin', foreignKey: 'adminId' });
 
@@ -162,15 +182,33 @@ Notification.belongsTo(User, {
     onDelete: 'CASCADE',
 });
 
+Chatroom.belongsTo(User, { as: 'groupAdmin', foreignKey: 'groupAdmin' });
 Chatroom.belongsToMany(User, {
     through: UserChatroom,
     foreignKey: 'chatroomId',
     otherKey: 'userId',
+    onDelete: 'CASCADE',
 });
-Chatroom.hasMany(Message, { as: 'messages', foreignKey: 'chatroomId' });
+Chatroom.hasMany(Message, {
+    as: 'messages',
+    foreignKey: 'chatroomId',
+    onDelete: 'CASCADE',
+});
+Chatroom.hasOne(SupportTicket, {
+    as: 'tickets',
+    foreignKey: 'chatroomId',
+    onDelete: 'CASCADE',
+});
 
-Message.belongsTo(Chatroom, {as: 'chatroom', foreignKey: 'chatroomId'});
+Message.belongsTo(Chatroom, {
+    as: 'chatroom',
+    foreignKey: 'chatroomId',
+    onDelete: 'CASCADE',
+});
 Message.belongsTo(User, { as: 'sender', foreignKey: 'senderId' });
+
+SupportTicket.belongsTo(SupportAgent, { as: 'agent', foreignKey: 'agentId' });
+SupportTicket.belongsTo(Chatroom, { as: 'chatroom', foreignKey: 'chatroomId' });
 
 export {
     User,
@@ -192,4 +230,9 @@ export {
     ReplenishmentPayment,
     RefundRequest,
     Notification,
+    Chatroom,
+    Message,
+    UserChatroom,
+    SupportAgent,
+    SupportTicket,
 };
