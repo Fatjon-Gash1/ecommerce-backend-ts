@@ -341,4 +341,40 @@ export class OrderService {
         order.status = 'delivered';
         await order.save();
     }
+
+    /**
+     * Rate delivered order.
+     *
+     * @param userId - The id of the user
+     * @param orderId - The id of the order
+     * @param rating - The rating to be given
+     */
+    public async rateDeliveredOrder(
+        userId: number,
+        orderId: number,
+        rating: number
+    ): Promise<void> {
+        const order = await Order.findOne({
+            where: { id: orderId },
+            attributes: ['status', 'rating'],
+            include: {
+                model: Customer,
+                as: 'customer',
+                where: { userId },
+                attributes: [],
+            },
+        });
+
+        if (!order) {
+            throw new OrderNotFoundError();
+        }
+
+        if (order.status !== 'delivered') {
+            throw new Error('Cannot rate order. Order is not delivered.');
+        }
+
+        order.rating = rating;
+
+        await order.save();
+    }
 }

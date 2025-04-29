@@ -43,6 +43,7 @@ export class Order extends Model<
     declare paymentIntentId: string;
     declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
     declare refundRequest?: NonAttribute<RefundRequest>;
+    declare rating: CreationOptional<number>;
 
     public static generateTrackingNumber(): string {
         const timestamp = Date.now().toString(36);
@@ -152,6 +153,10 @@ Order.init(
         paymentIntentId: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        rating: {
+            type: DataTypes.TINYINT.UNSIGNED,
+            validate: { min: 1, max: 5 },
         },
     },
     { sequelize, modelName: 'Order', tableName: 'orders' }
