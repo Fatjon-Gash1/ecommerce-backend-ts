@@ -16,6 +16,7 @@ import { Notification } from './Notification.model';
 import { Chatroom, Message, UserChatroom } from './Chatroom.model';
 import { SupportAgent } from './SupportAgent.model';
 import { SupportTicket } from './SupportTicket.model';
+import { Courier } from './Courier.model';
 
 User.hasOne(Customer, {
     as: 'customer',
@@ -25,6 +26,11 @@ User.hasOne(Customer, {
 User.hasOne(Admin, { as: 'admin', foreignKey: 'userId', onDelete: 'CASCADE' });
 User.hasOne(SupportAgent, {
     as: 'agent',
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+});
+User.hasOne(Courier, {
+    as: 'courier',
     foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
@@ -86,6 +92,12 @@ SupportAgent.belongsTo(User, {
 SupportAgent.hasMany(SupportTicket, {
     as: 'tickets',
     foreignKey: 'agentId',
+    onDelete: 'CASCADE',
+});
+
+Courier.belongsTo(User, {
+    as: 'user',
+    foreignKey: 'userId',
     onDelete: 'CASCADE',
 });
 
@@ -156,6 +168,7 @@ Order.belongsToMany(Customer, {
     otherKey: 'customerId',
 });
 Order.hasOne(RefundRequest, { as: 'refundRequest', foreignKey: 'orderId' });
+Order.belongsTo(Courier, { as: 'courier', foreignKey: 'courierId' });
 
 Sale.belongsTo(Order, { foreignKey: 'orderId' });
 
@@ -210,6 +223,8 @@ Message.belongsTo(User, { as: 'sender', foreignKey: 'senderId' });
 SupportTicket.belongsTo(SupportAgent, { as: 'agent', foreignKey: 'agentId' });
 SupportTicket.belongsTo(Chatroom, { as: 'chatroom', foreignKey: 'chatroomId' });
 
+Courier.hasMany(Order, { as: 'orders', foreignKey: 'courierId' });
+
 export {
     User,
     Customer,
@@ -235,4 +250,5 @@ export {
     UserChatroom,
     SupportAgent,
     SupportTicket,
+    Courier,
 };
