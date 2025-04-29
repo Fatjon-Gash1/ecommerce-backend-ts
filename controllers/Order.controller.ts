@@ -13,10 +13,7 @@ export class OrderController {
     private loggingService?: LoggingService;
     private logger: Logger;
 
-    constructor(
-        orderService: OrderService,
-        loggingService?: LoggingService
-    ) {
+    constructor(orderService: OrderService, loggingService?: LoggingService) {
         this.orderService = orderService;
         this.loggingService = loggingService;
         this.logger = new Logger();
@@ -36,7 +33,7 @@ export class OrderController {
         const orderId: number = Number(req.params.id);
 
         try {
-            const order = await this.orderService.getOrderById( orderId,userId);
+            const order = await this.orderService.getOrderById(orderId, userId);
             return res.status(200).json({ order });
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
@@ -145,7 +142,7 @@ export class OrderController {
                 await this.orderService.getCustomerOrdersByStatus(
                     customerId,
                     userId,
-                    status as string,
+                    status as string
                 );
             return res.status(200).json({ total: count, orders });
         } catch (error) {
@@ -215,7 +212,11 @@ export class OrderController {
             await this.orderService.markAsDelivered(orderId);
             res.sendStatus(204);
 
-            await this.loggingService!.logOperation(username, 'order', 'update');
+            await this.loggingService!.logOperation(
+                username,
+                'order',
+                'update'
+            );
         } catch (error) {
             if (error instanceof OrderNotFoundError) {
                 this.logger.error('Error marking order as delivered: ' + error);
@@ -228,6 +229,29 @@ export class OrderController {
             }
 
             this.logger.error('Error marking order as delivered: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async rateDeliveredOrder(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { rating } = req.body;
+        const { userId } = req.user as JwtPayload;
+        const orderId = Number(req.params.id);
+
+        try {
+            await this.orderService.rateDeliveredOrder(userId, orderId, rating);
+
+            res.sendStatus(204);
+        } catch (error) {
+            if (error instanceof OrderNotFoundError) {
+                this.logger.error('Error rating order: ' + error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            this.logger.error('Error rating order: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
