@@ -5,7 +5,15 @@ import { queue2 } from '@/jobQueues';
 import { addBirthdayJobScheduler } from '@/jobSchedulers';
 import { PaymentService } from './Payment.service';
 import { NotificationService } from './Notification.service';
-import { User, Customer, Admin } from '@/models/relational';
+import {
+    User,
+    Customer,
+    Admin,
+    SupportAgent,
+    SupportTicket,
+    Courier,
+    Order,
+} from '@/models/relational';
 import {
     UserNotFoundError,
     UserAlreadyExistsError,
@@ -18,8 +26,11 @@ import {
     CustomerDetails,
     AuthTokens,
     CustomerResponse,
+    SupportAgentResponse,
     UserType,
+    CourierResponse,
 } from '@/types';
+import sequelize from 'sequelize';
 
 const {
     ACCESS_TOKEN_KEY,
@@ -170,7 +181,7 @@ export class UserService {
         const newCustomer = await this.userFactory(Customer, {
             ...details,
             isActive: true,
-            lastLogin: new Date().toISOString()
+            lastLogin: new Date().toISOString(),
         });
         newCustomer.stripeId = await this.paymentService.createCustomer(
             `${newCustomer.firstName} ${newCustomer.lastName}`,
@@ -304,24 +315,13 @@ export class UserService {
         customerId: number
     ): Promise<CustomerResponse> {
         const customer = await Customer.findByPk(customerId, {
-            attributes: [
-                'id',
-                'stripeId',
-                'shippingAddress',
-                'billingAddress',
-                'isActive',
-                'createdAt',
-            ],
+            attributes: {
+                exclude: ['userId', 'stripeId', 'stripePaymentMethodId'],
+            },
             include: {
                 model: User,
                 as: 'user',
-                attributes: [
-                    'profilePictureUrl',
-                    'firstName',
-                    'lastName',
-                    'username',
-                    'email',
-                ],
+                attributes: { exclude: ['id', 'password'] },
             },
         });
 
@@ -332,6 +332,125 @@ export class UserService {
         const { user, ...rest } = customer.toJSON();
 
         return { ...rest, ...user };
+    }
+
+    /**
+     * Retrieves support agent by its ID.
+     *
+     * @param supportAgentId - The ID of the support agent
+     * @returns A promise resolving to a Support Agent object
+     */
+    public async getSupportAgentById(
+        supportAgentId: number
+    ): Promise<SupportAgentResponse> {
+        const supportAgent = await SupportAgent.findByPk(supportAgentId, {
+            attributes: { exclude: ['userId'] },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: { exclude: ['id', 'password'] },
+                },
+                {
+                    model: SupportTicket,
+                    as: 'tickets',
+                    attributes: [
+                        [
+                            sequelize.fn(
+                                'AVG',
+                                sequelize.col('initialResponseTime')
+                            ),
+                            'averageResponseTime',
+                        ],
+                        [
+                            sequelize.fn(
+                                'AVG',
+                                sequelize.col('customerRating')
+                            ),
+                            'averageCustomerRating',
+                        ],
+                        [
+                            sequelize.fn('COUNT', sequelize.col('id')),
+                            'handledTickets',
+                        ],
+                        [
+                            sequelize.fn(
+                                'COUNT',
+                                sequelize.where(
+                                    sequelize.col('status'),
+                                    'resolved'
+                                )
+                            ),
+                            'resolvedTickets',
+                        ],
+                        [
+                            sequelize.fn(
+                                'COUNT',
+                                sequelize.where(
+                                    sequelize.col('status'),
+                                    'failed'
+                                )
+                            ),
+                            'failedTickets',
+                        ],
+                        [
+                            sequelize.fn(
+                                'COUNT',
+                                sequelize.where(
+                                    sequelize.col('status'),
+                                    'pending'
+                                )
+                            ),
+                            'pendingTickets',
+                        ],
+                    ],
+                },
+            ],
+        });
+
+        if (!supportAgent) {
+            throw new UserNotFoundError('Support agent not found');
+        }
+
+        return supportAgent.toJSON();
+    }
+
+    /**
+     * Retrieves a courier by its ID.
+     *
+     * @param courierId - The ID of the courier
+     * @returns A promise resolving to a Courier object
+     */
+    public async getCourierById(courierId: number): Promise<CourierResponse> {
+        const courier = await Courier.findByPk(courierId, {
+            attributes: { exclude: ['userId'] },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: { exclude: ['id', 'password'] },
+                },
+                {
+                    model: Order,
+                    as: 'orders',
+                    attributes: [
+                        [
+                            sequelize.fn(
+                                'AVG',
+                                sequelize.col('rating')
+                            ),
+                            'averageCustomerRating',
+                        ],
+                    ],
+                },
+            ],
+        });
+
+        if (!courier) {
+            throw new UserNotFoundError('Courier not found');
+        }
+
+        return courier.toJSON();
     }
 
     /**

@@ -1,7 +1,22 @@
 import { UserService } from './User.service';
-import { User, Customer, Admin } from '@/models/relational';
+import {
+    User,
+    Customer,
+    Admin,
+    SupportAgent,
+    SupportTicket,
+    Courier,
+    Order,
+} from '@/models/relational';
 import { UserNotFoundError } from '@/errors';
-import { UserCreationDetails, CustomerResponse, AdminResponse } from '@/types';
+import {
+    UserCreationDetails,
+    CustomerResponse,
+    AdminResponse,
+    SupportAgentResponse,
+    CourierResponse,
+} from '@/types';
+import sequelize from 'sequelize';
 
 /**
  * Service responsible for Admin-related operations.
@@ -96,7 +111,7 @@ export class AdminService extends UserService {
      * Retrieves all Customers in the database.
      *
      * @returns A promise resolving to the total count along with
-     * an array of Customer instances
+     * an array of Customer objects
      */
     public async getAllCustomers(): Promise<{
         count: number;
@@ -120,10 +135,131 @@ export class AdminService extends UserService {
     }
 
     /**
+     * Retrieves all Support Agents in the database.
+     *
+     * @returns A promise resolving to the total count along with
+     * an array of Support Agent objects
+     */
+    public async getAllSupportAgents(): Promise<{
+        count: number;
+        supportAgents: SupportAgentResponse[];
+    }> {
+        const { count, rows } = await SupportAgent.findAndCountAll({
+            attributes: { exclude: ['userId'] },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: { exclude: ['id', 'password'] },
+                },
+                {
+                    model: SupportTicket,
+                    as: 'tickets',
+                    attributes: [
+                        [
+                            sequelize.fn(
+                                'AVG',
+                                sequelize.col('initialResponseTime')
+                            ),
+                            'averageResponseTime',
+                        ],
+                        [
+                            sequelize.fn(
+                                'AVG',
+                                sequelize.col('customerRating')
+                            ),
+                            'averageCustomerRating',
+                        ],
+                        [
+                            sequelize.fn('COUNT', sequelize.col('id')),
+                            'handledTickets',
+                        ],
+                        [
+                            sequelize.fn(
+                                'COUNT',
+                                sequelize.where(
+                                    sequelize.col('status'),
+                                    'resolved'
+                                )
+                            ),
+                            'resolvedTickets',
+                        ],
+                        [
+                            sequelize.fn(
+                                'COUNT',
+                                sequelize.where(
+                                    sequelize.col('status'),
+                                    'failed'
+                                )
+                            ),
+                            'failedTickets',
+                        ],
+                        [
+                            sequelize.fn(
+                                'COUNT',
+                                sequelize.where(
+                                    sequelize.col('status'),
+                                    'pending'
+                                )
+                            ),
+                            'pendingTickets',
+                        ],
+                    ],
+                },
+            ],
+        });
+
+        const supportAgents = rows.map((row) => {
+            const { user, ...rest } = row.toJSON();
+            return { ...rest, ...user };
+        });
+
+        return { count, supportAgents };
+    }
+
+    /**
+     * Retrieves all Couriers in the database.
+     *
+     * @returns A promise resolving to the total count along with the Courier objects
+     */
+    public async getAllCouriers(): Promise<{
+        count: number;
+        couriers: CourierResponse[];
+    }> {
+        const { count, rows } = await Courier.findAndCountAll({
+            attributes: { exclude: ['userId'] },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: { exclude: ['id', 'password'] },
+                },
+                {
+                    model: Order,
+                    as: 'orders',
+                    attributes: [
+                        [
+                            sequelize.fn('AVG', sequelize.col('rating')),
+                            'averageCustomerRating',
+                        ],
+                    ],
+                },
+            ],
+        });
+
+        const couriers = rows.map((row) => {
+            const { user, ...rest } = row.toJSON();
+            return { ...rest, ...user };
+        });
+
+        return { count, couriers };
+    }
+
+    /**
      * Retrieves Admin by ID.
      *
      * @param adminId - The id of the Admin
-     * @returns A promise resolving to an Admin instance
+     * @returns A promise resolving to an Admin object
      */
     public async getAdminById(adminId: number): Promise<AdminResponse> {
         const admin = await Admin.findByPk(adminId, {
