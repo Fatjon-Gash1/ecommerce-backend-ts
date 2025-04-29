@@ -4,6 +4,8 @@ export {
     CustomerDetails,
     AuthTokens,
     CustomerResponse,
+    SupportAgentResponse,
+    CourierResponse,
     UserType,
 } from './User.types';
 export {

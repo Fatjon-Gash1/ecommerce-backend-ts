@@ -34,13 +34,24 @@ export interface ClientToServerEvents {
         groupName: string,
         ...memberUserIds: number[]
     ) => void;
-    updateGroupName: (userId: number, roomId: string, newName: string) => void;
+    updateGroupName: (chatroomId: number, newName: string) => void;
     viewMessage: (
         viewerUserId: number,
         targetUserId: number,
         chatroomId: number,
         messageSenderId: number,
         oneOnOne?: boolean
+    ) => void;
+    updateMessage: (
+        messageId: number,
+        newMessage: string,
+        targetUserId?: number,
+        chatroomId?: number
+    ) => void;
+    removeMessage: (
+        messageId: number,
+        targetUserId?: number,
+        chatroomId?: number
     ) => void;
     contactSupport: (
         senderUserType: UserType,
@@ -52,6 +63,11 @@ export interface ClientToServerEvents {
     groupTypingStopped: (typerUserId: number, chatroomId: number) => void;
     typing: (typerUserId: number, targetUserId: number) => void;
     typingStopped: (typerUserId: number, targetUserId: number) => void;
+    markSupportTicketAsClosed: (
+        chatroomId: number,
+        targetUserId: number,
+        resolved?: boolean
+    ) => void;
 }
 
 export interface ServerToClientEvents {
@@ -71,11 +87,15 @@ export interface ServerToClientEvents {
     kickedFromGroup: (roomId: string, message: string) => void;
     addedGroupMember: (message: string) => void;
     groupDeleted: (groupName: string) => void;
+    messageUpdated: (messageId: number, newMessage: string) => void;
+    messageRemoved: (messageId: number) => void;
+    groupNameUpdated: (chatroomId: number, newName: string) => void;
     groupSystemMessage: (message: string) => void;
     [key: `lastMessageViews:${string}`]: (
         viewers: string[],
         messageSenderId: number
     ) => void;
+    ticketClosed: (chatroomId: number, resolved?: boolean) => void;
     groupTyping: (typerUserId: number) => void;
     groupTypingStopped: (typerUserId: number) => void;
     typing: (typerUserId: number) => void;
