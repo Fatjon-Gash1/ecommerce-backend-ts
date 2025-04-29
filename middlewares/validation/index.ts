@@ -68,6 +68,12 @@ export {
 } from './subscriptionValidations';
 
 export {
+    validateType,
+    validateMessageDate,
+    validateRating,
+} from './chattingValidations';
+
+export {
     validateId,
     validateObjectId,
     validateQuery,
