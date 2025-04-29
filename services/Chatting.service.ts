@@ -3,6 +3,7 @@ import {
     Chatroom,
     Message,
     SupportAgent,
+    SupportTicket,
     User,
     UserChatroom,
 } from '@/models/relational';
@@ -194,14 +195,6 @@ export class ChattingService {
             });
         });
 
-        socket.on('updateGroupName', async (userId, roomId, newName) => {
-            await this.updateGroupName(
-                parseInt(roomId.split(':')[1]),
-                userId,
-                newName
-            );
-        });
-
         socket.on(
             'kickGroupMember',
             async (ownerUserId, kickedUserId, roomId) => {
@@ -319,6 +312,37 @@ export class ChattingService {
                 });
 
                 if (socket.data.type === 'support') {
+                    const firstResponse = await redisClient.hget(
+                        'supportTicketTimestamps',
+                        chatroomId.toString()
+                    );
+
+                    if (firstResponse) {
+                        const passedMilliseconds =
+                            Date.now() - parseInt(firstResponse);
+
+                        const supportAgent = await SupportAgent.findOne({
+                            where: { userId: senderUserId },
+                            attributes: ['id'],
+                        });
+
+                        if (!supportAgent) {
+                            throw new UserNotFoundError(
+                                'Support agent not found'
+                            );
+                        }
+
+                        await SupportTicket.create({
+                            chatroomId,
+                            agentId: supportAgent.id,
+                            initialResponseTime: passedMilliseconds,
+                        });
+                        await redisClient.hdel(
+                            'supportTicketTimestamps',
+                            chatroomId.toString()
+                        );
+                    }
+
                     const pendingJob = await redisClient.hget(
                         'SupportAgentDetachmentJobs',
                         senderUserId.toString()
@@ -410,11 +434,105 @@ export class ChattingService {
         );
 
         socket.on(
+            'updateMessage',
+            async (messageId, newMessage, targetUserId, chatroomId) => {
+                const message = await Message.findOne({
+                    where: { id: messageId, senderId: socket.data.userId },
+                });
+
+                if (!message) {
+                    throw new Error('Message not found');
+                }
+
+                if (targetUserId) {
+                    const socketId = await redisClient.hget(
+                        'userSockets',
+                        targetUserId.toString()
+                    );
+
+                    if (!socketId) {
+                        throw new Error('Target socket Id not found');
+                    }
+
+                    this.io
+                        .to(socketId)
+                        .emit('messageUpdated', messageId, newMessage);
+                }
+
+                if (chatroomId) {
+                    this.io
+                        .to('groupChat:' + chatroomId)
+                        .emit('messageUpdated', messageId, newMessage);
+                }
+
+                message.message = newMessage;
+                message.status = 'edited';
+                await message.save();
+            }
+        );
+
+        socket.on(
+            'removeMessage',
+            async (messageId, targetUserId, chatroomId) => {
+                const message = await Message.findOne({
+                    where: { id: messageId, senderId: socket.data.userId },
+                });
+
+                if (!message) {
+                    throw new Error('Message not found');
+                }
+
+                if (targetUserId) {
+                    const socketId = await redisClient.hget(
+                        'userSockets',
+                        targetUserId.toString()
+                    );
+
+                    if (!socketId) {
+                        throw new Error('Target socket Id not found');
+                    }
+
+                    this.io.to(socketId).emit('messageRemoved', messageId);
+                }
+
+                if (chatroomId) {
+                    this.io
+                        .to('groupChat:' + chatroomId)
+                        .emit('messageRemoved', messageId);
+                }
+
+                message.status = 'removed';
+                await message.save();
+            }
+        );
+
+        socket.on('updateGroupName', async (chatroomId, newName) => {
+            const chatroom = await Chatroom.findByPk(chatroomId);
+
+            if (!chatroom) {
+                throw new Error('Chatroom not found');
+            }
+
+            if (socket.data.userId !== chatroom.groupAdmin) {
+                throw new Error('Unauthorized');
+            }
+
+            this.io
+                .to('groupChat:' + chatroomId)
+                .emit('groupNameUpdated', chatroomId, newName);
+
+            chatroom.name = newName;
+            await chatroom.save();
+        });
+
+        socket.on(
             'contactSupport',
             async (senderUserType, senderUserId, message) => {
                 if (senderUserType !== 'customer') {
                     throw new Error('Invalid user type. User must be customer');
                 }
+
+                const ticketTimestamp = Date.now();
 
                 const supportAgents = await SupportAgent.findAll({
                     where: { status: 'available' },
@@ -453,6 +571,54 @@ export class ChattingService {
                     'Support Agent Detachment',
                     `Support Agent "${agent.id}" is now available`
                 );
+
+                await redisClient.hset(
+                    'supportTicketTimestamps',
+                    chatroomId,
+                    ticketTimestamp
+                );
+            }
+        );
+
+        socket.on(
+            'markSupportTicketAsClosed',
+            async (chatroomId, targetUserId, resolved) => {
+                if (socket.data.type !== 'support') {
+                    throw new Error(
+                        'Invalid user type. User must be support agent'
+                    );
+                }
+
+                const ticket = await SupportTicket.findOne({
+                    where: { chatroomId },
+                    include: {
+                        model: SupportAgent,
+                        as: 'agent',
+                        where: { userId: socket.data.userId },
+                        attributes: [],
+                    },
+                    attributes: ['status'],
+                });
+
+                if (!ticket) {
+                    throw new Error(
+                        'Cannot mark ticked as closed, no ticket was found'
+                    );
+                }
+                const socketId = await redisClient.hget(
+                    'userSockets',
+                    targetUserId.toString()
+                );
+
+                if (!socketId) {
+                    throw new Error('Target socket Id not found');
+                }
+
+                this.io.to(socketId).emit('ticketClosed', chatroomId, resolved);
+
+                ticket.status = resolved ? 'resolved' : 'failed';
+
+                await ticket.save();
             }
         );
 
@@ -639,7 +805,12 @@ export class ChattingService {
             throw error;
         }
     }
+}
 
+/**
+ * Serves chatting related business logic for HTTP requests.
+ */
+export class ChattingServiceHTTP {
     /**
      * Retrieves the user chatrooms by type, or all if type is not provided.
      *
@@ -709,75 +880,27 @@ export class ChattingService {
     }
 
     /**
-     * Updates the group name.
+     * Rates the support agent for the given session.
      *
-     * @param chatroomId - The ID of the group chatroom
-     * @param groupAdminUserId - The user ID of the group admin
-     * @param newName - The new group name
+     * @param chatroomId - The ID of the chatroom
+     * @param rating - The rating value
      */
-    public async updateGroupName(
+    public async rateSupportSession(
         chatroomId: number,
-        groupAdminUserId: number,
-        newName: string
+        rating: number
     ): Promise<void> {
-        const chatroom = await Chatroom.findByPk(chatroomId);
+        const ticket = await SupportTicket.findOne({ where: { chatroomId } });
 
-        if (!chatroom) {
-            throw new Error('Chatroom not found');
+        if (!ticket) {
+            throw new Error('Cannot rate support session, no ticket was found');
         }
 
-        if (groupAdminUserId !== chatroom.groupAdmin) {
-            throw new Error('Unauthorized');
+        if (ticket.status === 'pending') {
+            throw new Error('Cannot rate support session, it is still pending');
         }
 
-        chatroom.name = newName;
-        await chatroom.save();
-    }
+        ticket.customerRating = rating;
 
-    /**
-     * Updates a message in the chatroom.
-     *
-     * @param messageId - The ID of the message to update
-     * @param senderId - The ID of the user who sent the message
-     * @param newMessage - The new message
-     */
-    public async updateMessage(
-        messageId: number,
-        senderId: number,
-        newMessage: string
-    ): Promise<void> {
-        const message = await Message.findOne({
-            where: { id: messageId, senderId },
-        });
-
-        if (!message) {
-            throw new Error('Message not found');
-        }
-
-        message.message = newMessage;
-        message.status = 'edited';
-        await message.save();
-    }
-
-    /**
-     * Removes a message from the chatroom.
-     *
-     * @param messageId - The ID of the message to remove
-     * @param senderId - The ID of the user who sent the message
-     */
-    public async removeMessage(
-        messageId: number,
-        senderId: number
-    ): Promise<void> {
-        const message = await Message.findOne({
-            where: { id: messageId, senderId },
-        });
-
-        if (!message) {
-            throw new Error('Message not found');
-        }
-
-        message.status = 'removed';
-        await message.save();
+        await ticket.save();
     }
 }
