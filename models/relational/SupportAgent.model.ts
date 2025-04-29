@@ -32,6 +32,8 @@ export class SupportAgent extends Model<
     declare averageCustomerRating?: number;
     declare handledTickets?: number;
     declare resolvedTickets?: number;
+    declare failedTickets?: number;
+    declare pendingTickets?: number;
 }
 
 SupportAgent.init(
@@ -83,9 +85,16 @@ SupportAgent.init(
     }
 );
 
-SupportAgent.beforeCreate(async (customer: SupportAgent) => {
-    const { firstName, lastName, username, email, password, isActive, lastLogin } =
-        customer;
+SupportAgent.beforeCreate(async (agent: SupportAgent) => {
+    const {
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+        isActive,
+        lastLogin,
+    } = agent;
 
     const user = await User.create({
         firstName,
@@ -94,8 +103,8 @@ SupportAgent.beforeCreate(async (customer: SupportAgent) => {
         email,
         password,
         isActive,
-        lastLogin
+        lastLogin,
     });
 
-    customer.userId = user.id;
+    agent.userId = user.id;
 });

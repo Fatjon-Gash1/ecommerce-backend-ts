@@ -17,8 +17,8 @@ export class SupportTicket extends Model<
     declare chatroomId: ForeignKey<Chatroom['id']>;
     declare agentId: ForeignKey<SupportAgent['id']>;
     declare initialResponseTime: number;
-    declare customerRating: number;
-    declare status: 'pending' | 'failed' | 'resolved';
+    declare customerRating: CreationOptional<number>;
+    declare status: CreationOptional<'pending' | 'failed' | 'resolved'>;
 }
 
 SupportTicket.init(

@@ -15,7 +15,7 @@ export class Chatroom extends Model<
 > {
     declare id: CreationOptional<number>;
     declare type: CreationOptional<'one-on-one' | 'group' | 'support'>;
-    declare groupAdmin: CreationOptional<ForeignKey<User['id']>>;
+    declare groupAdmin: ForeignKey<User['id']>;
     declare name: CreationOptional<string>;
 
     // Association properties

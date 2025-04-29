@@ -42,6 +42,7 @@ import {
     EmailNotificationError,
 } from './NotificationErrors';
 import { ReportNotFoundError } from './AnalyticsErrors';
+import { ChatroomNotFoundError } from './ChattingErrors';
 
 export {
     UserNotFoundError,
@@ -75,4 +76,5 @@ export {
     NotificationNotFoundError,
     EmailNotificationError,
     ReportNotFoundError,
+    ChatroomNotFoundError,
 };
