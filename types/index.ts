@@ -80,3 +80,4 @@ export {
     InterServerEvents,
     UserData,
 } from './Socket.types';
+export { ChatroomResponse, MessageResponse } from './Chatting.types';

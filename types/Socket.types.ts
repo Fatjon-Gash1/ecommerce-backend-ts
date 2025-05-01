@@ -104,6 +104,8 @@ export interface ServerToClientEvents {
 
 export interface AdminServerToClientEvents extends ServerToClientEvents {
     activeAdmins: (count: number) => void;
+    activeSupport: (count: number) => void;
+    activeCouriers: (count: number) => void;
     activeCustomers: (count: number) => void;
     adminLog: (log: object) => void;
     platformLog: (log: object) => void;

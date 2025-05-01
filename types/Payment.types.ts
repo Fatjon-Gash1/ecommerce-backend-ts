@@ -40,6 +40,7 @@ export interface PaymentProcessingData {
     paymentMethodType: 'card';
     paymentMethodId: string;
     loyaltyPoints?: number;
+    safeShippingPaid?: boolean;
 }
 
 export interface OrderItem {
@@ -62,4 +63,17 @@ export interface SubscriptionFormattedResponse {
     price: number | null;
     status: 'active' | 'canceled';
     created: Date;
+}
+
+export interface ProcessedPaymentResponse {
+    weightCategory:
+        | 'light'
+        | 'standard'
+        | 'heavy'
+        | 'very-heavy'
+        | 'extra-heavy';
+    orderWeight: number;
+    paymentIntentId: string;
+    paymentAmount: number;
+    safeShippingPaid?: boolean;
 }

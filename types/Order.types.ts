@@ -21,9 +21,13 @@ export interface OrderResponse {
         | 'awaiting pickup'
         | 'delivered'
         | 'refunded'
-        | 'partially-refunded';
+        | 'partially-refunded'
+        | 'uncollected';
     trackingNumber: string;
     total: number;
+    rating?: number;
+    proofOfDeliveryImageUrl?: string;
+    safeShipping: boolean;
     createdAt?: Date;
 }
 

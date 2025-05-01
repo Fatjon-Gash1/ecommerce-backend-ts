@@ -7,6 +7,7 @@ export interface UserDetails {
     isActive?: boolean;
     lastLogin?: Date | string;
     role?: string;
+    phoneNumber?: string;
     birthday?: Date;
     createdAt?: Date;
 }
@@ -55,5 +56,5 @@ export type UserType =
     | 'admin'
     | 'manager'
     | 'customer'
-    | 'supportAgent'
+    | 'support'
     | 'courier';
