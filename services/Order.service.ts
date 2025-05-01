@@ -1,12 +1,8 @@
 import { sequelize } from '@/config/db';
 import { Op } from 'sequelize';
 import type { Transaction } from 'sequelize';
-import { Order, Customer } from '@/models/relational';
-import {
-    UserNotFoundError,
-    OrderNotFoundError,
-    OrderAlreadyMarkedError,
-} from '@/errors';
+import { Order, Customer, Courier } from '@/models/relational';
+import { UserNotFoundError, OrderNotFoundError } from '@/errors';
 import { OrderItemAttributes, OrderResponse, OrderItemResponse } from '@/types';
 
 /**
@@ -42,10 +38,12 @@ export class OrderService {
         shippingMethod: 'standard' | 'express' | 'next-day',
         orderTotal: number,
         paymentIntentId: string,
+        safeShippingPaid?: boolean,
         transactionObj?: Transaction
     ): Promise<OrderResponse> {
         const transaction: Transaction =
             transactionObj ?? (await sequelize.transaction());
+        let safeShipping: boolean | undefined;
 
         try {
             const customer = await Customer.findOne({
@@ -55,6 +53,10 @@ export class OrderService {
 
             if (!customer) {
                 throw new UserNotFoundError('Customer not found');
+            }
+
+            if (safeShippingPaid || customer.membership !== 'free') {
+                safeShipping = true;
             }
 
             const order = await Order.create(
@@ -67,6 +69,7 @@ export class OrderService {
                     shippingMethod,
                     total: orderTotal,
                     paymentIntentId,
+                    safeShipping,
                 },
                 { transaction }
             );
@@ -307,42 +310,6 @@ export class OrderService {
     }
 
     /**
-     * Marks customer's order as delivered.
-     *
-     * @param orderId - The id of the order
-     *
-     * @throws {@link OrderNotFoundError}
-     * Thrown if the order is not found.
-     *
-     * @throws {@link OrderAlreadyMarkedError}
-     * Thrown if the order is already marked as delivered.
-     *
-     * @throws Error
-     * Thrown if the order status is not "awaiting pickup".
-     */
-    public async markAsDelivered(orderId: number): Promise<void> {
-        const order = await Order.findByPk(orderId);
-
-        if (!order) {
-            throw new OrderNotFoundError();
-        }
-
-        if (order.status === 'delivered') {
-            throw new OrderAlreadyMarkedError();
-        }
-
-        if (order.status !== 'awaiting pickup') {
-            throw new OrderAlreadyMarkedError(
-                'Cannot mark order as delivered. Order status is: ' +
-                    order.status
-            );
-        }
-
-        order.status = 'delivered';
-        await order.save();
-    }
-
-    /**
      * Rate delivered order.
      *
      * @param userId - The id of the user
@@ -354,8 +321,7 @@ export class OrderService {
         orderId: number,
         rating: number
     ): Promise<void> {
-        const order = await Order.findOne({
-            where: { id: orderId },
+        const order = await Order.findByPk(orderId, {
             attributes: ['status', 'rating'],
             include: {
                 model: Customer,
@@ -373,8 +339,114 @@ export class OrderService {
             throw new Error('Cannot rate order. Order is not delivered.');
         }
 
-        order.rating = rating;
+        await Order.update({ rating }, { where: { id: orderId } });
+    }
 
-        await order.save();
+    /**
+     * Marks order as shipped, awaiting pickup, or delivered.
+     *
+     * @param userId - The id of the user
+     * @param orderId - The id of the order
+     * @param status - The status to mark the order as
+     *
+     * @throws {@link UserNotFoundError}
+     * Thrown if the user is not found.
+     *
+     * @throws {@link OrderNotFoundError}
+     * Thrown if the order is not found.
+     */
+    public async markOrder(
+        userId: number,
+        orderId: number,
+        status: 'shipped' | 'awaiting pickup' | 'delivered' | 'uncollected',
+        deliveryImageUrl?: string
+    ): Promise<void> {
+        const courier = await Courier.findOne({ where: { userId } });
+
+        if (!courier) {
+            throw new UserNotFoundError('Courier not found');
+        }
+
+        const order = await Order.findByPk(orderId);
+
+        if (!order) {
+            throw new OrderNotFoundError();
+        }
+
+        if (status === 'delivered' && order.safeShipping) {
+            if (order.status !== 'awaiting pickup') {
+                throw new Error(
+                    'Cannot mark order as delivered. Order status is: ' +
+                        order.status
+                );
+            }
+            if (!deliveryImageUrl) {
+                // In this case image would be a signature
+                throw new Error('Delivery proof image is required');
+            }
+            order.proofOfDeliveryImageUrl = deliveryImageUrl;
+            order.status = status;
+            await order.save();
+            return;
+        }
+
+        switch (status) {
+            case 'shipped': {
+                if (order.status !== 'pending') {
+                    throw new Error(
+                        'Order cannot be marked as shipped. Order status is: ' +
+                            order.status
+                    );
+                }
+                order.status = status;
+                order.courierId = courier.id;
+                await order.save();
+                break;
+            }
+            case 'awaiting pickup': {
+                if (!order.safeShipping) {
+                    throw new Error(
+                        'Cannot mark order as awaiting pickup. Order does not have safe shipping'
+                    );
+                }
+                if (order.status !== 'shipped') {
+                    throw new Error(
+                        'Cannot mark order as awaiting pickup. Order status is: ' +
+                            order.status
+                    );
+                }
+
+                order.status = status;
+                await order.save();
+                break;
+            }
+            case 'delivered': {
+                if (order.status !== 'shipped') {
+                    throw new Error(
+                        'Cannot mark order as delivered. Order status is: ' +
+                            order.status
+                    );
+                }
+                if (!deliveryImageUrl) {
+                    // In this case image would be a package capture
+                    throw new Error('Delivery proof image is required');
+                }
+                order.proofOfDeliveryImageUrl = deliveryImageUrl;
+                order.status = status;
+                await order.save();
+                break;
+            }
+            case 'uncollected': {
+                if (order.status !== 'awaiting pickup') {
+                    throw new Error(
+                        'Cannot mark order as uncollected. Order status is: ' +
+                            order.status
+                    );
+                }
+                order.status = status;
+                await order.save();
+                break;
+            }
+        }
     }
 }

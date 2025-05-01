@@ -26,6 +26,7 @@ import {
     RefundRequestResponse,
     SubscriptionFormattedResponse,
 } from '@/types';
+import { ProcessedPaymentResponse } from '@/types/Payment.types';
 
 dotenv.config();
 
@@ -442,7 +443,7 @@ export class PaymentService {
      *
      * @remarks
      * This method can be only called by customers.
-     * The request is reviewed by a manager before the refund is processed.
+     * The request is reviewed by a support agent or admin before the refund is processed.
      *
      * @param userId - The user ID of the customer
      * @param orderId - The ID of the order to refund
@@ -524,7 +525,7 @@ export class PaymentService {
      * Retrieves refund requests.
      *
      * @remarks
-     * This method can only be called by admins.
+     * This method can only be called by support or admins.
      *
      * @param [filter] - Optional filter object
      * @returns - A promise resolving to an array of refund requests.
@@ -557,7 +558,7 @@ export class PaymentService {
      * Retrieve customer's refund requests.
      *
      * @remarks
-     * This method can only be called by admins.
+     * This method can only be called by support or admins.
      *
      * @param userId - The user ID of the customer
      * @returns - A promise resolving to an array of refund requests.
@@ -583,7 +584,7 @@ export class PaymentService {
      * Handles the refund request for an order.
      *
      * @remarks
-     * This method can only be called by admins.
+     * This method can only be called by support or admins.
      *
      * @param refundRequestId - The ID of the refund request
      * @param action - The action to take (deny or approve)
@@ -1068,23 +1069,19 @@ export class PaymentService {
     public async processPayment(
         userId: number,
         data: PaymentProcessingData
-    ): Promise<{
-        weightCategory:
-            | 'light'
-            | 'standard'
-            | 'heavy'
-            | 'very-heavy'
-            | 'extra-heavy';
-        orderWeight: number;
-        paymentIntentId: string;
-        paymentAmount: number;
-    }> {
+    ): Promise<ProcessedPaymentResponse> {
         const customer = await Customer.findOne({
             where: { userId },
         });
 
         if (!customer) {
             throw new UserNotFoundError('Customer not found');
+        }
+
+        if (data.safeShippingPaid && customer.membership !== 'free') {
+            throw new Error(
+                'You already have safe shipping enabled. No need to pay extra'
+            );
         }
 
         if (data.loyaltyPoints && data.loyaltyPoints > customer.loyaltyPoints) {
@@ -1124,7 +1121,8 @@ export class PaymentService {
             data.shippingCountry,
             data.shippingMethod,
             undefined,
-            data.orderItems
+            data.orderItems,
+            data.safeShippingPaid
         );
 
         let discountedPrice: number | null = null; // Discounted from loyalty points
@@ -1164,6 +1162,7 @@ export class PaymentService {
             orderWeight,
             paymentIntentId,
             paymentAmount: totalAmount,
+            safeShippingPaid: data.safeShippingPaid,
         };
     }
 
@@ -1177,19 +1176,19 @@ export class PaymentService {
         userId: number,
         data: PaymentProcessingData
     ): Promise<void> {
-        const { weightCategory, orderWeight, paymentIntentId, paymentAmount } =
-            await this.processPayment(userId, data);
+        const paymentData = await this.processPayment(userId, data);
 
         await this.orderService!.createOrder(
             userId,
             data.orderItems,
             data.paymentMethodType,
             data.shippingCountry,
-            weightCategory,
-            orderWeight,
+            paymentData.weightCategory,
+            paymentData.orderWeight,
             data.shippingMethod,
-            paymentAmount,
-            paymentIntentId
+            paymentData.paymentAmount,
+            paymentData.paymentIntentId,
+            paymentData.safeShippingPaid
         );
     }
 }

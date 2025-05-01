@@ -338,6 +338,7 @@ export class ShippingService {
      * @param countryName - The name of the shipping country
      * @param shippingMethod - The type of the shipping method
      * @param [userId] - The id of the user
+     * @param safeShippingPaid - If the customer paid for safe shipping
      * @returns A promise that resolves to the calculated shipping cost and the weight range
      *
      * @throws {@link ShippingLocationNotFoundError}
@@ -350,7 +351,8 @@ export class ShippingService {
         countryName: string,
         shippingMethod: string, // next-day for replenishment
         userId?: number,
-        orderItems?: ProductItem[]
+        orderItems?: ProductItem[],
+        safeShippingPaid?: boolean
     ): Promise<ShippingCostResponse> {
         const [country, method] = await Promise.all([
             ShippingCountry.findOne({
@@ -367,6 +369,10 @@ export class ShippingService {
             throw new ShippingOptionNotFoundError('Shipping method not found');
         }
 
+        const safeShippingCost = safeShippingPaid
+            ? Number(await ShippingMethod.findOne({ method: 'safe-shipping' }))
+            : 0;
+
         const { weightCategory, orderWeight } = orderItems
             ? await this.determineWeightCategory(orderItems)
             : await this.determineWeightCategoryForCart(userId!);
@@ -380,7 +386,12 @@ export class ShippingService {
         }
 
         const cost: number = parseFloat(
-            (country.rate + method.rate + weightResult.rate).toFixed(2)
+            (
+                country.rate +
+                method.rate +
+                weightResult.rate +
+                safeShippingCost
+            ).toFixed(2)
         );
 
         return {
