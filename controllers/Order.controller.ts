@@ -2,11 +2,7 @@ import { Request, Response } from 'express';
 import { OrderService, LoggingService } from '@/services';
 import { JwtPayload } from 'jsonwebtoken';
 import { Logger } from '@/logger';
-import {
-    OrderAlreadyMarkedError,
-    OrderNotFoundError,
-    UserNotFoundError,
-} from '@/errors';
+import { OrderNotFoundError, UserNotFoundError } from '@/errors';
 
 export class OrderController {
     private orderService: OrderService;
@@ -201,38 +197,6 @@ export class OrderController {
         }
     }
 
-    public async markAsDelivered(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const orderId: number = Number(req.params.id);
-        const { username } = req.user as JwtPayload;
-
-        try {
-            await this.orderService.markAsDelivered(orderId);
-            res.sendStatus(204);
-
-            await this.loggingService!.logOperation(
-                username,
-                'order',
-                'update'
-            );
-        } catch (error) {
-            if (error instanceof OrderNotFoundError) {
-                this.logger.error('Error marking order as delivered: ' + error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            if (error instanceof OrderAlreadyMarkedError) {
-                this.logger.error('Error marking order as delivered: ' + error);
-                return res.status(400).json({ message: error.message });
-            }
-
-            this.logger.error('Error marking order as delivered: ' + error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
     public async rateDeliveredOrder(
         req: Request,
         res: Response
@@ -252,6 +216,35 @@ export class OrderController {
             }
 
             this.logger.error('Error rating order: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async markOrder(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { username, userId } = req.user as JwtPayload;
+        const orderId = Number(req.params.id);
+        const { status } = req.body;
+
+        try {
+            await this.orderService.markOrder(userId, orderId, status);
+
+            res.sendStatus(204);
+
+            await this.loggingService!.logOperation(
+                username,
+                'order',
+                'update'
+            );
+        } catch (error) {
+            if (error instanceof OrderNotFoundError) {
+                this.logger.error('Error marking order: ' + error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            this.logger.error('Error marking order: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }

@@ -79,6 +79,68 @@ export class AdminController {
         }
     }
 
+    public async registerSupportAgent(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { username } = req.user as JwtPayload;
+        const { details } = req.body;
+
+        try {
+            await this.adminService.registerSupportAgent(details);
+            res.status(201).json({
+                message: 'Support agent registered successfully',
+            });
+
+            await this.loggingService.logOperation(
+                username,
+                'support agent',
+                'create'
+            );
+        } catch (err) {
+            if (err instanceof UserAlreadyExistsError) {
+                this.logger.error('Error registering support agent:' + err);
+                return res
+                    .status(409)
+                    .json({ message: 'Support agent already exists' });
+            }
+
+            this.logger.error('Error registering support agent:' + err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async registerCourier(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const { username } = req.user as JwtPayload;
+        const { details } = req.body;
+
+        try {
+            await this.adminService.registerCourier(details);
+            res.status(201).json({
+                message: 'Courier registered successfully',
+            });
+
+            await this.loggingService.logOperation(
+                username,
+                'courier',
+                'create'
+            );
+        } catch (err) {
+            if (err instanceof UserAlreadyExistsError) {
+                this.logger.error('Error registering courier:' + err);
+                return res
+                    .status(409)
+                    .json({ message: 'Courier already exists' });
+            }
+
+            this.logger.error('Error registering courier:' + err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
     public async getCustomerById(
         req: Request,
         res: Response
@@ -149,6 +211,70 @@ export class AdminController {
             return res.status(200).json({ total: count, customers });
         } catch (error) {
             this.logger.error('Error retrieving customers: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getAllSupportAgents(
+        _req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        try {
+            const { count, supportAgents } =
+                await this.adminService.getAllSupportAgents();
+            return res.status(200).json({ total: count, supportAgents });
+        } catch (error) {
+            this.logger.error('Error retrieving support agents: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getAllCouriers(
+        _req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        try {
+            const { count, couriers } =
+                await this.adminService.getAllCouriers();
+            return res.status(200).json({ total: count, couriers });
+        } catch (error) {
+            this.logger.error('Error retrieving couriers: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getCourierById(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const courierId = Number(req.params.id);
+
+        try {
+            const courier = await this.adminService.getCourierById(
+                undefined,
+                courierId
+            );
+            return res.status(200).json({ courier });
+        } catch (error) {
+            this.logger.error('Error retrieving courier by Id: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getSupportAgentById(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const agentId = Number(req.params.id);
+
+        try {
+            const supportAgent = await this.adminService.getSupportAgentById(
+                undefined,
+                agentId
+            );
+            return res.status(200).json({ supportAgent });
+        } catch (error) {
+            this.logger.error('Error retrieving support agent by Id: ' + error);
             return res.status(500).json({ message: 'Server error' });
         }
     }
