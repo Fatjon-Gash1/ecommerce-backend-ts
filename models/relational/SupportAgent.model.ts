@@ -81,7 +81,7 @@ SupportAgent.init(
     {
         sequelize,
         modelName: 'SupportAgent',
-        tableName: 'customers',
+        tableName: 'support_agents',
     }
 );
 

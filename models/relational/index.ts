@@ -195,7 +195,7 @@ Notification.belongsTo(User, {
     onDelete: 'CASCADE',
 });
 
-Chatroom.belongsTo(User, { as: 'groupAdmin', foreignKey: 'groupAdmin' });
+Chatroom.belongsTo(User, { as: 'admin', foreignKey: 'groupAdmin' });
 Chatroom.belongsToMany(User, {
     through: UserChatroom,
     foreignKey: 'chatroomId',

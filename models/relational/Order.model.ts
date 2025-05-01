@@ -13,6 +13,7 @@ import { Customer } from './Customer.model';
 import { Product } from './Product.model';
 import { RefundRequest } from './RefundRequest.model';
 import { ProductNotFoundError } from '@/errors';
+import { Courier } from './Courier.model';
 
 export class Order extends Model<
     InferAttributes<Order>,
@@ -20,6 +21,7 @@ export class Order extends Model<
 > {
     declare id: CreationOptional<number>;
     declare customerId: ForeignKey<Customer['id']>;
+    declare courierId: CreationOptional<ForeignKey<Courier['id']>>;
     declare paymentMethod: 'card' | 'wallet' | 'bank-transfer';
     declare shippingCountry: string;
     declare weightCategory:
@@ -37,6 +39,7 @@ export class Order extends Model<
         | 'delivered'
         | 'refunded'
         | 'partially-refunded'
+        | 'uncollected'
     >;
     declare trackingNumber: CreationOptional<string>;
     declare total: number;
@@ -44,6 +47,13 @@ export class Order extends Model<
     declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
     declare refundRequest?: NonAttribute<RefundRequest>;
     declare rating: CreationOptional<number>;
+    declare proofOfDeliveryImageUrl: CreationOptional<string>;
+    declare safeShipping: CreationOptional<boolean>;
+
+    // Aggregation properties
+    declare averageRating: NonAttribute<number>;
+    declare shippedOrders: NonAttribute<number>;
+    declare deliveredOrders: NonAttribute<number>;
 
     public static generateTrackingNumber(): string {
         const timestamp = Date.now().toString(36);
@@ -137,7 +147,8 @@ Order.init(
                 'awaiting pickup',
                 'delivered',
                 'refunded',
-                'partially-refunded'
+                'partially-refunded',
+                'uncollected'
             ),
             defaultValue: 'pending',
         },
@@ -158,6 +169,8 @@ Order.init(
             type: DataTypes.TINYINT.UNSIGNED,
             validate: { min: 1, max: 5 },
         },
+        proofOfDeliveryImageUrl: { type: DataTypes.STRING },
+        safeShipping: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
     { sequelize, modelName: 'Order', tableName: 'orders' }
 );

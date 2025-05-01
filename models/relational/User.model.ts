@@ -19,7 +19,7 @@ export class User extends Model<
     declare email: string;
     declare password: string;
     declare isActive: CreationOptional<boolean>;
-    declare lastLogin: Date | string;
+    declare lastLogin: CreationOptional<Date | string>;
 
     public async hashAndStorePassword(password: string): Promise<void> {
         const saltRounds = 12;

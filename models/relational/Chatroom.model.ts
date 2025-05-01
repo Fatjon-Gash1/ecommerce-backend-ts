@@ -15,7 +15,7 @@ export class Chatroom extends Model<
 > {
     declare id: CreationOptional<number>;
     declare type: CreationOptional<'one-on-one' | 'group' | 'support'>;
-    declare groupAdmin: ForeignKey<User['id']>;
+    declare groupAdmin: CreationOptional<ForeignKey<User['id']>>;
     declare name: CreationOptional<string>;
 
     // Association properties
@@ -27,7 +27,6 @@ Chatroom.init(
         id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
         type: {
             type: DataTypes.ENUM('one-on-one', 'group', 'support'),
-            defaultValue: 'regular',
         },
         name: { type: DataTypes.STRING },
     },

@@ -29,6 +29,8 @@ export class Courier extends Model<
     // Associations
     declare user?: User;
     declare averageCustomerRating?: number;
+    declare shippedOrders?: number;
+    declare deliveredOrders?: number;
 }
 
 Courier.init(

@@ -33,6 +33,7 @@ export class Customer extends Model<
     declare email: string;
     declare password: string;
     declare isActive: CreationOptional<boolean>;
+    declare lastLogin: CreationOptional<Date | string>;
 
     // Associations
     declare user?: User;
@@ -102,6 +103,9 @@ Customer.init(
         isActive: {
             type: DataTypes.VIRTUAL,
         },
+        lastLogin: {
+            type: DataTypes.VIRTUAL,
+        },
     },
     {
         sequelize,
@@ -111,8 +115,15 @@ Customer.init(
 );
 
 Customer.beforeCreate(async (customer: Customer) => {
-    const { firstName, lastName, username, email, password, isActive } =
-        customer;
+    const {
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+        isActive,
+        lastLogin,
+    } = customer;
 
     const user = await User.create({
         firstName,
@@ -121,6 +132,7 @@ Customer.beforeCreate(async (customer: Customer) => {
         email,
         password,
         isActive,
+        lastLogin,
     });
 
     customer.userId = user.id;
