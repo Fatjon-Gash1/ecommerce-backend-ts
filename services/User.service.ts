@@ -5,6 +5,7 @@ import { queue2 } from '@/jobQueues';
 import { addBirthdayJobScheduler } from '@/jobSchedulers';
 import { PaymentService } from './Payment.service';
 import { NotificationService } from './Notification.service';
+import sequelize from 'sequelize';
 import {
     User,
     Customer,
@@ -30,7 +31,6 @@ import {
     UserType,
     CourierResponse,
 } from '@/types';
-import sequelize from 'sequelize';
 
 const {
     ACCESS_TOKEN_KEY,
@@ -45,12 +45,12 @@ const {
  * Service responsible for user-related operations.
  */
 export class UserService {
-    protected paymentService: PaymentService;
-    protected notificationService: NotificationService;
+    protected paymentService?: PaymentService;
+    protected notificationService?: NotificationService;
 
     constructor(
-        paymentService: PaymentService,
-        notificationService: NotificationService
+        paymentService?: PaymentService,
+        notificationService?: NotificationService
     ) {
         this.paymentService = paymentService;
         this.notificationService = notificationService;
@@ -77,6 +77,18 @@ export class UserService {
             case 'manager': {
                 const { count } = await Admin.findAndCountAll(filteringObject);
                 adminNamespace.emit('activeAdmins', count);
+                break;
+            }
+            case 'support': {
+                const { count } =
+                    await SupportAgent.findAndCountAll(filteringObject);
+                adminNamespace.emit('activeSupport', count);
+                break;
+            }
+            case 'courier': {
+                const { count } =
+                    await Courier.findAndCountAll(filteringObject);
+                adminNamespace.emit('activeCouriers', count);
                 break;
             }
             case 'customer': {
@@ -163,7 +175,7 @@ export class UserService {
             verificationToken
         );
 
-        await this.notificationService.sendEmailVerificationEmail(
+        await this.notificationService!.sendEmailVerificationEmail(
             details.email,
             verificationToken
         );
@@ -183,7 +195,7 @@ export class UserService {
             isActive: true,
             lastLogin: new Date().toISOString(),
         });
-        newCustomer.stripeId = await this.paymentService.createCustomer(
+        newCustomer.stripeId = await this.paymentService!.createCustomer(
             `${newCustomer.firstName} ${newCustomer.lastName}`,
             newCustomer.email
         );
@@ -197,7 +209,7 @@ export class UserService {
             await addBirthdayJobScheduler(newCustomer);
         }
 
-        await this.notificationService.sendWelcomeEmail(
+        await this.notificationService!.sendWelcomeEmail(
             newCustomer.firstName,
             newCustomer.email
         );
@@ -231,9 +243,15 @@ export class UserService {
             throw new InvalidCredentialsError();
         }
 
-        const admin = await Admin.findOne({ where: { userId: user.id } });
+        const [admin, support, courier] = await Promise.all([
+            Admin.findOne({ where: { userId: user.id } }),
+            SupportAgent.findOne({ where: { userId: user.id } }),
+            Courier.findOne({ where: { userId: user.id } }),
+        ]);
 
-        type = admin ? admin.role! : 'customer';
+        type =
+            admin?.role ??
+            (support ? 'support' : courier ? 'courier' : 'customer');
 
         user.isActive = true;
         user.lastLogin = new Date().toISOString();
@@ -255,7 +273,7 @@ export class UserService {
     public generateTokens(
         userId: number,
         username: string,
-        type: string = 'customer'
+        type: UserType = 'customer'
     ): AuthTokens {
         const refreshToken = jwt.sign(
             { userId, username, type },
@@ -335,15 +353,18 @@ export class UserService {
     }
 
     /**
-     * Retrieves support agent by its ID.
+     * Retrieves a Support Agent by its ID.
      *
-     * @param supportAgentId - The ID of the support agent
-     * @returns A promise resolving to a Support Agent object
+     * @param [userId] - The user ID of the Support Agent
+     * @param [agentId] - The ID of the Support Agent
+     * @returns A promise resolving to the support agent object
      */
     public async getSupportAgentById(
-        supportAgentId: number
+        userId?: number,
+        agentId?: number
     ): Promise<SupportAgentResponse> {
-        const supportAgent = await SupportAgent.findByPk(supportAgentId, {
+        const supportAgent = await SupportAgent.findOne({
+            where: userId ? { userId } : { id: agentId },
             attributes: { exclude: ['userId'] },
             include: [
                 {
@@ -370,36 +391,24 @@ export class UserService {
                             'averageCustomerRating',
                         ],
                         [
-                            sequelize.fn('COUNT', sequelize.col('id')),
+                            sequelize.fn('COUNT', sequelize.col('tickets.id')),
                             'handledTickets',
                         ],
                         [
-                            sequelize.fn(
-                                'COUNT',
-                                sequelize.where(
-                                    sequelize.col('status'),
-                                    'resolved'
-                                )
+                            sequelize.literal(
+                                `SUM(CASE WHEN tickets.status = 'resolved' THEN 1 ELSE 0 END)`
                             ),
                             'resolvedTickets',
                         ],
                         [
-                            sequelize.fn(
-                                'COUNT',
-                                sequelize.where(
-                                    sequelize.col('status'),
-                                    'failed'
-                                )
+                            sequelize.literal(
+                                `SUM(CASE WHEN tickets.status = 'failed' THEN 1 ELSE 0 END)`
                             ),
                             'failedTickets',
                         ],
                         [
-                            sequelize.fn(
-                                'COUNT',
-                                sequelize.where(
-                                    sequelize.col('status'),
-                                    'pending'
-                                )
+                            sequelize.literal(
+                                `SUM(CASE WHEN tickets.status = 'pending' THEN 1 ELSE 0 END)`
                             ),
                             'pendingTickets',
                         ],
@@ -409,48 +418,76 @@ export class UserService {
         });
 
         if (!supportAgent) {
-            throw new UserNotFoundError('Support agent not found');
+            throw new UserNotFoundError('Support Agent not found');
         }
 
-        return supportAgent.toJSON();
+        const { user, ...rest } = supportAgent.toJSON();
+
+        return { ...rest, ...user };
     }
 
     /**
-     * Retrieves a courier by its ID.
+     * Retrieves a Courier by its id.
      *
-     * @param courierId - The ID of the courier
-     * @returns A promise resolving to a Courier object
+     * @param [userId] - The user id of the Courier
+     * @param [courierId] - The id of the Courier
+     * @returns A promise resolving to the courier object
      */
-    public async getCourierById(courierId: number): Promise<CourierResponse> {
-        const courier = await Courier.findByPk(courierId, {
+    public async getCourierById(
+        userId?: number,
+        courierId?: number
+    ): Promise<CourierResponse> {
+        const courier = await Courier.findOne({
+            where: userId ? { userId } : { id: courierId },
             attributes: { exclude: ['userId'] },
-            include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: { exclude: ['id', 'password'] },
-                },
-                {
-                    model: Order,
-                    as: 'orders',
-                    attributes: [
-                        [
-                            sequelize.fn(
-                                'AVG',
-                                sequelize.col('rating')
-                            ),
-                            'averageCustomerRating',
-                        ],
-                    ],
-                },
-            ],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['id', 'password'] },
+            },
         });
 
         if (!courier) {
             throw new UserNotFoundError('Courier not found');
         }
 
-        return courier.toJSON();
+        const aggregates = await Order.findAll({
+            attributes: [
+                'courierId',
+                [sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
+                [
+                    sequelize.fn(
+                        'COUNT',
+                        sequelize.literal(
+                            `CASE WHEN status = 'shipped' THEN 1 END`
+                        )
+                    ),
+                    'shippedOrders',
+                ],
+                [
+                    sequelize.fn(
+                        'COUNT',
+                        sequelize.literal(
+                            `CASE WHEN status = 'delivered' THEN 1 END`
+                        )
+                    ),
+                    'deliveredOrders',
+                ],
+            ],
+            where: { courierId },
+            raw: true,
+        });
+
+        courier.setDataValue(
+            'averageCustomerRating',
+            aggregates[0].averageRating
+        );
+        courier.setDataValue('shippedOrders', aggregates[0].shippedOrders);
+        courier.setDataValue('deliveredOrders', aggregates[0].deliveredOrders);
+
+        const { user, ...rest } = courier.toJSON();
+
+        return { ...rest, ...user };
     }
 
     /**
@@ -543,7 +580,7 @@ export class UserService {
         notificationId?: number,
         all?: boolean
     ) {
-        await this.notificationService.markAsRead(userId, notificationId, all);
+        await this.notificationService!.markAsRead(userId, notificationId, all);
     }
 
     /**
@@ -584,7 +621,7 @@ export class UserService {
         }
 
         if (customer) {
-            await this.paymentService.deleteCustomer(customer.stripeId);
+            await this.paymentService!.deleteCustomer(customer.stripeId);
             await queue2.removeJobScheduler(
                 'birthday:scheduler:' + user.username
             );
@@ -605,7 +642,7 @@ export class UserService {
         notificationId?: number,
         all?: boolean
     ): Promise<void> {
-        await this.notificationService.removeNotification(
+        await this.notificationService!.removeNotification(
             userId,
             notificationId,
             all
@@ -631,7 +668,7 @@ export class UserService {
             expiresIn: '15m',
         });
 
-        await this.notificationService.sendPasswordResetEmail(
+        await this.notificationService!.sendPasswordResetEmail(
             user.email,
             user.firstName,
             resetToken

@@ -42,6 +42,8 @@ export class LoggingService {
 
         const categories: string[] = [
             'customer',
+            'support agent',
+            'courier',
             'admin',
             'category',
             'product',

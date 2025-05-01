@@ -16,7 +16,7 @@ import {
     SupportAgentResponse,
     CourierResponse,
 } from '@/types';
-import sequelize from 'sequelize';
+import sequelize, { Sequelize } from 'sequelize';
 
 /**
  * Service responsible for Admin-related operations.
@@ -29,11 +29,33 @@ export class AdminService extends UserService {
      */
     public async registerCustomer(details: UserCreationDetails): Promise<void> {
         const newCustomer = await this.userFactory(Customer, details);
-        newCustomer.stripeId = await this.paymentService.createCustomer(
+        newCustomer.stripeId = await this.paymentService!.createCustomer(
             `${newCustomer.firstName} ${newCustomer.lastName}`,
             newCustomer.email
         );
         await newCustomer.save();
+    }
+
+    /**
+     * Registers a user as a Support Agent.
+     *
+     * @param details - The details of the user to register
+     */
+    public async registerSupportAgent(
+        details: UserCreationDetails
+    ): Promise<void> {
+        const newSupportAgent = await this.userFactory(SupportAgent, details);
+        await newSupportAgent.save();
+    }
+
+    /**
+     * Registers a user as a Courier.
+     *
+     * @param details - The details of the user to register
+     */
+    public async registerCourier(details: UserCreationDetails): Promise<void> {
+        const newCourier = await this.userFactory(Courier, details);
+        await newCourier.save();
     }
 
     /**
@@ -171,36 +193,24 @@ export class AdminService extends UserService {
                             'averageCustomerRating',
                         ],
                         [
-                            sequelize.fn('COUNT', sequelize.col('id')),
+                            sequelize.fn('COUNT', sequelize.col('tickets.id')),
                             'handledTickets',
                         ],
                         [
-                            sequelize.fn(
-                                'COUNT',
-                                sequelize.where(
-                                    sequelize.col('status'),
-                                    'resolved'
-                                )
+                            sequelize.literal(
+                                `SUM(CASE WHEN tickets.status = 'resolved' THEN 1 ELSE 0 END)`
                             ),
                             'resolvedTickets',
                         ],
                         [
-                            sequelize.fn(
-                                'COUNT',
-                                sequelize.where(
-                                    sequelize.col('status'),
-                                    'failed'
-                                )
+                            sequelize.literal(
+                                `SUM(CASE WHEN tickets.status = 'failed' THEN 1 ELSE 0 END)`
                             ),
                             'failedTickets',
                         ],
                         [
-                            sequelize.fn(
-                                'COUNT',
-                                sequelize.where(
-                                    sequelize.col('status'),
-                                    'pending'
-                                )
+                            sequelize.literal(
+                                `SUM(CASE WHEN tickets.status = 'pending' THEN 1 ELSE 0 END)`
                             ),
                             'pendingTickets',
                         ],
@@ -228,24 +238,45 @@ export class AdminService extends UserService {
     }> {
         const { count, rows } = await Courier.findAndCountAll({
             attributes: { exclude: ['userId'] },
-            include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: { exclude: ['id', 'password'] },
-                },
-                {
-                    model: Order,
-                    as: 'orders',
-                    attributes: [
-                        [
-                            sequelize.fn('AVG', sequelize.col('rating')),
-                            'averageCustomerRating',
-                        ],
-                    ],
-                },
-            ],
+            include: {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['id', 'password'] },
+            },
         });
+
+        const aggregates = await Order.findAll({
+            attributes: [
+                'courierId',
+                [Sequelize.fn('AVG', Sequelize.col('rating')), 'averageRating'],
+                [
+                    Sequelize.literal(
+                        `SUM(CASE WHEN status = 'shipped' THEN 1 ELSE 0 END)`
+                    ),
+                    'shippedOrders',
+                ],
+                [
+                    Sequelize.literal(
+                        `SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END)`
+                    ),
+                    'deliveredOrders',
+                ],
+            ],
+            group: ['courierId'],
+            raw: true,
+        });
+
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].setDataValue(
+                'averageCustomerRating',
+                aggregates[i].averageRating
+            );
+            rows[i].setDataValue('shippedOrders', aggregates[i].shippedOrders);
+            rows[i].setDataValue(
+                'deliveredOrders',
+                aggregates[i].deliveredOrders
+            );
+        }
 
         const couriers = rows.map((row) => {
             const { user, ...rest } = row.toJSON();
@@ -253,31 +284,6 @@ export class AdminService extends UserService {
         });
 
         return { count, couriers };
-    }
-
-    /**
-     * Retrieves Admin by ID.
-     *
-     * @param adminId - The id of the Admin
-     * @returns A promise resolving to an Admin object
-     */
-    public async getAdminById(adminId: number): Promise<AdminResponse> {
-        const admin = await Admin.findByPk(adminId, {
-            attributes: { exclude: ['userId', 'updatedAt'] },
-            include: {
-                model: User,
-                as: 'user',
-                attributes: { exclude: ['id', 'password', 'updatedAt'] },
-            },
-        });
-
-        if (!admin) {
-            throw new UserNotFoundError('Admin not found');
-        }
-
-        const { user, ...rest } = admin.toJSON();
-
-        return { ...rest, ...user };
     }
 
     /**
@@ -305,6 +311,31 @@ export class AdminService extends UserService {
         });
 
         return { count, admins };
+    }
+
+    /**
+     * Retrieves Admin by ID.
+     *
+     * @param adminId - The id of the Admin
+     * @returns A promise resolving to an Admin object
+     */
+    public async getAdminById(adminId: number): Promise<AdminResponse> {
+        const admin = await Admin.findByPk(adminId, {
+            attributes: { exclude: ['userId', 'updatedAt'] },
+            include: {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['id', 'password', 'updatedAt'] },
+            },
+        });
+
+        if (!admin) {
+            throw new UserNotFoundError('Admin not found');
+        }
+
+        const { user, ...rest } = admin.toJSON();
+
+        return { ...rest, ...user };
     }
 
     /**
