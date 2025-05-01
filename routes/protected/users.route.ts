@@ -29,8 +29,11 @@ import paymentRoutes from './payments.route';
 import orderRoutes from './orders.route';
 import shippingRoutes from './shippings.route';
 import ratingRoutes from './ratings.route';
-import adminRoutes from './private/admins.route';
 import subscriptionRoutes from './subscriptions.route';
+import chattingRoutes from './chats.route';
+import supportAgentRoutes from './supportAgents.route';
+import courierRoutes from './couriers.route';
+import adminRoutes from './private/admins.route';
 
 const router: Router = Router();
 const userService = new UserService(
@@ -230,6 +233,22 @@ router.use(
     authenticateAccessToken,
     authorize(['customer']),
     ratingRoutes
+);
+
+router.use('/chats', authenticateAccessToken, chattingRoutes);
+
+router.use(
+    '/support-agents',
+    authenticateAccessToken,
+    authorize(['support']),
+    supportAgentRoutes
+);
+
+router.use(
+    '/couriers',
+    authenticateAccessToken,
+    authorize(['courier']),
+    courierRoutes
 );
 
 router.use(

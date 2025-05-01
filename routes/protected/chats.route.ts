@@ -8,6 +8,7 @@ import {
     validateRating,
     validationErrors,
 } from '@/middlewares/validation';
+import authorize from '@/middlewares/authorization/authorize';
 
 const router: Router = Router();
 const chattingController = new ChattingController(new ChattingServiceHTTP());
@@ -28,6 +29,7 @@ router.get(
 
 router.patch(
     'support-chatroom/:id/rate',
+    authorize(['customer']),
     validateId(),
     validateRating(),
     validationErrors,

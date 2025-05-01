@@ -45,12 +45,11 @@ router.get(
     validationErrors,
     orderController.getOrderItemsByOrderId.bind(orderController)
 );
-
 router.patch(
-    '/:id/mark-delivered',
+    '/:id/mark',
     validateId(),
     validationErrors,
-    orderController.markAsDelivered.bind(orderController)
+    orderController.markOrder.bind(orderController)
 );
 
 export default router;
