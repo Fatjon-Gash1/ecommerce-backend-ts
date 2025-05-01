@@ -52,6 +52,22 @@ router.post(
     adminController.registerCustomer.bind(adminController)
 );
 router.post(
+    '/support-agents',
+    authorize(['admin']),
+    registerRateLimiter,
+    validateRegistration(),
+    validationErrors,
+    adminController.registerSupportAgent.bind(adminController)
+);
+router.post(
+    '/couriers',
+    authorize(['admin']),
+    registerRateLimiter,
+    validateRegistration(),
+    validationErrors,
+    adminController.registerCourier.bind(adminController)
+);
+router.post(
     '/admins',
     authorize(['admin']),
     registerRateLimiter,
@@ -89,6 +105,19 @@ router.get(
     validateId(),
     validationErrors,
     adminController.getCustomerById.bind(adminController)
+);
+router.get(
+    '/support-agents',
+    adminController.getAllSupportAgents.bind(adminController)
+);
+router.get('/couriers', adminController.getAllCouriers.bind(adminController));
+router.get(
+    '/support-agents/:id',
+    adminController.getSupportAgentById.bind(adminController)
+);
+router.get(
+    '/couriers/:id',
+    adminController.getCourierById.bind(adminController)
 );
 router.get(
     '/admins/search',
