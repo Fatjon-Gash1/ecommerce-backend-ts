@@ -24,8 +24,10 @@ import {
     validatePassword,
     validateEmail,
 } from '@/middlewares/validation';
+import authorizeMembership from '@/middlewares/authorization/membershipAuthorize';
 import cartRoutes from './carts.route';
 import paymentRoutes from './payments.route';
+import productRoutes from './products.route';
 import orderRoutes from './orders.route';
 import shippingRoutes from './shippings.route';
 import ratingRoutes from './ratings.route';
@@ -210,6 +212,14 @@ router.use(
     authenticateAccessToken,
     authorize(['customer']),
     paymentRoutes
+);
+
+router.use(
+    '/customers/products',
+    authenticateAccessToken,
+    authorize(['customer']),
+    authorizeMembership(['premium']),
+    productRoutes
 );
 
 router.use(
