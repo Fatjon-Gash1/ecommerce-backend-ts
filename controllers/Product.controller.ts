@@ -41,7 +41,11 @@ export class ProductController {
                 category,
             });
 
-            await this.loggingService!.logOperation(username, 'category', 'create');
+            await this.loggingService!.logOperation(
+                username,
+                'category',
+                'create'
+            );
         } catch (error) {
             if (error instanceof CategoryAlreadyExistsError) {
                 this.logger.error('Error adding category: ' + error);
@@ -74,7 +78,11 @@ export class ProductController {
                 product,
             });
 
-            await this.loggingService!.logOperation(username, 'product', 'create');
+            await this.loggingService!.logOperation(
+                username,
+                'product',
+                'create'
+            );
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 this.logger.error('Error adding product: ' + error);
@@ -154,6 +162,18 @@ export class ProductController {
         }
     }
 
+    public async getAllProductsWithExclusiveness(
+        _req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        try {
+            const { count, rows } = await this.productService.getAllProducts(true);
+            return res.status(200).json({ total: count, products: rows });
+        } catch (error) {
+            this.logger.error('Error getting all products: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
     public async getProductsByCategory(
         req: Request,
         res: Response
@@ -163,6 +183,32 @@ export class ProductController {
         try {
             const { count, rows } =
                 await this.productService.getProductsByCategory(categoryId);
+            return res.status(200).json({ total: count, products: rows });
+        } catch (error) {
+            if (error instanceof CategoryNotFoundError) {
+                this.logger.error(
+                    'Error getting products by category: ' + error
+                );
+                return res.status(404).json({ message: error.message });
+            }
+
+            this.logger.error('Error getting products by category: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
+
+    public async getProductsByCategoryWithExclusiveness(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const categoryId: number = Number(req.params.id);
+
+        try {
+            const { count, rows } =
+                await this.productService.getProductsByCategory(
+                    categoryId,
+                    true
+                );
             return res.status(200).json({ total: count, products: rows });
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
@@ -218,6 +264,26 @@ export class ProductController {
         }
     }
 
+    public async viewProductByIdWithExclusiveness(
+        req: Request,
+        res: Response
+    ): Promise<void | Response> {
+        const productId: number = Number(req.params.id);
+
+        try {
+            const product =
+                await this.productService.viewProductById(productId,true);
+            return res.status(200).json({ product });
+        } catch (error) {
+            if (error instanceof ProductNotFoundError) {
+                this.logger.error('Error viewing product: ' + error);
+                return res.status(404).json({ message: error.message });
+            }
+
+            this.logger.error('Error viewing product: ' + error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    }
     public async getProductCategory(
         req: Request,
         res: Response
@@ -262,27 +328,6 @@ export class ProductController {
         }
     }
 
-    public async getDiscountedPrice(
-        req: Request,
-        res: Response
-    ): Promise<void | Response> {
-        const productId: number = Number(req.params.id);
-
-        try {
-            const discountedPrice: number =
-                await this.productService.getDiscountedPrice(productId);
-            return res.status(200).json({ discountedPrice });
-        } catch (error) {
-            if (error instanceof ProductNotFoundError) {
-                this.logger.error('Error getting discounted price: ' + error);
-                return res.status(404).json({ message: error.message });
-            }
-
-            this.logger.error('Error getting discounted price: ' + error);
-            return res.status(500).json({ message: 'Server error' });
-        }
-    }
-
     public async updateCategoryById(
         req: Request,
         res: Response
@@ -299,7 +344,11 @@ export class ProductController {
             );
             res.status(200).json({ category });
 
-            await this.loggingService!.logOperation(username, 'category', 'update');
+            await this.loggingService!.logOperation(
+                username,
+                'category',
+                'update'
+            );
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 this.logger.error('Error updating category: ' + error);
@@ -333,7 +382,11 @@ export class ProductController {
                 discountedPrice,
             });
 
-            await this.loggingService!.logOperation(username, 'product', 'update');
+            await this.loggingService!.logOperation(
+                username,
+                'product',
+                'update'
+            );
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 this.logger.error('Error setting discount: ' + error);
@@ -362,7 +415,11 @@ export class ProductController {
                 updatedProduct,
             });
 
-            await this.loggingService!.logOperation(username, 'product', 'update');
+            await this.loggingService!.logOperation(
+                username,
+                'product',
+                'update'
+            );
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 this.logger.error('Error updating product: ' + error);
@@ -385,7 +442,11 @@ export class ProductController {
             await this.productService.deleteCategoryById(categoryId);
             res.sendStatus(204);
 
-            await this.loggingService!.logOperation(username, 'category', 'delete');
+            await this.loggingService!.logOperation(
+                username,
+                'category',
+                'delete'
+            );
         } catch (error) {
             if (error instanceof CategoryNotFoundError) {
                 this.logger.error('Error deleting category: ' + error);
@@ -408,7 +469,11 @@ export class ProductController {
             await this.productService.deleteProductById(productId);
             res.sendStatus(204);
 
-            await this.loggingService!.logOperation(username, 'product', 'delete');
+            await this.loggingService!.logOperation(
+                username,
+                'product',
+                'delete'
+            );
         } catch (error) {
             if (error instanceof ProductNotFoundError) {
                 this.logger.error('Error deleting product: ' + error);

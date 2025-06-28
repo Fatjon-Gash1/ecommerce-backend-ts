@@ -32,7 +32,7 @@ export default (io: Server) => {
     });
 };
 
-//customer related emits
+//customer related emits for order operations
 //
 // server side
 // io.to('orders:${userId}').emit(`order:${trackingNumber}`, geoJSONData);

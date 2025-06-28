@@ -14,8 +14,10 @@ import { queue5 } from '@/jobQueues';
 import { UserNotFoundError } from '@/errors';
 import type { Server, Socket } from 'socket.io';
 import {
+    ChatroomResponse,
     ClientToServerEvents,
     InterServerEvents,
+    MessageResponse,
     ServerToClientEvents,
     UserData,
 } from '@/types';
@@ -821,7 +823,7 @@ export class ChattingServiceHTTP {
     public async getUserChatroomsByType(
         userId: number,
         type?: string
-    ): Promise<{ chatrooms: object[]; total: number }> {
+    ): Promise<{ chatrooms: ChatroomResponse[]; total: number }> {
         const { rows, count } = await Chatroom.findAndCountAll({
             where: { type },
             include: [
@@ -847,7 +849,7 @@ export class ChattingServiceHTTP {
         userId: number,
         chatroomId: number,
         lastMessageDate?: Date
-    ): Promise<object[]> {
+    ): Promise<MessageResponse[]> {
         const chatroom = await Chatroom.findOne({
             where: { id: chatroomId },
             attributes: [],

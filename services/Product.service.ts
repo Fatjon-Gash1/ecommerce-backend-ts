@@ -252,13 +252,16 @@ export class ProductService {
     /**
      * Retrieves all products in the database.
      *
+     * @param [exclusive=false] - Whether to fetch exclusive products or not
      * @returns a promise resolving to an array of Product instances
      */
-    public async getAllProducts(): Promise<{
+    public async getAllProducts(exclusive: boolean = false): Promise<{
         count: number;
         rows: Product[];
     }> {
-        const { count, rows } = await Product.findAndCountAll();
+        const { count, rows } = await Product.findAndCountAll({
+            where: { ...(exclusive ? {} : { availableDue: null }) },
+        });
 
         return { count, rows };
     }
@@ -267,10 +270,12 @@ export class ProductService {
      * Retrieves all products of a certain category.
      *
      * @param categoryId - The ID of the category
+     * @param [exclusive=false] - Whether to fetch exclusive products or not
      * @returns a promise resolving to an array of Product instances
      */
     public async getProductsByCategory(
-        categoryId: number
+        categoryId: number,
+        exclusive: boolean = false
     ): Promise<{ count: number; rows: Product[] }> {
         const foundCategory = await Category.findByPk(categoryId);
 
@@ -279,7 +284,10 @@ export class ProductService {
         }
 
         const { count, rows } = await Product.findAndCountAll({
-            where: { categoryId: foundCategory.id },
+            where: {
+                categoryId: foundCategory.id,
+                ...(exclusive ? {} : { availableDue: null }),
+            },
         });
 
         return { count, rows };
@@ -305,13 +313,22 @@ export class ProductService {
      * Retrieves a product by ID for customers only.
      *
      * @param productId - The ID of the product
+     * @param [exclusive=false] - Whether to fetch exclusive products or not
      * @returns a promise resolving to a Product instance
      *
      * @throws {@link ProductNotFoundError}
      * Thrown if the product is not found
      */
-    public async viewProductById(productId: number): Promise<Product> {
-        const product = await Product.findByPk(productId);
+    public async viewProductById(
+        productId: number,
+        exclusive: boolean = false
+    ): Promise<Product> {
+        const product = await Product.findOne({
+            where: {
+                id: productId,
+                ...(exclusive ? {} : { availableDue: null }),
+            },
+        });
 
         if (!product) {
             throw new ProductNotFoundError();
@@ -374,33 +391,6 @@ export class ProductService {
         const products = rows.map((row) => row.toJSON());
 
         return { count, products };
-    }
-
-    /**
-     * Retrieves the product's discounted price.
-     *
-     * @param productId - The id of the product
-     *
-     * @returns A promise resolving to the discounted price
-     *
-     * @throws {@link ProductNotFoundError}
-     * Thrown if the product is not found.
-     */
-    public async getDiscountedPrice(productId: number): Promise<number> {
-        const product = await Product.findByPk(productId);
-
-        if (!product) {
-            throw new ProductNotFoundError();
-        }
-
-        if (product.discount === 0) {
-            return product.price;
-        }
-
-        const discountedPrice =
-            product.price - (product.price * product.discount!) / 100;
-
-        return Math.ceil(discountedPrice) - 0.01;
     }
 
     /**
