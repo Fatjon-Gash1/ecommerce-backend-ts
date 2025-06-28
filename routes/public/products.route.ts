@@ -23,12 +23,6 @@ router.get(
     productController.viewProductById.bind(productController)
 );
 router.get(
-    '/:id/discounted',
-    validateId(),
-    validationErrors,
-    productController.getDiscountedPrice.bind(productController)
-);
-router.get(
     '/categories/top-level',
     productController.getAllTopLevelCategories.bind(productController)
 );
