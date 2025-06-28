@@ -13,6 +13,7 @@ import {
     validationErrors,
 } from '@/middlewares/validation';
 import { checkExact } from 'express-validator';
+import authorizeMembership from '@/middlewares/authorization/membershipAuthorize';
 
 const router: Router = Router();
 const paymentService = new PaymentService(
@@ -34,6 +35,7 @@ router.post(
 );
 router.post(
     '/refunds/:orderId',
+    authorizeMembership(['plus','premium']),
     validateId('orderId'),
     validateRefundRequest(),
     validationErrors,
@@ -57,6 +59,7 @@ router.get(
 );
 router.get(
     '/refund-requests',
+    authorizeMembership(['plus','premium']),
     paymentController.getCustomerRefundRequests.bind(paymentController)
 );
 

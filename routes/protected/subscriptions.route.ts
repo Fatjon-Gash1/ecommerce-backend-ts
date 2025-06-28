@@ -18,6 +18,7 @@ import {
     replenishmentUpdateRateLimiter,
     replenishmentCancelToggleRateLimiter,
 } from '@/middlewares/rateLimiting';
+import authorizeMembership from '@/middlewares/authorization/membershipAuthorize';
 
 const router: Router = Router();
 const notificationService = new NotificationService();
@@ -54,6 +55,7 @@ router.post(
 );
 router.post(
     '/replenishments',
+    authorizeMembership(['premium']),
     validateReplenishment(),
     validationErrors,
     subscriptionController.createReplenishment.bind(subscriptionController)
@@ -61,12 +63,14 @@ router.post(
 
 router.get(
     '/replenishments/:id',
+    authorizeMembership(['premium']),
     validateId(),
     validationErrors,
     subscriptionController.getReplenishmentById.bind(subscriptionController)
 );
 router.get(
     '/replenishments',
+    authorizeMembership(['premium']),
     subscriptionController.getCustomerReplenishments.bind(
         subscriptionController
     )
@@ -83,6 +87,7 @@ router.patch(
 
 router.put(
     '/replenishments/:id',
+    authorizeMembership(['premium']),
     replenishmentUpdateRateLimiter,
     validateId(),
     validateReplenishment(),
@@ -91,6 +96,7 @@ router.put(
 );
 router.put(
     '/replenishments/:id/toggle-cancel',
+    authorizeMembership(['premium']),
     replenishmentCancelToggleRateLimiter,
     validateId(),
     validationErrors,
@@ -101,6 +107,7 @@ router.put(
 
 router.delete(
     '/replenishments/:id',
+    authorizeMembership(['premium']),
     validateId(),
     validationErrors,
     subscriptionController.removeReplenishment.bind(subscriptionController)
