@@ -7,6 +7,7 @@ export {
     SupportAgentResponse,
     CourierResponse,
     UserType,
+    CustomerMembership
 } from './User.types';
 export {
     ShippingCountryResponse,

@@ -30,6 +30,7 @@ import {
     SupportAgentResponse,
     UserType,
     CourierResponse,
+    CustomerMembership
 } from '@/types';
 
 const {
@@ -214,7 +215,7 @@ export class UserService {
             newCustomer.email
         );
 
-        return this.generateTokens(newCustomer.userId!, newCustomer.username);
+        return this.generateTokens(newCustomer.userId!, newCustomer.username, 'customer', newCustomer.membership);
     }
 
     /**
@@ -259,7 +260,18 @@ export class UserService {
 
         await this.streamActiveUsers(type);
 
-        return this.generateTokens(user.id!, user.username, type);
+        let membership;
+        if (type === 'customer') {
+            const customer = await Customer.findOne({where: {userId: user.id}});
+
+            if (!customer) {
+                throw new UserNotFoundError('Customer not found');
+            }
+
+            membership = customer.membership;
+        }
+
+        return this.generateTokens(user.id!, user.username, type, membership);
     }
 
     /**
@@ -273,10 +285,11 @@ export class UserService {
     public generateTokens(
         userId: number,
         username: string,
-        type: UserType = 'customer'
+        type: UserType = 'customer',
+        membership?: CustomerMembership
     ): AuthTokens {
         const refreshToken = jwt.sign(
-            { userId, username, type },
+            { userId, username, type, membership },
             REFRESH_TOKEN_KEY,
             {
                 expiresIn: REFRESH_TOKEN_EXPIRY,
@@ -284,7 +297,7 @@ export class UserService {
         );
 
         const accessToken = jwt.sign(
-            { userId, username, type },
+            { userId, username, type, membership },
             ACCESS_TOKEN_KEY,
             {
                 expiresIn: ACCESS_TOKEN_EXPIRY,

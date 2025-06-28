@@ -58,3 +58,5 @@ export type UserType =
     | 'customer'
     | 'support'
     | 'courier';
+
+export type CustomerMembership = 'free' | 'plus' | 'premium';
