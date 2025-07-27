@@ -50,10 +50,11 @@ export class Order extends Model<
     declare proofOfDeliveryImageUrl: CreationOptional<string>;
     declare safeShipping: CreationOptional<boolean>;
 
-    // Aggregation properties
+    // Response properties
     declare averageRating: NonAttribute<number>;
     declare shippedOrders: NonAttribute<number>;
     declare deliveredOrders: NonAttribute<number>;
+    declare averageTotalValue?: string;
 
     public static generateTrackingNumber(): string {
         const timestamp = Date.now().toString(36);
@@ -158,7 +159,7 @@ Order.init(
             defaultValue: () => Order.generateTrackingNumber(),
         },
         total: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.FLOAT,
             allowNull: false,
         },
         paymentIntentId: {
