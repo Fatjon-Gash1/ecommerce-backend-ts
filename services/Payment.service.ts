@@ -10,6 +10,7 @@ import {
     Product,
     User,
     RefundRequest,
+    Purchase,
 } from '@/models/relational';
 import {
     OrderNotFoundError,
@@ -22,7 +23,6 @@ import {
     MembershipSubscribeDetails,
     PaymentProductDetails,
     PaymentProcessingData,
-    OrderItem,
     RefundRequestResponse,
     SubscriptionFormattedResponse,
 } from '@/types';
@@ -653,6 +653,28 @@ export class PaymentService {
             await foundOrder!.update({
                 status: request.amount ? 'partially-refunded' : 'refunded',
             });
+
+            if (!request.amount) {
+                const orderProducts = await Purchase.findAll({
+                    where: { orderId: foundOrder!.id },
+                });
+
+                orderProducts.map(async (product) => {
+                    await product.destroy();
+                });
+            } else {
+                const { rows, count } = await Purchase.findAndCountAll({
+                    where: { orderId: foundOrder!.id },
+                });
+
+                const removalCount =
+                    ((foundOrder!.total - request.amount) / foundOrder!.total) *
+                    count;
+
+                for (let i = 0; i < removalCount; i++) {
+                    await rows[i].destroy();
+                }
+            }
         } else if (!rejectionReason) {
             throw new Error(
                 'Rejection reason is required for "denied" requests'
@@ -1090,8 +1112,9 @@ export class PaymentService {
             );
         }
 
+        let itemIndex = 0;
         const productTotal: number = await Promise.all(
-            data.orderItems.map(async (item: OrderItem) => {
+            data.orderItems.map(async (item) => {
                 const product = await Product.findByPk(item.productId, {
                     attributes: ['price', 'discount'],
                 });
@@ -1102,14 +1125,15 @@ export class PaymentService {
                     );
                 }
 
-                return (
-                    (product.discount
-                        ? Math.ceil(
-                              product.price -
-                                  (product.price * product.discount) / 100
-                          ) - 0.01
-                        : product.price) * item.quantity
-                );
+                const itemPurchasePrice = product.discount
+                    ? Math.ceil(
+                          product.price -
+                              (product.price * product.discount) / 100
+                      ) - 0.01
+                    : product.price;
+
+                data.orderItems[itemIndex++].purchasePrice = itemPurchasePrice;
+                return itemPurchasePrice * item.quantity;
             })
         ).then((prices) => prices.reduce((acc, price) => acc + price, 0));
 
@@ -1158,6 +1182,7 @@ export class PaymentService {
         await customer.save();
 
         return {
+            mutatedOrderItems: data.orderItems,
             weightCategory,
             orderWeight,
             paymentIntentId,
@@ -1167,7 +1192,7 @@ export class PaymentService {
     }
 
     /**
-     * Processes a payment and creates an order for a customer.
+     * Processes a payment, audits new product purchases, and creates an order for a customer.
      *
      * @param userId - The customer's user ID
      * @param data - The payment processing data
@@ -1178,7 +1203,7 @@ export class PaymentService {
     ): Promise<void> {
         const paymentData = await this.processPayment(userId, data);
 
-        await this.orderService!.createOrder(
+        const { ['id']: orderId } = await this.orderService!.createOrder(
             userId,
             data.orderItems,
             data.paymentMethodType,
@@ -1190,5 +1215,15 @@ export class PaymentService {
             paymentData.paymentIntentId,
             paymentData.safeShippingPaid
         );
+
+        paymentData.mutatedOrderItems.map(async (orderItem) => {
+            for (let i = 0; i < orderItem.quantity; i++) {
+                await Purchase.create({
+                    orderId,
+                    productId: orderItem.productId,
+                    purchasePrice: orderItem.purchasePrice!,
+                });
+            }
+        });
     }
 }

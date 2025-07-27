@@ -6,12 +6,13 @@ import { OrderService } from '../Order.service';
 import { ShippingService } from '../Shipping.service';
 import { NotificationService } from '../Notification.service';
 import { Logger } from '@/logger';
-import { Replenishment, Customer, User } from '@/models/relational';
+import { Replenishment, Customer, User, Purchase } from '@/models/relational';
 import { PlatformData } from '@/models/document';
 import { UserNotFoundError } from '@/errors';
 import type IORedis from 'ioredis';
 import type { Transaction } from 'sequelize';
 import type { Job } from 'bullmq';
+import { OrderItem } from '@/types';
 
 const CLIENT_URL = process.env.CLIENT_URL as string;
 
@@ -109,8 +110,19 @@ export class WorkerService {
                     'next-day',
                     returnData.paymentAmount,
                     returnData.paymentIntentId,
+                    true,
                     transaction
                 );
+
+                returnData.mutatedOrderItems.map(async (orderItem: OrderItem) => {
+                    for (let i = 0; i < orderItem.quantity; i++) {
+                        await Purchase.create({
+                            orderId: order.id,
+                            productId: orderItem.productId,
+                            purchasePrice: orderItem.purchasePrice!,
+                        });
+                    }
+                });
 
                 const replenishment = await Replenishment.findByPk(
                     job.data.replenishmentId,

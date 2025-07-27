@@ -4,34 +4,39 @@ import type {
     ForeignKey,
     InferAttributes,
     InferCreationAttributes,
-    NonAttribute,
 } from 'sequelize';
 import { sequelize } from '@/config/db';
-import { Customer } from './Customer.model';
 import { Product } from './Product.model';
+import { Order } from './Order.model';
 
 export class Purchase extends Model<
     InferAttributes<Purchase>,
     InferCreationAttributes<Purchase>
 > {
     declare id: CreationOptional<number>;
-    declare customerId: ForeignKey<Customer['id']>;
+    declare orderId: ForeignKey<Order['id']>;
     declare productId: ForeignKey<Product['id']>;
-    declare quantity: CreationOptional<number>;
-    declare discountRate: CreationOptional<number>;
+    declare purchasePrice: number;
 
-    // Reports related
-    declare categoryId?: NonAttribute<number>;
-    declare categoryName?: NonAttribute<string>;
-    declare purchaseCount?: NonAttribute<number>;
-    declare totalRevenue?: NonAttribute<number>;
+    // Response fields
+    declare Product?: Product;
+    declare purchaseCount?: number;
+    declare totalRevenue?: number;
+    declare categoryId?: number;
+    declare categoryName?: string;
+    declare categoryPurchaseCount?: number;
+    declare categoryTotalRevenue?: number;
+    declare purchasedProductId?: number;
+    declare productName?: string;
+    declare productCurrentPrice?: number;
+    declare productPurchaseCount?: number;
+    declare totalSpentOnProduct?: number;
 }
 
 Purchase.init(
     {
         id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-        quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
-        discountRate: { type: DataTypes.FLOAT, defaultValue: 1 },
+        purchasePrice: { type: DataTypes.FLOAT, allowNull: false },
     },
     {
         sequelize,
