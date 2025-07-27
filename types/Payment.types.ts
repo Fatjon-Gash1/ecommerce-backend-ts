@@ -46,6 +46,7 @@ export interface PaymentProcessingData {
 export interface OrderItem {
     productId: number;
     quantity: number;
+    purchasePrice?: number;
 }
 
 export interface RefundRequestResponse {
@@ -66,6 +67,7 @@ export interface SubscriptionFormattedResponse {
 }
 
 export interface ProcessedPaymentResponse {
+    mutatedOrderItems: OrderItem[];
     weightCategory:
         | 'light'
         | 'standard'

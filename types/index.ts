@@ -1,3 +1,4 @@
+export { PageMetaData } from './Global.types';
 export {
     UserDetails,
     UserCreationDetails,
@@ -7,7 +8,7 @@ export {
     SupportAgentResponse,
     CourierResponse,
     UserType,
-    CustomerMembership
+    CustomerMembership,
 } from './User.types';
 export {
     ShippingCountryResponse,

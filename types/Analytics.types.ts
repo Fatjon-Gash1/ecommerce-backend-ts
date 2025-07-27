@@ -1,14 +1,16 @@
 export interface PurchasedProductResponse {
-    id?: number;
+    id: number;
     name: string;
-    price: number;
-    quantity: number;
-    totalRevenue: number;
+    currentPrice: number;
+    purchaseCount: number;
+    totalSpent?: number;
+    totalRevenue?: number;
 }
 
 export interface TopCategory {
     categoryId?: number;
     categoryName: string;
+    currentProducts: number;
     purchaseCount: number;
     totalRevenue?: number;
 }
