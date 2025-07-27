@@ -6,7 +6,6 @@ import { Category } from './Category.model';
 import { Product } from './Product.model';
 import { Cart, CartItem } from './Cart.model';
 import { Order, OrderItem } from './Order.model';
-import { Sale } from './Sale.model';
 import { ShippingCountry, ShippingCity } from './ShippingCountry.model';
 import { Payment } from './Payment.model';
 import { Purchase } from './Purchase.model';
@@ -61,11 +60,6 @@ Customer.hasOne(Cart, {
 });
 Customer.hasMany(Order, { as: 'orders', foreignKey: 'customerId' });
 Customer.hasMany(Payment, { foreignKey: 'customerId' });
-Customer.belongsToMany(Product, {
-    through: Purchase,
-    foreignKey: 'customerId',
-    otherKey: 'productId',
-});
 Customer.belongsToMany(Order, {
     through: Replenishment,
     foreignKey: 'customerId',
@@ -127,10 +121,10 @@ Product.belongsToMany(Order, {
     foreignKey: 'productId',
     otherKey: 'orderId',
 });
-Product.belongsToMany(Customer, {
-    through: Purchase,
+Product.belongsToMany(Order, {
+    through: { model: Purchase, unique: false },
     foreignKey: 'productId',
-    otherKey: 'customerId',
+    otherKey: 'orderId',
 });
 
 Cart.belongsToMany(Product, {
@@ -161,16 +155,18 @@ Order.belongsToMany(Product, {
     otherKey: 'productId',
 });
 Order.belongsTo(Customer, { as: 'customer', foreignKey: 'customerId' });
-Order.hasOne(Sale, { foreignKey: 'orderId' });
 Order.belongsToMany(Customer, {
     through: Replenishment,
     foreignKey: 'orderId',
     otherKey: 'customerId',
 });
+Order.belongsToMany(Product, {
+    through: { model: Purchase, unique: false },
+    foreignKey: 'orderId',
+    otherKey: 'productId',
+});
 Order.hasOne(RefundRequest, { as: 'refundRequest', foreignKey: 'orderId' });
 Order.belongsTo(Courier, { as: 'courier', foreignKey: 'courierId' });
-
-Sale.belongsTo(Order, { foreignKey: 'orderId' });
 
 Replenishment.hasMany(ReplenishmentPayment, {
     as: 'payments',
@@ -188,6 +184,9 @@ RefundRequest.belongsTo(Customer, {
     foreignKey: 'customerId',
 });
 RefundRequest.belongsTo(Order, { as: 'order', foreignKey: 'orderId' });
+
+Purchase.belongsTo(Product, {foreignKey: 'productId'});
+Purchase.belongsTo(Order, {foreignKey: 'orderId'});
 
 Notification.belongsTo(User, {
     as: 'user',
@@ -239,7 +238,6 @@ export {
     Payment,
     Order,
     OrderItem,
-    Sale,
     Purchase,
     Replenishment,
     ReplenishmentPayment,
