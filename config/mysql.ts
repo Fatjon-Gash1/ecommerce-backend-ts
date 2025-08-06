@@ -29,7 +29,7 @@ const sequelize = new Sequelize(
         port: config.port,
         dialect: 'mysql',
         dialectOptions: config.dialectOptions,
-        logging: false,
+        logging: console.log,
     }
 );
 
