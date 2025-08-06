@@ -18,7 +18,7 @@ export interface OrderResponse {
     status:
         | 'pending'
         | 'shipped'
-        | 'awaiting pickup'
+        | 'awaiting-pickup'
         | 'delivered'
         | 'refunded'
         | 'partially-refunded'

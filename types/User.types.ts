@@ -31,6 +31,7 @@ export interface CustomerResponse extends UserDetails {
     stripeId?: string;
     shippingAddress?: string;
     billingAddress?: string;
+    membership?: CustomerMembership;
 }
 
 export interface SupportAgentResponse extends UserDetails {

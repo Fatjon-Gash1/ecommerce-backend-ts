@@ -59,7 +59,13 @@ export {
 } from './Notification.types';
 export { AdminLogResponse, PlatformLogResponse } from './Logging.types';
 export { CartItemResponse } from './Cart.types';
-export { PurchasedProductResponse, TopCategory } from './Analytics.types';
+export {
+    PurchasedProductResponse,
+    PurchasedCategoryResponse,
+    TopCustomerSortBy,
+    TopCustomersResponse,
+    PreparedTopCustomerObject
+} from './Analytics.types';
 export { Message } from './Ai.types';
 export { AdminResponse } from './Admin.types';
 export {
