@@ -1,183 +1,173 @@
-import { Sequelize, Op } from 'sequelize';
-import PDFDocument from 'pdfkit';
+import PDFDocument from 'pdfkit-table';
 import fs from 'fs';
 import path from 'path';
+import sequelize from 'sequelize';
 import {
     Purchase,
     Product,
     Category,
-    Sale,
     Order,
+    Customer,
     User,
+    Admin,
 } from '@/models/relational';
 import {
     CategoryNotFoundError,
-    ProductNotFoundError,
-    InvalidStockStatusError,
-    UserNotFoundError,
     ReportNotFoundError,
+    UserNotFoundError,
 } from '@/errors';
-import { PurchasedProductResponse, TopCategory } from '@/types';
+import {
+    OrderResponse,
+    PageMetaData,
+    PreparedTopCustomerObject,
+    PurchasedCategoryResponse,
+    PurchasedProductResponse,
+    TopCustomerSortBy,
+    TopCustomersResponse,
+} from '@/types';
 
-const reportsDir = path.join(__dirname, '../reports');
+const reportsDir = path.join(process.env.BASE_PATH, '/reports');
+const assetsDir = path.join(process.env.BASE_PATH, '/assets');
 
 /**
  * Service responsible for analytics-related operations and report generation.
  */
 export class AnalyticsService {
     /**
-     * Generates a broad sales report including product sales, category sales, and total revenue.
+     * Generates a broad sales report including product sales, category sales, total revenue and so on.
      *
      * @param username - The user's username
-     * @returns A promise that resolves to void
      */
     public async generateSalesReport(username: string): Promise<void> {
-        const user = await User.findOne({ where: { username } });
+        const admin = (
+            await Admin.findOne({
+                include: [{ model: User, as: 'user', where: { username } }],
+            })
+        )?.toJSON();
 
-        if (!user) {
+        if (!admin) {
             throw new UserNotFoundError('Admin not found');
         }
 
         const firstName =
-            user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1);
+            admin.user!.firstName.charAt(0).toUpperCase() +
+            admin.user!.firstName.slice(1);
         const lastName =
-            user.lastName.charAt(0).toUpperCase() + user.lastName.slice(1);
+            admin.user!.lastName.charAt(0).toUpperCase() +
+            admin.user!.lastName.slice(1);
 
         const productRevenue = await this.getTotalProductsRevenue();
         const totalRevenue = await this.getTotalRevenue();
-        const totalTransactions = await Sale.count();
+        const totalTransactions = await Order.count();
         const averageOrderValue = await this.getAverageOrderValue();
-        const { purchasesCount } =
-            await this.getTotalProductPurchases('quantity');
-        const pendingOrders = await this.getPlatformOrdersByStatus('Pending');
-        const cancelledOrders =
-            await this.getPlatformOrdersByStatus('Cancelled');
-        const deliveredOrders =
-            await this.getPlatformOrdersByStatus('Delivered');
-        //const categoryData = await this.getCategoryPurchases();
+        const purchasesCount = await Purchase.count();
+        const mostPurchasedCategory = await this.getCategoryWithMostPurchases();
+        const pendingOrders = await this.getOrdersByStatus('pending');
+        const shippedOrders = await this.getOrdersByStatus('shipped');
+        const awaitingPickupOrders =
+            await this.getOrdersByStatus('awaiting-pickup');
+        const deliveredOrders = await this.getOrdersByStatus('delivered');
+        const refundedOrders = await this.getOrdersByStatus('refunded');
+        const partiallyRefundedOrders =
+            await this.getOrdersByStatus('partially-refunded');
+        const uncollectedOrders = await this.getOrdersByStatus('uncollected');
 
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+        if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+        }
+
         doc.pipe(
-            fs.createWriteStream(`reports/sales_report_${Date.now()}.pdf`)
+            fs.createWriteStream(`${reportsDir}/sales_report_${Date.now()}.pdf`)
         );
 
-        doc.fontSize(25).text('Product Sales Report', { align: 'center' });
-        doc.fontSize(18)
-            .moveDown()
-            .text('E-Commerce Site', { align: 'center' });
+        doc.image(
+            assetsDir + '/water.png',
+            doc.page.width - doc.page.margins.left * 2,
+            10,
+            { scale: 0.1 }
+        );
 
-        doc.fillColor('black')
-            .moveDown()
-            .fontSize(16)
-            .text('Sales Overview', 60);
-        doc.fontSize(12).moveDown();
-        doc.text('Total Sales: ' + productRevenue, 65, 195, { continued: true })
-            .fillColor('#4CAF50')
-            .text(' (+15%)');
-        doc.fillColor('black')
-            .moveDown(0.25)
-            .text('Total Sales including shipping: ' + totalRevenue, {
-                continued: true,
-            })
-            .fillColor('#4CAF50')
-            .text(' (+35%)');
-        doc.fillColor('black')
-            .moveDown(0.25)
-            .text('Number of Products Sold: ' + purchasesCount, {
-                continued: true,
-            })
-            .fillColor('#4CAF50')
-            .text(' (+8%)');
-        doc.fillColor('black')
-            .moveDown(0.25)
-            .text('Number of Transactions: ' + totalTransactions, {
-                continued: true,
-            })
-            .fillColor('#FF3300')
-            .text(' (-5%)');
-        doc.fillColor('black')
-            .moveDown(0.25)
-            .text('Average Order Value: ' + averageOrderValue, {
-                continued: true,
-            })
-            .fillColor('#4CAF50')
-            .text(' (+10%)');
-
-        doc.circle(490, 210, 60)
-            .lineWidth(0)
-            .fillAndStroke('darkblue', '#ffffff');
-
-        doc.rect(60, 300, 490, 30).fill('lightblue');
-        doc.rect(60, 330, 490, 30).fill('lightgray');
-        doc.strokeColor('gray').moveTo(61, 360).lineTo(61, 385).stroke();
-        doc.moveTo(61, 385).lineTo(549, 385).stroke();
-        doc.moveTo(549, 385).lineTo(549, 360).stroke();
-
-        doc.moveDown(2.3)
-            .fill('black')
-            .font('Helvetica-Bold')
-            .fontSize(14)
-            .text('Total Orders Data', 70);
-
-        doc.moveDown()
-            .fontSize(12)
-            .text('Pending', 75, 340, { continued: true });
-        doc.text('Cancelled', 235, 340, { continued: true });
-        doc.text('Delivered', 377, 340);
-
-        doc.font('Helvetica');
-
-        doc.text(pendingOrders.total.toString(), -346, 368, {
-            align: 'center',
+        doc.font('Helvetica').fontSize(14).text('company image').moveDown();
+        doc.fontSize(18).text('Generic Sales Report', {
+            align: 'left',
             continued: true,
         });
-        doc.text(cancelledOrders.total.toString(), -148, 368, {
-            align: 'center',
-            continued: true,
-        });
-        doc.text(deliveredOrders.total.toString(), 32, 368, {
-            align: 'center',
-        });
+        doc.fontSize(14).text('Company Name Inc.', { align: 'right' });
 
-        doc.rect(60, 397, 490, 30).fill('lightblue');
-        doc.fillColor('black')
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text('Product Sales By Category Overview', 70, 407);
-        doc.font('Helvetica').fontSize(12);
-        let yPosition = 427;
+        const availableWidth =
+            doc.page.width - doc.page.margins.left * 2;
 
-        /*categoryData.forEach((category, index) => {
-            const bgColor = index % 2 === 0 ? '#F2F2F2' : '#FFFFFF';
-            doc.rect(60, yPosition, 490, 30).fill(bgColor).stroke();
-            doc.fillColor('black').text(
-                `${index + 1}. ${category.categoryName} - ${category.purchaseCount} items - $${category.totalRevenue}`,
-                68,
-                yPosition + 10
-            );
-
-            /* Color sales percentage changes
-            const changeColor = category.change > 0 ? '#4CAF50' : '#FF3300';
-            doc.fillColor(changeColor).text(
-                `(${category.change}%)`,
-                500,
-                yPosition + 10,
-                { align: 'right' }
-            );
-            */
-
-        /*yPosition += 30;
-        });*/
-
-        doc.fillColor('black')
+        doc.moveDown().rect(doc.x, doc.y, availableWidth, 25).fill('#3761a7');
+        doc.font('Helvetica-Bold')
+            .fillColor('white')
             .fontSize(12)
-            .moveDown()
-            .text(`Report generated by: ${firstName} ${lastName}`, 68, 690, {
-                continued: true,
-            });
-        doc.fillColor('gray').text(new Date().toLocaleDateString(), {
-            align: 'right',
+            .text('Sales Summary', doc.x + 10, doc.y + 10);
+        doc.moveDown(0.25);
+        const salesTable = {
+            headers: ['Insight', 'Value'],
+            rows: [
+                ['Total Sales', productRevenue.toString()],
+                ['Total Sales including shipping', totalRevenue.toString()],
+                ['Number of Products Sold', purchasesCount.toString()],
+                ['Number of Transactions', totalTransactions.toString()],
+                ['Average Order Value', averageOrderValue.toString()],
+            ],
+        };
+        doc.table(salesTable, {
+            hideHeader: true,
+            x: doc.x - 10,
         });
+
+        doc.rect(doc.x, doc.y, availableWidth, 25).fill('#3761a7');
+        doc.font('Helvetica-Bold')
+            .fillColor('white')
+            .fontSize(12)
+            .text('Order Data', doc.x + 10, doc.y + 10);
+        doc.moveDown();
+        const ordersTable = {
+            headers: ['Status', 'Total'],
+            rows: [
+                ['Pending', pendingOrders.count.toString()],
+                ['Shipped', shippedOrders.count.toString()],
+                ['Awaiting Pickup', awaitingPickupOrders.count.toString()],
+                ['Delivered', deliveredOrders.count.toString()],
+                ['Refunded', refundedOrders.count.toString()],
+                [
+                    'Partially Refunded',
+                    partiallyRefundedOrders.count.toString(),
+                ],
+                ['Uncollected', uncollectedOrders.count.toString()],
+            ],
+        };
+        doc.table(ordersTable, {
+            hideHeader: true,
+            x: doc.x - 10,
+            y: doc.y - 10,
+        });
+
+        doc.moveDown();
+        doc.text(`Categories based on purchases: `);
+
+        const bottomY = doc.page.height - doc.page.margins.bottom;
+        doc.fillColor('black')
+            .font('Helvetica-Bold')
+            .fontSize(12)
+            .text(
+                `Report generated by: ${firstName} ${lastName}`,
+                doc.x,
+                bottomY - 40,
+                {
+                    continued: true,
+                }
+            );
+        doc.fillColor('gray').text(
+            `Generated on: ${new Date().toLocaleDateString()}`,
+            {
+                align: 'right',
+            }
+        );
         doc.fillColor('black')
             .moveDown(0.25)
             .fontSize(10)
@@ -192,7 +182,7 @@ export class AnalyticsService {
      * @param username - The user's username
      * @returns A promise that resolves to void
      */
-    public async generateStockReport(username: string) {
+    /*   public async generateStockReport(username: string) {
         const user = await User.findOne({ where: { username } });
 
         if (!user) {
@@ -273,113 +263,140 @@ export class AnalyticsService {
         doc.text('Generation date: ' + new Date().toLocaleDateString(), 235);
 
         doc.end();
+    }*/
+
+    /**
+     * Retrieves all platform orders by a given status.
+     *
+     * @param status - The status of the order
+     * @returns A promise resolving to an array of Order instances and their count
+     */
+    private async getOrdersByStatus(
+        status: string
+    ): Promise<{ count: number; orders: OrderResponse[] }> {
+        const { count, rows } = await Order.findAndCountAll({
+            where: { status },
+        });
+
+        const orders = rows.map((order) => order.toJSON());
+
+        return { count, orders };
     }
 
     /**
      * Retrieves the total number of product purchases and each
      * purchased product in the platform.
      *
+     * @param page - The current page number
+     * @param pageSize - The number of items per page
+     * @param [sortBy='purchaseCount'] - Sort by the specified column
+     * @param [sortOrder='DESC'] - Sorting order
+     * @param [minPurchases=0] - The minimum number of purchases for a product
+     * @param [minRevenue=0.0] - The minimum revenue for a product
      * @returns A promise that resolves to an object containing
-     * the total purchase count and an array of purchased products
+     * the total purchase count and an array of unique purchased products
      */
     public async getTotalProductPurchases(
-        filter: 'quantity' | 'totalRevenue'
+        page: number,
+        pageSize: number,
+        sortBy: string = 'purchaseCount',
+        sortOrder: string = 'DESC',
+        minPurchases: number = 0,
+        minRevenue: number = 0.0
     ): Promise<{
         purchasesCount: number;
         products: PurchasedProductResponse[];
+        meta: PageMetaData;
     }> {
-        const purchasesCount = await Purchase.sum('quantity');
-        const foundProducts = await Purchase.findAll({
+        const offset = (page - 1) * pageSize;
+        const purchasesCount = await Purchase.count();
+        const productPurchases = await Purchase.findAll({
             attributes: [
-                [
-                    Sequelize.cast(
-                        Sequelize.fn('SUM', Sequelize.col('quantity')),
-                        'int'
-                    ),
-                    'quantity',
-                ],
-                [
-                    Sequelize.cast(
-                        Sequelize.fn('SUM', Sequelize.col('discountRate')),
-                        'float'
-                    ),
-                    'discountRate',
-                ],
                 'productId',
+                [
+                    sequelize.fn('COUNT', sequelize.col('Purchase.productId')),
+                    'purchaseCount',
+                ],
+                [
+                    sequelize.fn(
+                        'SUM',
+                        sequelize.col('Purchase.purchasePrice')
+                    ),
+                    'totalRevenue',
+                ],
             ],
-            group: ['productId'],
+            include: [{ model: Product, attributes: ['id', 'name', 'price'] }],
+            group: ['Purchase.productId', 'Product.id'],
+            having: sequelize.and(
+                sequelize.literal(
+                    `COUNT(Purchase.productId) >= ${minPurchases}`
+                ),
+                sequelize.literal(
+                    `SUM(Purchase.purchasePrice) >= ${minRevenue}`
+                )
+            ),
+            order: [[sequelize.literal(sortBy), sortOrder]],
+            limit: pageSize,
+            offset,
         });
 
-        const productIds: number[] = foundProducts
-            .map((row) => row.productId)
-            .filter((row) => row != undefined);
-
-        const productResults = await Product.findAll({
-            where: { id: productIds },
-            attributes: ['id', 'name', 'price'],
-        });
-
-        const productsWithQuantity: PurchasedProductResponse[] = [];
-
-        for (let index = 0; index < productResults.length; index++) {
-            const { quantity, discountRate } = foundProducts[index];
-            const totalRevenue = discountRate * productResults[index].price;
-
-            productsWithQuantity.push({
-                ...productResults[index].toJSON(),
-                quantity,
-                totalRevenue: parseFloat(totalRevenue.toFixed(2)),
-            });
-        }
-
-        productsWithQuantity.sort((a, b) => {
-            return b[filter] - a[filter];
-        });
+        const totalProductGroups = (
+            await Purchase.findAll({
+                attributes: [
+                    [
+                        sequelize.fn(
+                            'COUNT',
+                            sequelize.col('Purchase.productId')
+                        ),
+                        'purchaseCount',
+                    ],
+                ],
+                group: ['Purchase.productId'],
+                having: sequelize.and(
+                    sequelize.literal(
+                        `COUNT(Purchase.productId) >= ${minPurchases}`
+                    ),
+                    sequelize.literal(
+                        `SUM(Purchase.purchasePrice) >= ${minRevenue}`
+                    )
+                ),
+            })
+        ).length;
 
         return {
             purchasesCount,
-            products: productsWithQuantity,
+            products:
+                purchasesCount > 0
+                    ? productPurchases.map((p) => {
+                          const o = p.toJSON();
+                          return {
+                              id: o.productId,
+                              name: o.Product!.name,
+                              currentPrice: o.Product!.price,
+                              purchaseCount: parseFloat(
+                                  o.purchaseCount!.toFixed(2)
+                              ),
+                              totalRevenue: parseFloat(
+                                  o.totalRevenue!.toFixed(2)
+                              ),
+                          };
+                      })
+                    : [],
+            meta: {
+                page,
+                pageSize,
+                total: totalProductGroups,
+                totalPages: Math.ceil(totalProductGroups / pageSize),
+            },
         };
     }
 
     /** Retrieves the total revenue of product sales.
      *
-     * @returns A promise that resolves to a number of total product sales.
+     * @returns A promise that resolves to a number representing the total revenue of product sales.
      */
     public async getTotalProductsRevenue(): Promise<number> {
-        const purchaseData = await Purchase.findAll({
-            attributes: [
-                [
-                    Sequelize.cast(
-                        Sequelize.fn('SUM', Sequelize.col('discountRate')),
-                        'float'
-                    ),
-                    'discountRate',
-                ],
-                'productId',
-            ],
-            group: ['productId'],
-        });
-
-        const productIds: number[] = purchaseData
-            .map((row) => row.productId)
-            .filter((row) => row !== undefined);
-
-        const products = await Product.findAll({
-            where: { id: productIds },
-            attributes: ['price'],
-        });
-
-        let totalRevenue = 0;
-
-        for (let index = 0; index < products.length; index++) {
-            const { discountRate } = purchaseData[index];
-            const currentSum = discountRate * products[index].price;
-
-            totalRevenue += parseFloat(currentSum.toFixed(2));
-        }
-
-        return totalRevenue;
+        return parseFloat((await Purchase.sum('purchasePrice')).toFixed(2));
     }
 
     /**
@@ -389,18 +406,7 @@ export class AnalyticsService {
      * the total revenue
      */
     public async getTotalRevenue(): Promise<number> {
-        const result = await Sale.findOne({
-            attributes: [
-                [Sequelize.fn('SUM', Sequelize.col('total')), 'totalRevenue'],
-            ],
-            raw: true,
-        });
-
-        if (!result) {
-            return 0;
-        }
-
-        return Number(result.totalRevenue);
+        return parseFloat((await Order.sum('total')).toFixed(2));
     }
 
     /**
@@ -410,21 +416,17 @@ export class AnalyticsService {
      * the average order value
      */
     public async getAverageOrderValue(): Promise<number> {
-        const result = await Sale.findOne({
+        const result = await Order.findOne({
             attributes: [
                 [
-                    Sequelize.fn('AVG', Sequelize.col('total')),
-                    'averageOrderValue',
+                    sequelize.fn('AVG', sequelize.col('total')),
+                    'averageTotalValue',
                 ],
             ],
             raw: true,
         });
 
-        if (!result) {
-            return 0;
-        }
-
-        return Number(result.averageOrderValue);
+        return parseFloat(result?.averageTotalValue ?? '0');
     }
 
     /**
@@ -433,45 +435,316 @@ export class AnalyticsService {
      * @returns A promise that resolves to an object containing the category
      * and the count of purchases.
      */
-    public async getCategoryWithMostPurchases(): Promise<TopCategory> {
-        const results = await Purchase.findAll({
+    public async getCategoryWithMostPurchases(): Promise<PurchasedCategoryResponse> {
+        const result = await Purchase.findOne({
             include: [
                 {
                     model: Product,
                     include: [
                         {
                             model: Category,
-                            attributes: ['id', 'name'],
+                            attributes: [],
+                        },
+                    ],
+                    attributes: [],
+                },
+            ],
+            attributes: [
+                [sequelize.col('Product.Category.id'), 'categoryId'],
+                [sequelize.col('Product.Category.name'), 'categoryName'],
+                [
+                    sequelize.fn('COUNT', sequelize.col('Purchase.id')),
+                    'categoryPurchaseCount',
+                ],
+                [
+                    sequelize.fn(
+                        'SUM',
+                        sequelize.col('Purchase.purchasePrice')
+                    ),
+                    'categoryTotalRevenue',
+                ],
+            ],
+            group: ['Product.Category.id', 'Product.Category.name'],
+            order: [
+                [sequelize.fn('COUNT', sequelize.col('Purchase.id')), 'DESC'],
+            ],
+            limit: 1,
+            raw: true,
+        });
+
+        if (!result) {
+            throw new Error('No purchases found');
+        }
+
+        const totalProducts = await Product.count({
+            where: { categoryId: result.categoryId },
+        });
+
+        return {
+            id: result.categoryId!,
+            name: result.categoryName!,
+            totalProducts,
+            purchaseCount: result.categoryPurchaseCount!,
+            totalRevenue: parseFloat(result.categoryTotalRevenue!.toFixed(2)),
+        };
+    }
+
+    /**
+     * Retrieves the top customers based on the ranking type.
+     *
+     * @param [getBy='order'] - Which format to retrieve the data by
+     * @param [limit=10] - The limit of customers
+     * @returns A promise that resolves to an array
+     */
+    public async getTopCustomers(
+        getBy: 'order' | 'purchase' = 'order',
+        sortBy: TopCustomerSortBy,
+        page: number,
+        pageSize: number
+    ): Promise<{
+        customers: TopCustomersResponse[];
+        meta: PageMetaData;
+    }> {
+        const offset = (page - 1) * pageSize;
+        let results: Order[] | Purchase[];
+        let recordCount: number;
+
+        if (getBy === 'order') {
+            results = await this.getTopCustomersByOrders(
+                sortBy,
+                pageSize,
+                offset
+            );
+
+            recordCount = (
+                await Order.findAll({
+                    include: [
+                        {
+                            model: Customer,
+                            as: 'customer',
+                            attributes: [],
+                        },
+                    ],
+                    attributes: [[sequelize.col('customer.id'), 'customerId']],
+                    group: ['customer.id'],
+                })
+            ).length;
+        } else {
+            results = await this.getTopCustomersByPurchases(
+                sortBy,
+                pageSize,
+                offset
+            );
+
+            recordCount = (
+                await Purchase.findAll({
+                    include: [
+                        {
+                            model: Order,
+                            include: [
+                                {
+                                    model: Customer,
+                                    as: 'customer',
+                                    attributes: [],
+                                },
+                            ],
+                            attributes: [],
+                        },
+                    ],
+                    attributes: [
+                        [sequelize.col('Order.customer.id'), 'customerId'],
+                    ],
+                    group: ['Order.customer.id'],
+                })
+            ).length;
+        }
+
+        return {
+            customers: results.map((c) => {
+                const obj = c.toJSON() as PreparedTopCustomerObject;
+
+                return {
+                    id: obj.customerId,
+                    firstName: obj.customerFirstName,
+                    lastName: obj.customerLastName,
+                    username: obj.customerUsername,
+                    email: obj.customerEmail,
+                    membership: obj.customerMembership,
+                    data:
+                        getBy === 'order'
+                            ? {
+                                  orderCount: obj.orderCount!,
+                                  totalSpentOnOrders: obj.totalSpent!,
+                              }
+                            : {
+                                  totalProductPurchases: obj.purchaseCount!,
+                                  totalSpent: parseFloat(
+                                      obj.totalRevenue!.toFixed(2)
+                                  ),
+                              },
+                };
+            }),
+            meta: {
+                page,
+                pageSize,
+                total: recordCount,
+                totalPages: Math.ceil(recordCount / pageSize),
+            },
+        };
+    }
+
+    /**
+     * Retrieves the top customers by orders sort parameter.
+     *
+     * @param sortBy - The sort parameter to use
+     * @param pageSize - The number of items per page
+     * @param offset - The offset for pagination
+     * @returns A promise that resolves to an array of purchases
+     */
+    private async getTopCustomersByOrders(
+        sortBy: TopCustomerSortBy,
+        pageSize: number,
+        offset: number
+    ): Promise<Order[]> {
+        return await Order.findAll({
+            include: [
+                {
+                    model: Customer,
+                    as: 'customer',
+                    attributes: [],
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: [],
                         },
                     ],
                 },
             ],
             attributes: [
-                [Sequelize.col('Product.Category.id'), 'categoryId'],
-                [Sequelize.col('Product.Category.name'), 'categoryName'],
+                [sequelize.col('customer.id'), 'customerId'],
+                [sequelize.col('customer.user.firstName'), 'customerFirstName'],
+                [sequelize.col('customer.user.lastName'), 'customerLastName'],
+                [sequelize.col('customer.user.username'), 'customerUsername'],
+                [sequelize.col('customer.user.email'), 'customerEmail'],
+                [sequelize.col('customer.membership'), 'customerMembership'],
                 [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.Category.id')),
+                    sequelize.fn('COUNT', sequelize.col('customer.id')),
+                    'orderCount',
+                ],
+                [
+                    sequelize.fn('SUM', sequelize.col('Order.total')),
+                    'totalSpent',
+                ],
+            ],
+            group: [
+                'customer.id',
+                'customer.user.firstName',
+                'customer.user.lastName',
+                'customer.user.username',
+                'customer.user.email',
+                'customer.membership',
+            ],
+            order: [[sequelize.literal(sortBy), 'DESC']],
+            limit: pageSize,
+            offset,
+        });
+    }
+
+    /**
+     * Retrieves the top customers by purchases sort parameter.
+     *
+     * @param sortBy - The sort parameter to use
+     * @param pageSize - The number of items per page
+     * @param offset - The offset for pagination
+     * @returns A promise that resolves to an array of purchases
+     */
+    private async getTopCustomersByPurchases(
+        sortBy: TopCustomerSortBy,
+        pageSize: number,
+        offset: number
+    ): Promise<Purchase[]> {
+        return await Purchase.findAll({
+            include: [
+                {
+                    model: Order,
+                    include: [
+                        {
+                            model: Customer,
+                            as: 'customer',
+                            attributes: [],
+                            include: [
+                                {
+                                    model: User,
+                                    as: 'user',
+                                    attributes: [],
+                                },
+                            ],
+                        },
+                    ],
+                    attributes: [],
+                },
+            ],
+            attributes: [
+                [sequelize.col('Order.customer.id'), 'customerId'],
+                [
+                    sequelize.col('Order.customer.user.firstName'),
+                    'customerFirstName',
+                ],
+                [
+                    sequelize.col('Order.customer.user.lastName'),
+                    'customerLastName',
+                ],
+                [
+                    sequelize.col('Order.customer.user.username'),
+                    'customerUsername',
+                ],
+                [sequelize.col('Order.customer.user.email'), 'customerEmail'],
+                [
+                    sequelize.col('Order.customer.membership'),
+                    'customerMembership',
+                ],
+                [
+                    sequelize.fn('COUNT', sequelize.col('Order.customer.id')),
                     'purchaseCount',
                 ],
-            ],
-            group: ['Product.Category.id', 'Product.Category.name'],
-            order: [
                 [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.Category.id')),
-                    'DESC',
+                    sequelize.fn(
+                        'SUM',
+                        sequelize.col('Purchase.purchasePrice')
+                    ),
+                    'totalRevenue',
                 ],
             ],
-            limit: 1,
+            group: [
+                'Order.customer.id',
+                'Order.customer.user.firstName',
+                'Order.customer.user.lastName',
+                'Order.customer.user.username',
+                'Order.customer.user.email',
+                'Order.customer.membership',
+            ],
+            order: [[sequelize.literal(sortBy), 'DESC']],
+            limit: pageSize,
+            offset,
+        });
+    }
+
+    /**
+     * Retrieves the total orders by customer.
+     *
+     * @param customerId - The ID of the customer
+     * @returns A promise that resolves to the total orders count
+     */
+    public async getTotalOrdersByCustomer(
+        customerId: number
+    ): Promise<{ totalCount: number; totalRevenue: number }> {
+        const totalCount = await Order.count({ where: { customerId } });
+        const totalRevenue = await Order.sum('total', {
+            where: { customerId },
         });
 
-        const result = results[0] as unknown as TopCategory;
-
-        if (!result) {
-            throw new CategoryNotFoundError();
-        }
-
-        const { categoryName, purchaseCount } = result;
-        return { categoryName, purchaseCount };
+        return { totalCount, totalRevenue };
     }
 
     /**
@@ -479,41 +752,82 @@ export class AnalyticsService {
      *
      * @param customerId - The ID of the customer
      * @returns A promise that resolves to an object containing
-     * the count and an array of products
+     * the total count, revenue and an array of products
      */
     public async getTotalProductPurchasesForCustomer(
         customerId: number
     ): Promise<{
         totalCount: number;
-        products: PurchasedProductResponse[];
+        totalRevenue: number;
+        purchasedProducts: PurchasedProductResponse[];
     }> {
-        const totalCount = await Purchase.count({ where: { customerId } });
-        const results = await Purchase.findAll({
-            where: { customerId },
+        const purchasedProducts = await Purchase.findAll({
             include: [
                 {
+                    model: Order,
+                    include: [
+                        {
+                            model: Customer,
+                            as: 'customer',
+                            where: { id: customerId },
+                            attributes: [],
+                        },
+                    ],
+                    attributes: [],
+                },
+                {
                     model: Product,
-                    attributes: ['id', 'name', 'price'],
+                    attributes: [],
                 },
             ],
             attributes: [
-                [Sequelize.col('Product.id'), 'productId'],
-                [Sequelize.col('Product.name'), 'productName'],
-                [Sequelize.col('Product.price'), 'productPrice'],
+                [sequelize.col('Product.id'), 'purchasedProductId'],
+                [sequelize.col('Product.name'), 'productName'],
+                [sequelize.col('Product.price'), 'productCurrentPrice'],
                 [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.id')),
-                    'purchaseCount',
+                    sequelize.fn('COUNT', sequelize.col('Purchase.id')),
+                    'productPurchaseCount',
+                ],
+                [
+                    sequelize.fn(
+                        'SUM',
+                        sequelize.col('Purchase.purchasePrice')
+                    ),
+                    'totalSpentOnProduct',
                 ],
             ],
             group: ['Product.id', 'Product.name', 'Product.price'],
             order: [
-                [Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'DESC'],
+                [sequelize.fn('COUNT', sequelize.col('Purchase.id')), 'DESC'],
             ],
+            raw: true,
         });
+
+        const totalCount = purchasedProducts.reduce(
+            (sum, product) => sum + Number(product.productPurchaseCount),
+            0
+        );
+        const totalRevenue = purchasedProducts.reduce(
+            (sum, product) => sum + Number(product.totalSpentOnProduct),
+            0
+        );
 
         return {
             totalCount,
-            products: results as unknown as PurchasedProductResponse[],
+            totalRevenue:
+                totalCount > 0 ? parseFloat(totalRevenue.toFixed(2)) : 0,
+            purchasedProducts:
+                totalCount > 0
+                    ? purchasedProducts.map((p) => ({
+                          id: p.purchasedProductId!,
+                          name: p.productName!,
+                          currentPrice: p.productCurrentPrice!,
+                          purchaseCount: p.productPurchaseCount!,
+                          totalSpent: parseFloat(
+                              p.totalSpentOnProduct!.toFixed(2)
+                          ),
+                      }))
+                    : [],
         };
     }
 
@@ -521,264 +835,200 @@ export class AnalyticsService {
      * Retrieves the category with the most purchases made by customer.
      *
      * @param customerId - The ID of the customer
-     * @returns A promise that resolves to an object containing the category
-     * and the count of purchases
+     * @returns A promise that resolves to an object containing the category response
      */
     public async getCategoryWithMostPurchasesByCustomer(
         customerId: number
-    ): Promise<TopCategory> {
-        const results = await Purchase.findAll({
-            where: { customerId },
+    ): Promise<PurchasedCategoryResponse> {
+        const result = await Purchase.findOne({
             include: [
+                {
+                    model: Order,
+                    include: [
+                        {
+                            model: Customer,
+                            as: 'customer',
+                            where: { id: customerId },
+                            attributes: [],
+                        },
+                    ],
+                    attributes: [],
+                },
                 {
                     model: Product,
                     include: [
                         {
                             model: Category,
-                            attributes: ['id', 'name'],
+                            attributes: [],
                         },
                     ],
-                },
-            ],
-            attributes: [
-                [Sequelize.col('Product.Category.id'), 'categoryId'],
-                [Sequelize.col('Product.Category.name'), 'categoryName'],
-                [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.Category.id')),
-                    'purchaseCount',
-                ],
-            ],
-            group: ['Product.Category.id', 'Product.Category.name'],
-            order: [
-                [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.Category.id')),
-                    'DESC',
-                ],
-            ],
-            limit: 1,
-        });
 
-        const result = results[0] as unknown as TopCategory;
-
-        if (!result) {
-            throw new CategoryNotFoundError();
-        }
-
-        const { categoryName, purchaseCount } = result;
-        return { categoryName, purchaseCount };
-    }
-
-    /**
-     * Retrieves the top selling products.
-     *
-     * @param limit - The number of products to retrieve
-     * @returns A promise resolving to an array of Product instances
-     */
-    public async getTopSellingProducts(limit: number): Promise<number> {
-        return limit;
-        /*const products = await Product.findAll({
-            include: [
-                {
-                    model: Purchase,
                     attributes: [],
                 },
             ],
             attributes: [
-                'name',
-                'price',
+                [sequelize.col('Product.Category.id'), 'categoryId'],
+                [sequelize.col('Product.Category.name'), 'categoryName'],
                 [
-                    Sequelize.fn('COUNT', Sequelize.col('Purchases.productId')),
-                    'purchaseCount',
-                ],
-            ],
-            group: ['Product.id'],
-            order: [
-                [
-                    Sequelize.fn('COUNT', Sequelize.col('Purchases.productId')),
-                    'DESC',
-                ],
-            ],
-            limit,
-        });
-
-        return products
-            .map((product) => ({
-                productName: product.name,
-                productPrice: product.price,
-                purchaseCount: product.getDataValue('purchaseCount'),
-            }))
-            .filter((product) => product !== undefined);
-            */
-    }
-
-    /**
-     * Retrieves the total views of a product.
-     *
-     * @param productId - The ID of the product
-     * @returns A promise resolving to a number representing
-     * the total views of the product
-     */
-    public async getProductViews(productId: number): Promise<number> {
-        const product = await Product.findByPk(productId);
-
-        if (!product) {
-            throw new ProductNotFoundError();
-        }
-
-        return product.views!;
-    }
-
-    /**
-     * Retrieves the total purchases for each category.
-     *
-     * @returns A promise resolving to an array of objects containing
-     * the category Id, name and the total purchases
-     */
-    /*public async getCategoryPurchases(): Promise<TopCategory[]> {
-        const results = await Purchase.findAll({
-            include: [
-                {
-                    model: Product,
-                    include: [
-                        {
-                            model: Category,
-                            attributes: ['id', 'name'],
-                        },
-                    ],
-                },
-            ],
-            attributes: [
-                [Sequelize.col('Product.Category.id'), 'categoryId'],
-                [Sequelize.col('Product.Category.name'), 'categoryName'],
-                [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.Category.id')),
+                    sequelize.fn('COUNT', sequelize.col('Purchase.id')),
                     'purchaseCount',
                 ],
                 [
-                    Sequelize.fn('SUM', Sequelize.col('Product.price')),
+                    sequelize.fn(
+                        'SUM',
+                        sequelize.col('Purchase.purchasePrice')
+                    ),
                     'totalRevenue',
                 ],
             ],
             group: ['Product.Category.id', 'Product.Category.name'],
             order: [
-                [
-                    Sequelize.fn('COUNT', Sequelize.col('Product.Category.id')),
-                    'DESC',
-                ],
+                [sequelize.fn('COUNT', sequelize.col('Purchase.id')), 'DESC'],
             ],
+            limit: 1,
+            raw: true,
         });
 
-        return results.map((purchase) => {
-            return {
-                categoryId: purchase.getDataValue('categoryId')!,
-                categoryName: purchase.getDataValue('categoryName')!,
-                purchaseCount: purchase.getDataValue('purchaseCount')!,
-                totalRevenue: purchase.getDataValue('totalRevenue')!,
-            };
-        });
-    }*/
-
-    /**
-     * Retrieves the products based on stock status.
-     *
-     * @param status - The stock status of the products (e.g., 'instock', 'outofstock', 'lowstock')
-     * @returns A promise resolving to an object containing
-     * the products in stock for the given status
-     */
-    public async getProductsByStockStatus(
-        status: string = 'instock'
-    ): Promise<{ total: number; rows: Product[] }> {
-        let operator;
-
-        status = status.toLowerCase();
-
-        switch (status) {
-            case 'instock':
-                operator = { [Op.gt]: 0 };
-                break;
-            case 'outofstock':
-                operator = 0;
-                break;
-            case 'lowstock':
-                operator = { [Op.lte]: 0 };
-                break;
-            default:
-                throw new InvalidStockStatusError(status);
+        if (!result) {
+            throw new CategoryNotFoundError();
         }
 
-        const { count, rows } = await Product.findAndCountAll({
-            where: { stockQuantity: operator },
+        const totalProducts = await Product.count({
+            where: { categoryId: result.categoryId },
         });
 
-        return { total: count, rows };
+        return {
+            id: result.categoryId!,
+            name: result.categoryName!,
+            totalProducts,
+            purchaseCount: result.purchaseCount!,
+            totalRevenue: parseFloat(result.totalRevenue!.toFixed(2)),
+        };
     }
 
     /**
-     * Retrieves stock data for each category.
+     * Retrieves the total purchases for each category.
      *
-     * @param status - The stock status of the products (e.g., 'instock', 'outofstock', 'lowstock')
-     * @returns A promise resolving to an array of objects containing the category name and stock status
+     * @param page - The current page number
+     * @param pageSize - The number of items per page
+     * @param [sortBy='purchaseCount'] - Sort by the specified column
+     * @param [sortOrder='DESC'] - Sorting order
+     * @param [minPurchases=0] - The minimum number of purchases for a category
+     * @param [minRevenue=0.0] - The minimum revenue for a category
+     * @returns A promise resolving to an array of PurchasedCategory objects
      */
-    public async getStockDataForCategoryByStatus(
-        status: string = 'instock'
-    ): Promise<{ categoryName: string; total: number }[]> {
-        let operator;
-
-        status = status.toLowerCase();
-
-        switch (status) {
-            case 'instock':
-                operator = { [Op.gt]: 0 };
-                break;
-            case 'outofstock':
-                operator = 0;
-                break;
-            case 'lowstock':
-                operator = { [Op.lte]: 0 };
-                break;
-            default:
-                throw new InvalidStockStatusError(status);
-        }
-
-        const stockData = await Product.findAll({
-            attributes: [
-                [Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'total'],
-                'categoryId',
-            ],
-            where: {
-                stockQuantity: operator,
-            },
-            group: ['categoryId'],
+    public async getPurchasesPerCategory(
+        page: number,
+        pageSize: number,
+        sortBy: string = 'purchaseCount',
+        sortOrder: string = 'DESC',
+        minPurchases: number = 0,
+        minRevenue: number = 0.0
+    ): Promise<{
+        categories: PurchasedCategoryResponse[];
+        meta: PageMetaData;
+    }> {
+        const offset = (page - 1) * pageSize;
+        const results = await Purchase.findAll({
             include: [
                 {
-                    model: Category,
-                    attributes: ['id', 'name'],
+                    model: Product,
+                    include: [
+                        {
+                            model: Category,
+                            attributes: ['id', 'name'],
+                        },
+                    ],
                 },
             ],
+            attributes: [
+                [sequelize.col('Product.Category.id'), 'categoryId'],
+                [sequelize.col('Product.Category.name'), 'categoryName'],
+                [
+                    sequelize.fn('COUNT', sequelize.col('Product.Category.id')),
+                    'purchaseCount',
+                ],
+                [
+                    sequelize.fn(
+                        'SUM',
+                        sequelize.col('Purchase.purchasePrice')
+                    ),
+                    'totalRevenue',
+                ],
+            ],
+            group: ['Product.Category.id', 'Product.Category.name'],
+            having: sequelize.and(
+                sequelize.literal(
+                    `COUNT(Purchase.productId) >= ${minPurchases}`
+                ),
+                sequelize.literal(
+                    `SUM(Purchase.purchasePrice) >= ${minRevenue}`
+                )
+            ),
+            order: [[sequelize.literal(sortBy), sortOrder]],
+            limit: pageSize,
+            offset,
         });
 
-        /*        return stockData.map((item) => ({
-            categoryName: item.Category!.name,
-            total: item.getDataValue('total')!,
-        }));
-  */ return [{ categoryName: 'asdf', total: 32 }];
-    }
+        const totalCategoryGroups = (
+            await Purchase.findAll({
+                include: [
+                    {
+                        model: Product,
+                        include: [
+                            {
+                                model: Category,
+                                attributes: ['id', 'name'],
+                            },
+                        ],
+                    },
+                ],
+                attributes: [
+                    [sequelize.col('Product.Category.id'), 'categoryId'],
+                ],
+                group: ['Product.Category.id'],
+                having: sequelize.and(
+                    sequelize.literal(
+                        `COUNT(Purchase.productId) >= ${minPurchases}`
+                    ),
+                    sequelize.literal(
+                        `SUM(Purchase.purchasePrice) >= ${minRevenue}`
+                    )
+                ),
+            })
+        ).length;
 
-    /**
-     * Retrieves the total platform orders by status.
-     *
-     * @param status - The status of the order (e.g., 'Pending', 'Cancelled', 'Delivered')
-     * @returns A promise that resolves to an object containing
-     * the count and an array of orders
-     */
-    public async getPlatformOrdersByStatus(
-        status: string
-    ): Promise<{ total: number; rows: Order[] }> {
-        const { count, rows } = await Order.findAndCountAll({
-            where: { status },
-        });
+        const productsCountMap = new Map<number, number>();
 
-        return { total: count, rows };
+        await Promise.all(
+            results.map(async (p) => {
+                const categoryId = p.getDataValue('categoryId');
+                const productsCount = await Product.count({
+                    where: { categoryId },
+                });
+                productsCountMap.set(categoryId!, productsCount);
+            })
+        );
+
+        return {
+            categories: results.map((p) => ({
+                id: p.getDataValue('categoryId')!,
+                name: p.getDataValue('categoryName')!,
+                totalProducts: productsCountMap.get(
+                    p.getDataValue('categoryId')!
+                )!,
+                purchaseCount: p.getDataValue('purchaseCount')!,
+                totalRevenue: parseFloat(
+                    p.getDataValue('totalRevenue')!.toFixed(2)
+                ),
+            })),
+            meta: {
+                page,
+                pageSize,
+                total: totalCategoryGroups,
+                totalPages: Math.ceil(totalCategoryGroups / pageSize),
+            },
+        };
     }
 
     /**

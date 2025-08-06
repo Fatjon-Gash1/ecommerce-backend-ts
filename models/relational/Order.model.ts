@@ -35,7 +35,7 @@ export class Order extends Model<
     declare status: CreationOptional<
         | 'pending'
         | 'shipped'
-        | 'awaiting pickup'
+        | 'awaiting-pickup'
         | 'delivered'
         | 'refunded'
         | 'partially-refunded'
@@ -145,7 +145,7 @@ Order.init(
             type: DataTypes.ENUM(
                 'pending',
                 'shipped',
-                'awaiting pickup',
+                'awaiting-pickup',
                 'delivered',
                 'refunded',
                 'partially-refunded',

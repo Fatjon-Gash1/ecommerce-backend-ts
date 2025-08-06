@@ -31,6 +31,8 @@ export class Purchase extends Model<
     declare productCurrentPrice?: number;
     declare productPurchaseCount?: number;
     declare totalSpentOnProduct?: number;
+    declare totalProducts?: number;
+    declare customerId?: number;
 }
 
 Purchase.init(

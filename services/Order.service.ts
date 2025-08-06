@@ -358,7 +358,7 @@ export class OrderService {
     public async markOrder(
         userId: number,
         orderId: number,
-        status: 'shipped' | 'awaiting pickup' | 'delivered' | 'uncollected',
+        status: 'shipped' | 'awaiting-pickup' | 'delivered' | 'uncollected',
         deliveryImageUrl?: string
     ): Promise<void> {
         const courier = await Courier.findOne({ where: { userId } });
@@ -374,7 +374,7 @@ export class OrderService {
         }
 
         if (status === 'delivered' && order.safeShipping) {
-            if (order.status !== 'awaiting pickup') {
+            if (order.status !== 'awaiting-pickup') {
                 throw new Error(
                     'Cannot mark order as delivered. Order status is: ' +
                         order.status
@@ -403,7 +403,7 @@ export class OrderService {
                 await order.save();
                 break;
             }
-            case 'awaiting pickup': {
+            case 'awaiting-pickup': {
                 if (!order.safeShipping) {
                     throw new Error(
                         'Cannot mark order as awaiting pickup. Order does not have safe shipping'
@@ -437,7 +437,7 @@ export class OrderService {
                 break;
             }
             case 'uncollected': {
-                if (order.status !== 'awaiting pickup') {
+                if (order.status !== 'awaiting-pickup') {
                     throw new Error(
                         'Cannot mark order as uncollected. Order status is: ' +
                             order.status
