@@ -1,12 +1,39 @@
 import { query, ValidationChain } from 'express-validator';
 
-export const validatePurchaseFilter = (): ValidationChain[] => [
-    query('filter')
-        .trim()
+export const validatePurchaseFilters = (): ValidationChain[] => [
+    query('page')
         .notEmpty()
-        .withMessage('Filter field is required')
-        .isIn(['quantity', 'totalRevenue'])
-        .withMessage('Field must be quantity or totalRevenue'),
+        .withMessage('Page is required')
+        .isInt({ min: 1 })
+        .withMessage('Field must be a number and greater than 0'),
+
+    query('page-size')
+        .notEmpty()
+        .withMessage('Page size is required')
+        .isInt({ min: 10 })
+        .withMessage('Field must be a number and at least 10'),
+
+    query('sort-by')
+        .optional()
+        .trim()
+        .isIn(['purchaseCount', 'totalRevenue'])
+        .withMessage("Field must be either 'purchaseCount' or 'totalRevenue"),
+
+    query('sort-order')
+        .optional()
+        .trim()
+        .isIn(['desc', 'asc'])
+        .withMessage("Field must be either 'desc' or 'asc'"),
+
+    query('min-purchases')
+        .optional()
+        .isInt()
+        .withMessage('Field must be a number'),
+
+    query('min-revenue')
+        .optional()
+        .isInt()
+        .withMessage('Field must be a number'),
 ];
 
 export const validatePagination = (): ValidationChain[] => [

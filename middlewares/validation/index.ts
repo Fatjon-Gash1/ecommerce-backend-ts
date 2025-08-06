@@ -48,7 +48,7 @@ export {
 } from './shippingValidations';
 
 export {
-    validatePurchaseFilter,
+    validatePurchaseFilters,
     validatePagination,
     validateProductStatus,
     validateReportName,

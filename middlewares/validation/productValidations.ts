@@ -57,6 +57,10 @@ export const validateProduct = (): ValidationChain[] => [
         .withMessage(
             'Weight must be a positive number and no more than 99.9kg'
         ),
+    body('details.availableDue')
+        .optional()
+        .isDate()
+        .withMessage('Available due must be a date'),
     query('promote').optional().toBoolean(),
 ];
 
