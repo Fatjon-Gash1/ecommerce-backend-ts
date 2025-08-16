@@ -157,18 +157,25 @@ export class AnalyticsService {
         doc.fontSize(14).text(`Categories based on purchases: `);
 
         const categoriesTable = {
-            headers: ['Category', 'Total Products', 'Total Purchases', 'Total Revenue'],
+            headers: [
+                'Category',
+                'Total Products',
+                'Total Purchases',
+                'Total Revenue',
+            ],
             rows: [
-                //categoriesWithPurchases.categories.map((c: PurchasedCategoryResponse) => (
-                //    [c.name, c.totalProducts, c.purchaseCount, c.totalRevenue]
-                //));
-
+                ...categoriesWithPurchases.categories.map((c) => [
+                    c.name,
+                    c.totalProducts.toString(),
+                    c.purchaseCount.toString(),
+                    c.totalRevenue.toString(),
+                ]),
             ],
         };
 
         doc.table(categoriesTable, {
             hideHeader: true,
-            x:  doc.x / 2,
+            x: doc.x / 2,
             y: doc.y - 10,
         });
 
