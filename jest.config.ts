@@ -3,9 +3,9 @@ import type { Config } from 'jest';
 const sharedConfig: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    roots: ['<rootDir>/tests'],
+    roots: ['<rootDir>/src/tests'],
     moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/$1',
+        '^@/(.*)$': '<rootDir>/src/$1',
     },
 };
 
@@ -14,38 +14,40 @@ const config: Config = {
         {
             ...sharedConfig,
             displayName: 'unit',
-            testMatch: ['<rootDir>/tests/**/*.unit.test.ts'],
+            testMatch: ['<rootDir>/src/tests/**/*.unit.test.ts'],
             setupFilesAfterEnv: [
-                '<rootDir>/tests/unit/setupEnv.ts',
-                '<rootDir>/tests/unit/setupMocks.ts',
+                '<rootDir>/src/tests/unit/setupEnv.ts',
+                '<rootDir>/src/tests/unit/setupMocks.ts',
             ],
         },
 
         {
             ...sharedConfig,
             displayName: 'integration',
-            testMatch: ['<rootDir>/tests/integration/tests/**/*.int.test.ts'],
-            globalSetup: '<rootDir>/tests/integration/globalSetup.ts',
-            globalTeardown: '<rootDir>/tests/integration/globalTeardown.ts',
-            setupFilesAfterEnv: [
-                '<rootDir>/tests/integration/setupIntegration.ts',
+            testMatch: [
+                '<rootDir>/src/tests/integration/tests/**/*.int.test.ts',
             ],
-            setupFiles: ['<rootDir>/tests/integration/loadMocks.ts'],
+            globalSetup: '<rootDir>/src/tests/integration/globalSetup.ts',
+            globalTeardown: '<rootDir>/src/tests/integration/globalTeardown.ts',
+            setupFilesAfterEnv: [
+                '<rootDir>/src/tests/integration/setupIntegration.ts',
+            ],
+            setupFiles: ['<rootDir>/src/tests/integration/loadMocks.ts'],
         },
     ],
     collectCoverage: true,
     coverageDirectory: 'coverage',
     collectCoverageFrom: [
-        'services/Admin.service.ts',
-        'services/Cart.service.ts',
-        'services/Logging.service.ts',
-        'services/Order.service.ts',
-        'services/Payment.service.ts',
-        'services/Product.service.ts',
-        'services/subscription_service/Scheduler.ts',
-        'services/Shipping.service.ts',
-        'services/subscription_service/index.ts',
-        'services/User.service.ts',
+        'src/services/Admin.service.ts',
+        'src/services/Cart.service.ts',
+        'src/services/Logging.service.ts',
+        'src/services/Order.service.ts',
+        'src/services/Payment.service.ts',
+        'src/services/Product.service.ts',
+        'src/services/subscription_service/Scheduler.ts',
+        'src/services/Shipping.service.ts',
+        'src/services/subscription_service/index.ts',
+        'src/services/User.service.ts',
     ],
     coverageThreshold: {
         global: {
