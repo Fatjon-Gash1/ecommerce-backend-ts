@@ -1,5 +1,5 @@
 {
     "plugin": ["typedoc-plugin-markdown"],
-    "entryPoints": ["./services"],
+    "entryPoints": ["./src/services"],
     "out": "./docs"
 }
