@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: NPM Audit
+        run: npm audit --audit-level=moderate
+
+      #- name: Run Snyk security scan
+      #  uses: snyk/actions/node@master
+      #  with:
+      #    command: test
+      #  env:
+      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: tsc --noEmit
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          CI: true
+
+      - name: Run integration tests
+        run: npm run test:int
+        env:
+          CI: true
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+
+  release:
+    needs: build-test-lint
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Semantic Release
+        run: npx semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
