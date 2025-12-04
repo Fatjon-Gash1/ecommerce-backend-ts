@@ -1,7 +1,7 @@
 {
-    "name": "server",
+    "name": "ecommerce-backend-ts",
     "version": "1.0.0",
-    "main": "server.js",
+    "main": "dist/server.js",
     "_moduleAliases": {
         "@": "dist"
     },
@@ -9,10 +9,21 @@
         "start": "node dist/server.js",
         "dev": "nodemon dist/server.js",
         "build": "tsc",
-        "docs": "typedoc"
+        "docs": "typedoc",
+        "lint": "eslint 'src/**/*.ts'",
+        "lint:fix": "eslint 'src/**/*.ts' --fix",
+        "test:unit": "jest --selectProjects unit",
+        "test:int": "jest --selectProjects integration --no-cache --runInBand --forceExit",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.ts": [
+            "eslint --fix",
+            "prettier --write"
+        ]
     },
     "keywords": [],
-    "author": "",
+    "author": "Fatjon-Gash1",
     "license": "ISC",
     "description": "",
     "dependencies": {
@@ -55,17 +66,36 @@
         "winston": "^3.17.0"
     },
     "devDependencies": {
+        "@commitlint/cli": "^20.1.0",
+        "@commitlint/config-conventional": "^20.0.0",
         "@eslint/js": "^9.10.0",
+        "@semantic-release/changelog": "^6.0.3",
+        "@semantic-release/commit-analyzer": "^13.0.1",
+        "@semantic-release/git": "^10.0.1",
+        "@semantic-release/github": "^11.0.6",
+        "@semantic-release/release-notes-generator": "^14.1.0",
         "@types/express": "^4.17.21",
+        "@types/jest": "^30.0.0",
         "@types/jsonwebtoken": "^9.0.7",
         "@types/nodemailer": "^6.4.16",
         "@types/sequelize": "^4.28.20",
+        "@types/supertest": "^6.0.3",
         "@types/swagger-jsdoc": "^6.0.4",
         "@types/swagger-ui-express": "^4.1.7",
-        "eslint": "^9.10.0",
+        "eslint": "^9.37.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.4",
         "globals": "^15.9.0",
+        "husky": "^9.1.7",
+        "jest": "^30.2.0",
+        "lint-staged": "^16.2.3",
+        "mockingoose": "^2.16.2",
         "nodemon": "^3.1.4",
+        "prettier": "^3.6.2",
+        "semantic-release": "^24.2.9",
         "sequelize-cli": "^6.6.2",
+        "supertest": "^7.1.4",
+        "ts-jest": "^29.4.5",
         "typedoc": "^0.27.9",
         "typedoc-plugin-markdown": "^4.4.1",
         "typescript": "^5.5.4",
