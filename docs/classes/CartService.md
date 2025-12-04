@@ -1,12 +1,12 @@
-[**server**](../README.md)
+[**ecommerce-backend-ts**](../README.md)
 
 ***
 
-[server](../globals.md) / CartService
+[ecommerce-backend-ts](../globals.md) / CartService
 
 # Class: CartService
 
-Defined in: [Cart.service.ts:14](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Cart.service.ts#L14)
+Defined in: Cart.service.ts:15
 
 Service responsible for Customer Cart-related operations.
 
@@ -24,9 +24,9 @@ Service responsible for Customer Cart-related operations.
 
 ### addItemToCart()
 
-> **addItemToCart**(`userId`, `productId`, `quantity`): `Promise`\<`object`[]\>
+> **addItemToCart**(`userId`, `productId`, `quantity`): `Promise`\<`CartItemResponse`[]\>
 
-Defined in: [Cart.service.ts:24](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Cart.service.ts#L24)
+Defined in: Cart.service.ts:24
 
 Inserts an item into the cart.
 
@@ -52,10 +52,9 @@ The product quantity.
 
 #### Returns
 
-`Promise`\<`object`[]\>
+`Promise`\<`CartItemResponse`[]\>
 
-A promise resolving to a boolean value indicating
-whether the item was inserted successfully.
+A promise resolving to an array of the updated cart items
 
 ***
 
@@ -63,7 +62,7 @@ whether the item was inserted successfully.
 
 > **cartCheckout**(`userId`): `Promise`\<`number`\>
 
-Defined in: [Cart.service.ts:119](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Cart.service.ts#L119)
+Defined in: Cart.service.ts:119
 
 Retrieves the total cart items amount.
 
@@ -79,7 +78,7 @@ The user ID
 
 `Promise`\<`number`\>
 
-A promise resolving to the total cart items amount
+A promise resolving to a number representing the total cart items amount
 
 ***
 
@@ -87,7 +86,7 @@ A promise resolving to the total cart items amount
 
 > **clearCart**(`userId`): `Promise`\<`void`\>
 
-Defined in: [Cart.service.ts:176](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Cart.service.ts#L176)
+Defined in: Cart.service.ts:178
 
 Clears the customer's cart.
 
@@ -97,7 +96,7 @@ Clears the customer's cart.
 
 `number`
 
-The user id
+The user id of the cart owner
 
 #### Returns
 
@@ -107,9 +106,9 @@ The user id
 
 ### getCartItems()
 
-> **getCartItems**(`userId`): `Promise`\<`object`[]\>
+> **getCartItems**(`userId`): `Promise`\<`CartItemResponse`[]\>
 
-Defined in: [Cart.service.ts:87](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Cart.service.ts#L87)
+Defined in: Cart.service.ts:89
 
 Retrieves all items in the customer's cart.
 
@@ -123,9 +122,9 @@ The user id
 
 #### Returns
 
-`Promise`\<`object`[]\>
+`Promise`\<`CartItemResponse`[]\>
 
-A promise resolving to an array of CartItem instances
+A promise resolving to an array of cart items
 
 ***
 
@@ -133,7 +132,7 @@ A promise resolving to an array of CartItem instances
 
 > **removeItemFromCart**(`userId`, `productId`): `Promise`\<`void`\>
 
-Defined in: [Cart.service.ts:140](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Cart.service.ts#L140)
+Defined in: Cart.service.ts:141
 
 Removes an item from the customer's cart.
 

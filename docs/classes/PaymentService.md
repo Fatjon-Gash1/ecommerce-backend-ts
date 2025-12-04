@@ -1,12 +1,14 @@
-[**server**](../README.md)
+[**ecommerce-backend-ts**](../README.md)
 
 ***
 
-[server](../globals.md) / PaymentService
+[ecommerce-backend-ts](../globals.md) / PaymentService
 
 # Class: PaymentService
 
-Defined in: [Payment.service.ts:93](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L93)
+Defined in: Payment.service.ts:41
+
+Service responsible for all payment related tasks.
 
 ## Constructors
 
@@ -14,7 +16,7 @@ Defined in: [Payment.service.ts:93](https://github.com/Fatjon-Gash1/edge-tech/bl
 
 > **new PaymentService**(`stripeKey`, `orderService`?, `shippingService`?, `notificationService`?): [`PaymentService`](PaymentService.md)
 
-Defined in: [Payment.service.ts:99](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L99)
+Defined in: Payment.service.ts:47
 
 #### Parameters
 
@@ -44,7 +46,7 @@ Defined in: [Payment.service.ts:99](https://github.com/Fatjon-Gash1/edge-tech/bl
 
 > **addPaymentDetails**(`userId`, `paymentType`, `token`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:165](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L165)
+Defined in: Payment.service.ts:125
 
 #### Parameters
 
@@ -70,7 +72,7 @@ Defined in: [Payment.service.ts:165](https://github.com/Fatjon-Gash1/edge-tech/b
 
 > **cancelMembershipSubscriptionWithProrate**(`customerId`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:1080](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L1080)
+Defined in: Payment.service.ts:1064
 
 Cancels membership subscription and credits unused time.
 
@@ -92,7 +94,7 @@ The id of the customer to cancel
 
 > **cancelMembershipSubscriptionWithRefund**(`userId`, `customerId`, `immediate`?): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:989](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L989)
+Defined in: Payment.service.ts:973
 
 Cancels a stripe customer's subscription.
 
@@ -140,7 +142,7 @@ Thrown if no invoice or invoice charge was found for the subscription.
 
 > **createCustomer**(`name`, `email`): `Promise`\<`string`\>
 
-Defined in: [Payment.service.ts:118](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L118)
+Defined in: Payment.service.ts:78
 
 Creates a new stripe customer.
 
@@ -170,7 +172,7 @@ A Promise resolving to the Stripe customer id
 
 > **createDiscountCouponAndPromotionCode**(`percentage`, `customerId`): `Promise`\<`string`\>
 
-Defined in: [Payment.service.ts:906](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L906)
+Defined in: Payment.service.ts:890
 
 Creates a discount coupon and promotion code.
 
@@ -204,7 +206,7 @@ This method is called from the subscription service and from a job scheduler's j
 
 > **createMembershipSubscription**(`customerId`, `membership`, `annual`?, `trial`?, `promoCode`?): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:936](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L936)
+Defined in: Payment.service.ts:920
 
 Creates a customer subscription to a membership plan.
 
@@ -254,7 +256,7 @@ This method is called from the subscription service.
 
 > **createPaymentIntent**(`userId`, `amount`, `currency`, `paymentMethodId`?): `Promise`\<`string`\>
 
-Defined in: [Payment.service.ts:407](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L407)
+Defined in: Payment.service.ts:367
 
 Create a payment intent using the Stripe API.
 
@@ -305,13 +307,13 @@ Thrown if the stripe customer is deleted.
 
 > **createProduct**(`details`): `Promise`\<\{ `priceId`: `string`; `productId`: `string`; \}\>
 
-Defined in: [Payment.service.ts:732](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L732)
+Defined in: Payment.service.ts:716
 
 #### Parameters
 
 ##### details
 
-`ProductDetails`
+`PaymentProductDetails`
 
 #### Returns
 
@@ -323,7 +325,7 @@ Defined in: [Payment.service.ts:732](https://github.com/Fatjon-Gash1/edge-tech/b
 
 > **createRefundRequest**(`userId`, `orderId`, `reason`, `amount`?): `Promise`\<`boolean` \| `void`\>
 
-Defined in: [Payment.service.ts:511](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L511)
+Defined in: Payment.service.ts:471
 
 Creates a refund request for an order.
 
@@ -360,7 +362,7 @@ The amount to refund
 #### Remarks
 
 This method can be only called by customers.
-The request is reviewed by a manager before the refund is processed.
+The request is reviewed by a support agent or admin before the refund is processed.
 
 #### Throws
 
@@ -378,7 +380,7 @@ Thrown if the order is not found.
 
 > **createSubscriptionsForCustomers**(`subscriptionData`, `priceId`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:804](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L804)
+Defined in: Payment.service.ts:788
 
 Creates new subscriptions for a set of customers.
 
@@ -408,7 +410,7 @@ This method is called from the subscription service.
 
 > **deleteCustomer**(`customerId`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:132](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L132)
+Defined in: Payment.service.ts:92
 
 Removes a stripe customer.
 
@@ -430,7 +432,7 @@ Stripe customer id
 
 > **deletePaymentMethod**(`userId`, `paymentMethodId`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:383](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L383)
+Defined in: Payment.service.ts:343
 
 Delete (Detach) a payment method from a customer.
 
@@ -458,7 +460,7 @@ The payment method id to delete
 
 > **extendMembershipSubscription**(`customerId`, `priceId`, `endOfPeriod`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:841](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L841)
+Defined in: Payment.service.ts:825
 
 Extends the customer membership subscription.
 
@@ -496,7 +498,7 @@ This method is called from the subscription service.
 
 > **getCustomerRefundRequests**(`userId`): `Promise`\<`RefundRequestResponse`[]\>
 
-Defined in: [Payment.service.ts:616](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L616)
+Defined in: Payment.service.ts:578
 
 Retrieve customer's refund requests.
 
@@ -516,7 +518,7 @@ The user ID of the customer
 
 #### Remarks
 
-This method can only be called by admins.
+This method can only be called by support or admins.
 
 ***
 
@@ -524,7 +526,7 @@ This method can only be called by admins.
 
 > **getCustomerSubscription**(`customerId`): `Promise`\<`null` \| `SubscriptionFormattedResponse`\>
 
-Defined in: [Payment.service.ts:291](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L291)
+Defined in: Payment.service.ts:251
 
 Retrieves customer subscription
 
@@ -548,11 +550,23 @@ This method is called from the subscription service.
 
 ***
 
+### getNotificationService()
+
+> `protected` **getNotificationService**(): `null` \| [`NotificationService`](NotificationService.md)
+
+Defined in: Payment.service.ts:63
+
+#### Returns
+
+`null` \| [`NotificationService`](NotificationService.md)
+
+***
+
 ### getPaymentIntentsForCustomer()
 
 > **getPaymentIntentsForCustomer**(`userId`): `Promise`\<`string`[]\>
 
-Defined in: [Payment.service.ts:462](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L462)
+Defined in: Payment.service.ts:422
 
 Retrieve a payment intent by its ID.
 
@@ -578,7 +592,7 @@ Thrown if it fails to retrieve the payment intent.
 
 > **getPaymentMethodById**(`userId`, `paymentMethodId`): `Promise`\<`PaymentMethodResponse`\>
 
-Defined in: [Payment.service.ts:252](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L252)
+Defined in: Payment.service.ts:212
 
 Retrieves a customer's payment method by its id.
 
@@ -608,7 +622,7 @@ A promise resolving to the payment method object
 
 > **getPaymentMethods**(`userId`): `Promise`\<`PaymentMethodResponse`[]\>
 
-Defined in: [Payment.service.ts:215](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L215)
+Defined in: Payment.service.ts:175
 
 Retrieve all customer's payment methods.
 
@@ -632,7 +646,7 @@ A promise resolving to an array of payment methods
 
 > **getRefundRequests**(`filter`?): `Promise`\<\{ `requests`: `RefundRequestResponse`[]; `total`: `number`; \}\>
 
-Defined in: [Payment.service.ts:583](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L583)
+Defined in: Payment.service.ts:545
 
 Retrieves refund requests.
 
@@ -658,7 +672,31 @@ Optional filter object
 
 #### Remarks
 
-This method can only be called by admins.
+This method can only be called by support or admins.
+
+***
+
+### getShippingService()
+
+> `protected` **getShippingService**(): `null` \| [`ShippingService`](ShippingService.md)
+
+Defined in: Payment.service.ts:67
+
+#### Returns
+
+`null` \| [`ShippingService`](ShippingService.md)
+
+***
+
+### getStripe()
+
+> `protected` **getStripe**(): `Stripe`
+
+Defined in: Payment.service.ts:59
+
+#### Returns
+
+`Stripe`
 
 ***
 
@@ -666,7 +704,7 @@ This method can only be called by admins.
 
 > **handleRefundRequest**(`refundRequestId`, `action`, `rejectionReason`?): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:642](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L642)
+Defined in: Payment.service.ts:604
 
 Handles the refund request for an order.
 
@@ -694,7 +732,7 @@ The action to take (deny or approve)
 
 #### Remarks
 
-This method can only be called by admins.
+This method can only be called by support or admins.
 
 ***
 
@@ -702,7 +740,7 @@ This method can only be called by admins.
 
 > **hasCanceledSubscriptions**(`customerId`): `Promise`\<`boolean`\>
 
-Defined in: [Payment.service.ts:319](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L319)
+Defined in: Payment.service.ts:279
 
 Checks if customer has canceled subscriptions.
 
@@ -724,9 +762,9 @@ A promise resolving to a boolean
 
 ### processPayment()
 
-> **processPayment**(`userId`, `data`): `Promise`\<\{ `orderWeight`: `number`; `paymentAmount`: `number`; `paymentIntentId`: `string`; `weightCategory`: `"light"` \| `"standard"` \| `"heavy"` \| `"very-heavy"` \| `"extra-heavy"`; \}\>
+> **processPayment**(`userId`, `data`): `Promise`\<`ProcessedPaymentResponse`\>
 
-Defined in: [Payment.service.ts:1119](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L1119)
+Defined in: Payment.service.ts:1103
 
 Handles payment processing for an order.
 
@@ -746,7 +784,7 @@ The payment processing data
 
 #### Returns
 
-`Promise`\<\{ `orderWeight`: `number`; `paymentAmount`: `number`; `paymentIntentId`: `string`; `weightCategory`: `"light"` \| `"standard"` \| `"heavy"` \| `"very-heavy"` \| `"extra-heavy"`; \}\>
+`Promise`\<`ProcessedPaymentResponse`\>
 
 A promise resolving to the weight range, payment intent id, and the payment amount
 
@@ -760,9 +798,9 @@ This method is also called from the replenishment service.
 
 > **processPaymentAndCreateOrder**(`userId`, `data`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:1227](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L1227)
+Defined in: Payment.service.ts:1212
 
-Processes a payment and creates an order for a customer.
+Processes a payment, audits new product purchases, and creates an order for a customer.
 
 #### Parameters
 
@@ -784,11 +822,45 @@ The payment processing data
 
 ***
 
+### refundPayment()
+
+> `protected` **refundPayment**(`paymentIntentId`, `refundReason`, `amount`?): `Promise`\<`void`\>
+
+Defined in: Payment.service.ts:441
+
+Refunds a payment intent.
+
+#### Parameters
+
+##### paymentIntentId
+
+`string`
+
+The ID of the payment intent to refund
+
+##### refundReason
+
+`string`
+
+The reason for the refund
+
+##### amount?
+
+`number`
+
+The amount to refund
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
 ### retrieveSubscribedCustomersByMembershipPriceAndCancelSubscriptions()
 
 > **retrieveSubscribedCustomersByMembershipPriceAndCancelSubscriptions**(`priceId`): `Promise`\<`Map`\<`string`, `number`\>\>
 
-Defined in: [Payment.service.ts:765](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L765)
+Defined in: Payment.service.ts:749
 
 Retrieves subscribed customers by membership price and cancels their subscriptions.
 
@@ -816,7 +888,7 @@ This method is called from the subscription service.
 
 > **setDefaultPaymentMethod**(`userId`, `paymentMethodId`): `Promise`\<`void`\>
 
-Defined in: [Payment.service.ts:194](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L194)
+Defined in: Payment.service.ts:154
 
 #### Parameters
 
@@ -838,7 +910,7 @@ Defined in: [Payment.service.ts:194](https://github.com/Fatjon-Gash1/edge-tech/b
 
 > **updateMembership**(`productId`, `priceType`, `price`): `Promise`\<`string`\>
 
-Defined in: [Payment.service.ts:872](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L872)
+Defined in: Payment.service.ts:856
 
 Updates a stripe membership product along with its related prices.
 
@@ -878,7 +950,7 @@ This method is called from the subscription service.
 
 > **updatePaymentMethod**(`userId`, `paymentMethodId`, `expMonth`?, `expYear`?): `Promise`\<`PaymentMethodResponse`\>
 
-Defined in: [Payment.service.ts:340](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Payment.service.ts#L340)
+Defined in: Payment.service.ts:300
 
 Updates a customer's payment method by its id.
 

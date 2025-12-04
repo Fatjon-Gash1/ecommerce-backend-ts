@@ -1,12 +1,12 @@
-[**server**](../README.md)
+[**ecommerce-backend-ts**](../README.md)
 
 ***
 
-[server](../globals.md) / SubscriptionService
+[ecommerce-backend-ts](../globals.md) / SubscriptionService
 
 # Class: SubscriptionService
 
-Defined in: [subscription\_service/index.ts:44](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L44)
+Defined in: subscription\_service/index.ts:23
 
 Service related to platform subscriptions
 
@@ -16,7 +16,7 @@ Service related to platform subscriptions
 
 > **new SubscriptionService**(`paymentService`?, `notificationService`?): [`SubscriptionService`](SubscriptionService.md)
 
-Defined in: [subscription\_service/index.ts:48](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L48)
+Defined in: subscription\_service/index.ts:27
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [subscription\_service/index.ts:48](https://github.com/Fatjon-Gash1/
 
 > `protected` `optional` **notificationService**: [`NotificationService`](NotificationService.md)
 
-Defined in: [subscription\_service/index.ts:46](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L46)
+Defined in: subscription\_service/index.ts:25
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [subscription\_service/index.ts:46](https://github.com/Fatjon-Gash1/
 
 > `protected` `optional` **paymentService**: [`PaymentService`](PaymentService.md)
 
-Defined in: [subscription\_service/index.ts:45](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L45)
+Defined in: subscription\_service/index.ts:24
 
 ## Methods
 
@@ -54,7 +54,7 @@ Defined in: [subscription\_service/index.ts:45](https://github.com/Fatjon-Gash1/
 
 > **cancelMembership**(`stripeCustomerId`): `Promise`\<`number`\>
 
-Defined in: [subscription\_service/index.ts:428](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L428)
+Defined in: subscription\_service/index.ts:408
 
 Cancels a customer's membership.
 
@@ -70,6 +70,8 @@ The customer's stripe id
 
 `Promise`\<`number`\>
 
+A promise that resolves to the customer's user id
+
 #### Remarks
 
 This method is called automatically from scheduled jobs.
@@ -80,7 +82,7 @@ This method is called automatically from scheduled jobs.
 
 > **cancelMembershipSubscription**(`userId`, `immediate`?): `Promise`\<`void`\>
 
-Defined in: [subscription\_service/index.ts:148](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L148)
+Defined in: subscription\_service/index.ts:127
 
 Cancels a customer's membership subscription.
 
@@ -113,7 +115,7 @@ Thrown if the customer does not exist.
 
 > **changeMembershipPrice**(`membershipId`, `pricePlan`, `price`): `Promise`\<`void`\>
 
-Defined in: [subscription\_service/index.ts:266](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L266)
+Defined in: subscription\_service/index.ts:245
 
 Changes a membership's price.
 
@@ -154,7 +156,7 @@ If no action is taken from the customer, the customer's membership is canceled a
 
 > **createMembershipSubscription**(`userId`, `membershipType`, `annual`?, `promoCode`?): `Promise`\<`void`\>
 
-Defined in: [subscription\_service/index.ts:70](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L70)
+Defined in: subscription\_service/index.ts:49
 
 Creates a new membership subscription.
 
@@ -204,7 +206,7 @@ Thrown if the customer does not exist.
 
 > **getMemberships**(): `Promise`\<`MembershipResponse`[]\>
 
-Defined in: [subscription\_service/index.ts:173](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L173)
+Defined in: subscription\_service/index.ts:152
 
 Retrieves the membership subscription type.
 
@@ -220,7 +222,7 @@ A promise resolving to the membership subscription type
 
 > **getMembershipSubscriptions**(`filters`?): `Promise`\<\{ `subscriptions`: `MembershipSubscriptionResponse`[]; `total`: `number`; \}\>
 
-Defined in: [subscription\_service/index.ts:185](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L185)
+Defined in: subscription\_service/index.ts:164
 
 Retrieves membership subscriptions based on filtering parameters. If none passed it returns all subscriptions.
 
@@ -244,7 +246,7 @@ A promise resolving to all membership subscriptions
 
 > **subscribeToNewMembershipPrice**(`userId`, `type`, `plan`, `endOfPeriod`): `Promise`\<`void`\>
 
-Defined in: [subscription\_service/index.ts:382](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/index.ts#L382)
+Defined in: subscription\_service/index.ts:361
 
 Creates a new subscription to the increased membership price.
 

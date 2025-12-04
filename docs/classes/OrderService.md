@@ -1,12 +1,12 @@
-[**server**](../README.md)
+[**ecommerce-backend-ts**](../README.md)
 
 ***
 
-[server](../globals.md) / OrderService
+[ecommerce-backend-ts](../globals.md) / OrderService
 
 # Class: OrderService
 
-Defined in: [Order.service.ts:54](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L54)
+Defined in: Order.service.ts:16
 
 Service responsible for Order-related operations.
 
@@ -22,44 +22,11 @@ Service responsible for Order-related operations.
 
 ## Methods
 
-### cancelOrder()
-
-> **cancelOrder**(`userId`, `orderId`): `Promise`\<`void`\>
-
-Defined in: [Order.service.ts:412](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L412)
-
-Cancels a customer's order.
-
-#### Parameters
-
-##### userId
-
-`number`
-
-The id of the user
-
-##### orderId
-
-`number`
-
-The id of the order
-
-#### Returns
-
-`Promise`\<`void`\>
-
-#### Throws
-
-OrderNotFoundError
-Thrown if the order is not found.
-
-***
-
 ### createOrder()
 
-> **createOrder**(`userId`, `items`, `paymentMethod`, `shippingCountry`, `weightCategory`, `orderWeight`, `shippingMethod`, `orderTotal`, `paymentIntentId`, `transactionObj`?): `Promise`\<`OrderResponse`\>
+> **createOrder**(`userId`, `items`, `paymentMethod`, `shippingCountry`, `weightCategory`, `orderWeight`, `shippingMethod`, `orderTotal`, `paymentIntentId`, `safeShippingPaid`?, `transactionObj`?): `Promise`\<`OrderResponse`\>
 
-Defined in: [Order.service.ts:69](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L69)
+Defined in: Order.service.ts:31
 
 Creates an order for a customer.
 
@@ -115,6 +82,10 @@ The total price of the order
 
 The id of the payment intent which is used for refunds
 
+##### safeShippingPaid?
+
+`boolean`
+
 ##### transactionObj?
 
 `Transaction`
@@ -133,7 +104,7 @@ A promise resolving to the created order
 
 > **getAllOrders**(): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:358](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L358)
+Defined in: Order.service.ts:318
 
 Retrieves all orders in the database.
 
@@ -145,113 +116,74 @@ A promise resolving to an array of Order instances
 
 ***
 
-### getCustomerOrderHistory()
+### getCustomerOrdersByStatus()
 
-> **getCustomerOrderHistory**(`customerId`, `userId`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
+> **getCustomerOrdersByStatus**(`customerId`?, `userId`?, `status`?): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:327](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L327)
+Defined in: Order.service.ts:269
 
-Retrieves customer's order history.
+Retrieves all orders of a given status for a customer.
+If no status is provided, it returns the order history.
 
 #### Parameters
 
-##### customerId
+##### customerId?
 
-The customer id
+`number`
 
-`undefined` | `number`
+The id of the customer
 
-##### userId
+##### userId?
+
+`number`
 
 The id of the user "Implicit customer id"
 
-`undefined` | `number`
-
-#### Returns
-
-`Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
-
-A promise resolving to an array of Order instances
-
-#### Remarks
-
-The order history is retrieved for a customer either by their id
-or their implicit id.
-
-#### Throws
-
-UserNotFoundError
-Thrown if the user of type Customer is not found.
-
-***
-
-### getCustomerOrdersByStatus()
-
-> **getCustomerOrdersByStatus**(`status`, `customerId`, `userId`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
-
-Defined in: [Order.service.ts:286](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L286)
-
-Retrieves all orders by a given status for a customer.
-
-#### Parameters
-
-##### status
+##### status?
 
 `string`
 
 The status of the order
 
-##### customerId
-
-The id of the customer
-
-`undefined` | `number`
-
-##### userId
-
-The id of the user "Implicit customer id"
-
-`undefined` | `number`
-
 #### Returns
 
 `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-A promise resolving to an array of Order instances
+A promise resolving to an array of order instances
 
 #### Remarks
 
-The order history is retrieved for a customer either by their id
+The orders are retrieved for a customer either by their id
 or their implicit id.
 
 #### Throws
 
 UserNotFoundError
-Thrown if the user of type Customer is not found.
+Thrown if the customer is not found.
 
 ***
 
 ### getOrderById()
 
-> **getOrderById**(`userId`, `orderId`): `Promise`\<`OrderResponse`\>
+> **getOrderById**(`orderId`, `userId`?): `Promise`\<`OrderResponse`\>
 
-Defined in: [Order.service.ts:140](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L140)
+Defined in: Order.service.ts:123
 
 Retrieves a specific order by ID.
 
 #### Parameters
-
-##### userId
-
-The id of the user
-
-`undefined` | `number`
 
 ##### orderId
 
 `number`
 
 The ID of the order
+
+##### userId?
+
+`number`
+
+The ID of the user
 
 #### Returns
 
@@ -263,25 +195,25 @@ A promise resolving to the order
 
 ### getOrderItemsByOrderId()
 
-> **getOrderItemsByOrderId**(`userId`, `orderId`): `Promise`\<`OrderItemResponse`[]\>
+> **getOrderItemsByOrderId**(`orderId`, `userId`?): `Promise`\<`OrderItemResponse`[]\>
 
-Defined in: [Order.service.ts:180](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L180)
+Defined in: Order.service.ts:162
 
 Retrieves all items of a specific order.
 
 #### Parameters
-
-##### userId
-
-The id of the user
-
-`undefined` | `number`
 
 ##### orderId
 
 `number`
 
 The ID of the order
+
+##### userId?
+
+`number`
+
+The id of the user
 
 #### Returns
 
@@ -300,7 +232,7 @@ Thrown if the order is not found.
 
 > **getOrdersByStatus**(`status`): `Promise`\<\{ `count`: `number`; `orders`: `OrderResponse`[]; \}\>
 
-Defined in: [Order.service.ts:259](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L259)
+Defined in: Order.service.ts:241
 
 Retrieves all platform orders by a given status.
 
@@ -324,7 +256,7 @@ A promise resolving to an array of Order instances and their count
 
 > **getTotalPriceOfOrderItems**(`userId`, `orderId`): `Promise`\<`number`\>
 
-Defined in: [Order.service.ts:232](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L232)
+Defined in: Order.service.ts:213
 
 Calculates the total price of all items in a specific order.
 
@@ -350,15 +282,21 @@ A promise resolving to the total price
 
 ***
 
-### markAsDelivered()
+### markOrder()
 
-> **markAsDelivered**(`orderId`): `Promise`\<`void`\>
+> **markOrder**(`userId`, `orderId`, `status`, `deliveryImageUrl`?): `Promise`\<`void`\>
 
-Defined in: [Order.service.ts:382](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/Order.service.ts#L382)
+Defined in: Order.service.ts:377
 
-Marks customer's order as delivered.
+Marks order as shipped, awaiting pickup, or delivered.
 
 #### Parameters
+
+##### userId
+
+`number`
+
+The id of the user
 
 ##### orderId
 
@@ -366,16 +304,60 @@ Marks customer's order as delivered.
 
 The id of the order
 
+##### status
+
+The status to mark the order as
+
+`"shipped"` | `"awaiting-pickup"` | `"delivered"` | `"uncollected"`
+
+##### deliveryImageUrl?
+
+`string`
+
 #### Returns
 
 `Promise`\<`void`\>
 
 #### Throws
 
-OrderNotFoundError
-Thrown if the order is not found.
+UserNotFoundError
+Thrown if the user is not found.
 
 #### Throws
 
-OrderAlreadyMarkedError
-Thrown if the order is already marked as delivered or canceled.
+OrderNotFoundError
+Thrown if the order is not found.
+
+***
+
+### rateDeliveredOrder()
+
+> **rateDeliveredOrder**(`userId`, `orderId`, `rating`): `Promise`\<`void`\>
+
+Defined in: Order.service.ts:338
+
+Rate delivered order.
+
+#### Parameters
+
+##### userId
+
+`number`
+
+The id of the user
+
+##### orderId
+
+`number`
+
+The id of the order
+
+##### rating
+
+`number`
+
+The rating to be given
+
+#### Returns
+
+`Promise`\<`void`\>

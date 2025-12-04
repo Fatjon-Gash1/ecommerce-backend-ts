@@ -1,12 +1,12 @@
-[**server**](../README.md)
+[**ecommerce-backend-ts**](../README.md)
 
 ***
 
-[server](../globals.md) / PlatformDataService
+[ecommerce-backend-ts](../globals.md) / PlatformDataService
 
 # Class: PlatformDataService
 
-Defined in: [PlatformData.service.ts:26](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/PlatformData.service.ts#L26)
+Defined in: PlatformData.service.ts:8
 
 Service responsible only for retrieval and modification of platform data
 
@@ -22,11 +22,35 @@ Service responsible only for retrieval and modification of platform data
 
 ## Methods
 
+### getActiveUsers()
+
+> **getActiveUsers**(`type`): `Promise`\<`number`\>
+
+Defined in: PlatformData.service.ts:57
+
+Retrieves the number of active users of a given type.
+
+#### Parameters
+
+##### type
+
+`UserType`
+
+The type of user ('admin', 'manager', 'customer')
+
+#### Returns
+
+`Promise`\<`number`\>
+
+A promise resolving to the number of active users
+
+***
+
 ### getPlatformData()
 
 > **getPlatformData**(): `Promise`\<`PlatformDataResponse`\>
 
-Defined in: [PlatformData.service.ts:59](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/PlatformData.service.ts#L59)
+Defined in: PlatformData.service.ts:41
 
 Retrieves the platform data.
 
@@ -42,7 +66,7 @@ A promise that resolves to the platform data
 
 > **updatePlatformData**(`id`, `data`): `Promise`\<`PlatformDataResponse`\>
 
-Defined in: [PlatformData.service.ts:37](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/PlatformData.service.ts#L37)
+Defined in: PlatformData.service.ts:19
 
 Updates the platform data.
 
@@ -56,7 +80,7 @@ The id of the platform data to update
 
 ##### data
 
-`PlatformData`
+`PlatformDataObject`
 
 The new platform data
 

@@ -1,16 +1,17 @@
-[**server**](README.md)
+[**ecommerce-backend-ts**](README.md)
 
 ***
 
-# server
+# ecommerce-backend-ts
 
 ## Classes
 
-- [AdminLogsService](classes/AdminLogsService.md)
 - [AdminService](classes/AdminService.md)
 - [AnalyticsService](classes/AnalyticsService.md)
 - [CartService](classes/CartService.md)
-- [LoggerService](classes/LoggerService.md)
+- [ChattingService](classes/ChattingService.md)
+- [ChattingServiceHTTP](classes/ChattingServiceHTTP.md)
+- [LoggingService](classes/LoggingService.md)
 - [NotificationService](classes/NotificationService.md)
 - [OrderService](classes/OrderService.md)
 - [PaymentService](classes/PaymentService.md)

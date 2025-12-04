@@ -1,18 +1,18 @@
-[**server**](../README.md)
+[**ecommerce-backend-ts**](../README.md)
 
 ***
 
-[server](../globals.md) / ReplenishmentService
+[ecommerce-backend-ts](../globals.md) / ReplenishmentService
 
 # Class: ReplenishmentService
 
-Defined in: [subscription\_service/Replenishment.service.ts:42](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L42)
+Defined in: subscription\_service/Replenishment.service.ts:25
 
 Responsible for replenishment related operations
 
 ## Remarks
 
-Users two separate classes.
+Uses two separate classes.
 
 ## Scheduler
 
@@ -28,7 +28,7 @@ Users two separate classes.
 
 > **new ReplenishmentService**(`instantiation`?): [`ReplenishmentService`](ReplenishmentService.md)
 
-Defined in: [subscription\_service/Replenishment.service.ts:47](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L47)
+Defined in: subscription\_service/Replenishment.service.ts:30
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [subscription\_service/Replenishment.service.ts:47](https://github.c
 
 > `optional` **scheduler**: `Scheduler`
 
-Defined in: [subscription\_service/Replenishment.service.ts:44](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L44)
+Defined in: subscription\_service/Replenishment.service.ts:27
 
 ## Methods
 
@@ -54,7 +54,7 @@ Defined in: [subscription\_service/Replenishment.service.ts:44](https://github.c
 
 > **getAllReplenishments**(`filters`?): `Promise`\<\{ `replenishments`: `ReplenishmentResponse`[]; `total`: `number`; \}\>
 
-Defined in: [subscription\_service/Replenishment.service.ts:146](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L146)
+Defined in: subscription\_service/Replenishment.service.ts:137
 
 Retrieves all customer order replenishments based on filtered parameters. If none provided it returns all replenishments.
 
@@ -78,7 +78,7 @@ A promise resolving to an object containing the total number of replenishments a
 
 > **getCustomerReplenishments**(`userId`): `Promise`\<\{ `rows`: `ReplenishmentResponse`[]; `total`: `number`; \}\>
 
-Defined in: [subscription\_service/Replenishment.service.ts:65](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L65)
+Defined in: subscription\_service/Replenishment.service.ts:56
 
 Retrieves all replenishments for a customer
 
@@ -102,7 +102,7 @@ A promise resolving to an object containing the total number of replenishments a
 
 > **getReplenishmentById**(`userId`, `replenishmentId`): `Promise`\<`ReplenishmentResponse`\>
 
-Defined in: [subscription\_service/Replenishment.service.ts:104](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L104)
+Defined in: subscription\_service/Replenishment.service.ts:95
 
 Retrieves a specific replenishment by its ID for a customer
 
@@ -128,11 +128,35 @@ A promise resolving to the replenishment object
 
 ***
 
+### getScheduler()
+
+> **getScheduler**(): `null` \| `Scheduler`
+
+Defined in: subscription\_service/Replenishment.service.ts:42
+
+#### Returns
+
+`null` \| `Scheduler`
+
+***
+
+### getWorkerService()
+
+> **getWorkerService**(): `null` \| `WorkerService`
+
+Defined in: subscription\_service/Replenishment.service.ts:46
+
+#### Returns
+
+`null` \| `WorkerService`
+
+***
+
 ### listenAll()
 
 > **listenAll**(): `void`
 
-Defined in: [subscription\_service/Replenishment.service.ts:54](https://github.com/Fatjon-Gash1/edge-tech/blob/24d7692b2f898f47915b9666fb1c8515d276fe0f/services/subscription_service/Replenishment.service.ts#L54)
+Defined in: subscription\_service/Replenishment.service.ts:37
 
 #### Returns
 
