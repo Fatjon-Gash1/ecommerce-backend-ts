@@ -1,0 +1,67 @@
+import { DataTypes, Model, BelongsToManyGetAssociationsMixin } from 'sequelize';
+import { Product } from './Product.model';
+import { getSequelize } from '../../config/db';
+const sequelize = getSequelize();
+
+interface CategoryAttributes {
+    id?: number;
+    name: string;
+    description: string;
+    hasProducts?: boolean;
+    parentId: number | null;
+}
+
+export class Category
+    extends Model<CategoryAttributes>
+    implements CategoryAttributes
+{
+    declare id?: number;
+    declare name: string;
+    declare description: string;
+    declare hasProducts?: boolean;
+    declare parentId: number | null;
+    declare getProducts: BelongsToManyGetAssociationsMixin<Product>;
+}
+
+Category.init(
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        description: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        hasProducts: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        parentId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: Category,
+                key: 'id',
+            },
+        },
+    },
+    {
+        sequelize,
+        modelName: 'Category',
+        tableName: 'categories',
+        paranoid: true,
+    }
+);
+
+Category.beforeDestroy(async ({ id }, options) => {
+    await Product.destroy({
+        where: { categoryId: id },
+        transaction: options.transaction,
+    });
+});

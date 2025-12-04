@@ -1,6 +1,9 @@
 node_modules
 .env
-app.log
+.env.test
+logs
 dist
-assets
+tsconfig.tsbuildinfo
 reports
+coverage
+.dockerignore
