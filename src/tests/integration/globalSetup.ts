@@ -14,7 +14,7 @@ const sequelize = getSequelize();
 import '../../models/relational';
 
 const START_COMMAND =
-    'docker-compose -f docker-compose.test.yml --env-file .env.test up -d --build --wait';
+    'docker compose -f docker-compose.test.yml --env-file .env.test up -d --build --wait';
 
 export default async function globalSetup() {
     startContainers();

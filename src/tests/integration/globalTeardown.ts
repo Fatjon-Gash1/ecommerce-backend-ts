@@ -4,7 +4,7 @@ import { redisClient } from '../../config/redis';
 import { getSequelize } from '../../config/db';
 const sequelize = getSequelize();
 
-const DOWN_COMMAND = 'docker-compose -f docker-compose.test.yml down -v';
+const DOWN_COMMAND = 'docker compose -f docker-compose.test.yml down -v';
 
 export default async function globalTeardown() {
     await teardownDatabase();
