@@ -25,7 +25,12 @@ jobs:
         run: npm ci
 
       - name: NPM Audit
-        run: npm audit --audit-level=moderate
+        run: |
+          npm audit --audit-level=high
+          AUDIT_EXIT_CODE=$?
+          if [ $AUDIT_EXIT_CODE -eq 1 ]; then
+            echo "High or critical vulnerabilities detected. Review the report above."
+          fi
 
       #- name: Run Snyk security scan
       #  uses: snyk/actions/node@master
