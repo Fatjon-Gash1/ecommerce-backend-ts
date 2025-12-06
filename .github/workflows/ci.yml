@@ -27,24 +27,6 @@ jobs:
       - name: NPM Audit
         run: npm audit --audit-level=high || true
 
-      #- name: Run Snyk security scan
-      #  uses: snyk/actions/node@master
-      #  with:
-      #    command: test
-      #  env:
-      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: TypeScript type check
-        run: tsc --noEmit
-
-      - name: Run unit tests
-        run: npm run test:unit
-        env:
-          CI: true
-
       - name: Create .env.test
         run: |
           cat <<EOF > .env.test
@@ -80,6 +62,24 @@ jobs:
 
           REGISTRATION_LOYALTY_POINTS=${{ secrets.TEST_REGISTRATION_LOYALTY_POINTS }}
           EOF
+
+      #- name: Run Snyk security scan
+      #  uses: snyk/actions/node@master
+      #  with:
+      #    command: test
+      #  env:
+      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: tsc --noEmit
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          CI: true
 
       - name: Run integration tests
         run: npm run test:int
