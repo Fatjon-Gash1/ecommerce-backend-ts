@@ -39,7 +39,7 @@ jobs:
           MYSQL_PORT=${{ secrets.TEST_MYSQL_PORT }}
 
           REDIS_HOST=${{ secrets.TEST_REDIS_HOST }}
-          REDIS_PORT=${{ secrets.TEST_REDIS_PORT }}
+          REDIS_PORT=6380
 
           ACCESS_TOKEN_KEY=${{ secrets.TEST_ACCESS_TOKEN_KEY }}
           REFRESH_TOKEN_KEY=${{ secrets.TEST_REFRESH_TOKEN_KEY }}
