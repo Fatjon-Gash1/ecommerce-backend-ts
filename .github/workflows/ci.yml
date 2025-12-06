@@ -35,32 +35,32 @@ jobs:
       - name: Build TS
         run: tsc --noEmit
 
-  #security-scan:
-  #  needs: lint-build
-  #  runs-on: ubuntu-latest
-  #    
-  #  steps:
-  #    - name: Checkout repository
-  #      uses: actions/checkout@v4
+  security-scan:
+    needs: lint-build
+    runs-on: ubuntu-latest
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #    - name: Setup Node.js
-  #      uses: actions/setup-node@v3
-  #      with:
-  #        node-version: '20'
-  #        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-  #    - name: Install dependencies
-  #      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-  #    - name: NPM Audit
-  #      run: npm audit --audit-level=high || true
+      - name: NPM Audit
+        run: npm audit --audit-level=high || true
 
-  #    - name: Snyk security scan
-  #      uses: snyk/actions/node@master
-  #      with:
-  #        command: test
-  #      env:
-  #        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Snyk security scan
+        uses: snyk/actions/node@master
+        with:
+          command: test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   unit-tests:
     needs: lint-build
