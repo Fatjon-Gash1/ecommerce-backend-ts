@@ -13,7 +13,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  build-test-lint:
+  lint-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +29,77 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: NPM Audit
-        run: npm audit --audit-level=high || true
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build TS
+        run: tsc --noEmit
+
+  #security-scan:
+  #  needs: lint-build
+  #  runs-on: ubuntu-latest
+  #    
+  #  steps:
+  #    - name: Checkout repository
+  #      uses: actions/checkout@v4
+
+  #    - name: Setup Node.js
+  #      uses: actions/setup-node@v3
+  #      with:
+  #        node-version: '20'
+  #        cache: 'npm'
+
+  #    - name: Install dependencies
+  #      run: npm ci
+
+  #    - name: NPM Audit
+  #      run: npm audit --audit-level=high || true
+
+  #    - name: Snyk security scan
+  #      uses: snyk/actions/node@master
+  #      with:
+  #        command: test
+  #      env:
+  #        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  unit-tests:
+    needs: lint-build
+    runs-on: ubuntu-latest
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        env:
+          CI: true
+        run: npm run test:unit
+
+  integration-tests:
+    needs: lint-build
+    runs-on: ubuntu-latest
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Create .env.test
         run: |
@@ -68,31 +137,13 @@ jobs:
           REGISTRATION_LOYALTY_POINTS=${{ secrets.TEST_REGISTRATION_LOYALTY_POINTS }}
           EOF
 
-      #- name: Run Snyk security scan
-      #  uses: snyk/actions/node@master
-      #  with:
-      #    command: test
-      #  env:
-      #    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: TypeScript type check
-        run: tsc --noEmit
-
-      - name: Run unit tests
-        env:
-          CI: true
-        run: npm run test:unit
-
-      - name: Run integration tests
+      - name: Run tests
         env:
           CI: true
         run: npm run test:int
 
   release:
-    needs: build-test-lint
+    needs: [unit-tests, integration-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
