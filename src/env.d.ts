@@ -4,6 +4,7 @@ declare namespace NodeJS {
         HOST: string;
         PORT: number;
         REDIS_URL: string;
+        REDIS_PORT: number;
         MYSQL_HOST: string;
         MYSQL_PORT: number;
         MYSQL_USER: string;

@@ -6,7 +6,7 @@ export const connectToRedisServer = (): IORedis => {
         if (process.env.NODE_ENV === 'production') {
             return new IORedis(process.env.REDIS_URL);
         } else {
-            return new IORedis();
+            return new IORedis(process.env.REDIS_PORT);
         }
     } catch (error) {
         logger.error('Error connecting to Redis server: ' + error);
@@ -21,4 +21,4 @@ export const workerRedisClient =
         ? new IORedis(process.env.REDIS_URL, {
               maxRetriesPerRequest: null,
           })
-        : new IORedis({ maxRetriesPerRequest: null });
+        : new IORedis(process.env.REDIS_PORT, { maxRetriesPerRequest: null });
