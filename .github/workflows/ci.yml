@@ -7,6 +7,11 @@ on:
       - develop
   pull_request:
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   build-test-lint:
     runs-on: ubuntu-latest
@@ -31,7 +36,6 @@ jobs:
         run: |
           cat <<EOF > .env.test
           NODE_ENV=test
-          changed_file=changed
 
           MYSQL_USER=${{ secrets.TEST_MYSQL_USER }}
           MYSQL_PASSWORD=${{ secrets.TEST_MYSQL_PASSWORD }}
@@ -40,7 +44,7 @@ jobs:
           MYSQL_PORT=${{ secrets.TEST_MYSQL_PORT }}
 
           REDIS_HOST=${{ secrets.TEST_REDIS_HOST }}
-          REDIS_PORT=6380
+          REDIS_PORT=${{ secrets.TEST_REDIS_PORT }}
 
           ACCESS_TOKEN_KEY=${{ secrets.TEST_ACCESS_TOKEN_KEY }}
           REFRESH_TOKEN_KEY=${{ secrets.TEST_REFRESH_TOKEN_KEY }}
@@ -78,51 +82,14 @@ jobs:
         run: tsc --noEmit
 
       - name: Run unit tests
-        run: npm run test:unit
         env:
           CI: true
+        run: npm run test:unit
 
       - name: Run integration tests
         env:
           CI: true
-          # NODE_ENV: test
-
-          # MYSQL_USER: ${{ secrets.TEST_MYSQL_USER }}
-          # MYSQL_PASSWORD: ${{ secrets.TEST_MYSQL_PASSWORD }}
-          # MYSQL_DATABASE: ${{ secrets.TEST_MYSQL_DATABASE }}
-          # MYSQL_HOST: ${{ secrets.TEST_MYSQL_HOST }}
-          # MYSQL_PORT: ${{ secrets.TEST_MYSQL_PORT }}
-
-          # REDIS_HOST: ${{ secrets.TEST_REDIS_HOST }}
-          # REDIS_PORT: ${{ secrets.TEST_REDIS_PORT }}
-
-          # ACCESS_TOKEN_KEY: ${{ secrets.TEST_ACCESS_TOKEN_KEY }}
-          # REFRESH_TOKEN_KEY: ${{ secrets.TEST_REFRESH_TOKEN_KEY }}
-          # ACCESS_TOKEN_EXPIRY: ${{ secrets.TEST_ACCESS_TOKEN_EXPIRY }}
-          # REFRESH_TOKEN_EXPIRY: ${{ secrets.TEST_REFRESH_TOKEN_EXPIRY }}
-          # GENERIC_TOKEN_KEY: ${{ secrets.TEST_GENERIC_TOKEN_KEY }}
-
-          # GMAIL_USER: ${{ secrets.TEST_GMAIL_USER }}
-          # GMAIL_PASS: ${{ secrets.TEST_GMAIL_PASS }}
-
-          # BASE_PATH: ${{ secrets.TEST_BASE_PATH }}
-
-          # LLM_API_KEY: ${{ secrets.TEST_LLM_API_KEY }}
-          # LLM_NAME: ${{ secrets.TEST_LLM_NAME }}
-          # LLM_PROVIDER: ${{ secrets.TEST_LLM_PROVIDER }}
-
-          # STRIPE_KEY: ${{ secrets.TEST_STRIPE_KEY }}
-
-          # CLIENT_URL: ${{ secrets.TEST_CLIENT_URL }}
-
-          # REGISTRATION_LOYALTY_POINTS: ${{ secrets.TEST_REGISTRATION_LOYALTY_POINTS }}
         run: npm run test:int
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/
 
   release:
     needs: build-test-lint
@@ -143,7 +110,7 @@ jobs:
         run: npm ci
 
       - name: Semantic Release
-        run: npx semantic-release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx semantic-release
 

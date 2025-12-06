@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { logger } from '../../logger';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { readFileSync } from 'fs';
 const envPath = path.resolve(process.cwd(), '.env.test');
 
 dotenv.config({
@@ -20,12 +19,6 @@ const START_COMMAND =
 export default async function globalSetup() {
     startContainers();
     await setupDatabase();
-
-    console.log('>>> REDIS_PORT =', process.env.REDIS_PORT);
-    console.log(
-        '>>> Loaded from .env.test =',
-        readFileSync('.env.test', 'utf8')
-    );
 }
 
 function startContainers() {
