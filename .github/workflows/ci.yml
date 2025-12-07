@@ -63,7 +63,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   unit-tests:
-    needs: lint-build
+    needs: [lint-build, security-scan]
     runs-on: ubuntu-latest
       
     steps:
@@ -85,7 +85,7 @@ jobs:
         run: npm run test:unit
 
   integration-tests:
-    needs: lint-build
+    needs: [lint-build, security-scan]
     runs-on: ubuntu-latest
       
     steps:
