@@ -391,7 +391,9 @@ export class SubscriptionService {
 
         const job = await membershipCancellationQueue.getJob(jobId);
 
-        await job.remove();
+        if (job) {
+            await job.remove();
+        }
 
         await this.paymentService!.extendMembershipSubscription(
             customer.stripeId,

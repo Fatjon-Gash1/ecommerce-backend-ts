@@ -383,7 +383,9 @@ export class ChattingService {
 
                     const job = await supportAgentDetachmentQueue.getJob(jobId);
 
-                    await job.remove();
+                    if (job) {
+                        await job.remove();
+                    }
                 }
             }
         );

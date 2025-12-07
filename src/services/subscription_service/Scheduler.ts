@@ -420,8 +420,8 @@ export class Scheduler {
             this.logger.error('Error from queue: ' + err);
         });
 
-        this.queue.on('removed', (job) => {
-            this.logger.log(`Job with id "${job.id}" has been removed!`);
+        this.queue.on('removed', (jobId) => {
+            this.logger.log(`Job with id "${jobId}" has been removed!`);
         });
     }
 }

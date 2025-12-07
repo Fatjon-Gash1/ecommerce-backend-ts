@@ -19,9 +19,9 @@ export default class SupportAgentDetachmentQueue extends Queue {
             logger.error(`Error from ${this.name}: ` + err);
         });
 
-        this.on('removed', (job) => {
+        this.on('removed', (jobId) => {
             logger.log(
-                `Job with id "${job.id}" has been removed from ${this.name}!`
+                `Job with id "${jobId}" has been removed from ${this.name}!`
             );
         });
     }

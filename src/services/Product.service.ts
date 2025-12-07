@@ -506,9 +506,11 @@ export class ProductService {
 
             const job = await exclusiveProductRemovalQueue.getJob(jobId);
 
-            await job.changeDelay(
-                new Date(details.availableDue).getTime() - Date.now()
-            );
+            if (job) {
+                await job.changeDelay(
+                    new Date(details.availableDue).getTime() - Date.now()
+                );
+            }
         } else if (details.availableDue === null) {
             const jobId = await redisConnection.hget(
                 'ExclusiveProductRemovalJobs',
@@ -528,7 +530,9 @@ export class ProductService {
 
             const job = await exclusiveProductRemovalQueue.getJob(jobId);
 
-            await job.remove();
+            if (job) {
+                await job.remove();
+            }
         }
 
         await product.update(details);

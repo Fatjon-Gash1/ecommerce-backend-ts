@@ -294,7 +294,7 @@ export class UserService {
     ): AuthTokens {
         const refreshToken = jwt.sign(
             { userId, username, type, membership },
-            REFRESH_TOKEN_KEY,
+            REFRESH_TOKEN_KEY!,
             {
                 expiresIn: REFRESH_TOKEN_EXPIRY,
             }
