@@ -52,13 +52,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: NPM Audit
-        run: npm audit --audit-level=high || true
-
-      - name: Snyk security scan
+      - name: Dependency scan
         uses: snyk/actions/node@master
         with:
           command: test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Code analysis
+        uses: snyk/actions/node@master
+        with:
+          command: code test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Dockerfile scan
+        uses: snyk/actions/node@master
+        with:
+          command: container test
+          args: Dockerfile
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
