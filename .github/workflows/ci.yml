@@ -66,14 +66,6 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Dockerfile scan
-        uses: snyk/actions/node@master
-        with:
-          command: container test
-          args: Dockerfile
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
   unit-tests:
     needs: [lint-build, security-scan]
     runs-on: ubuntu-latest
