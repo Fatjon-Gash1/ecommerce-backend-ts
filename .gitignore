@@ -6,4 +6,4 @@ dist
 tsconfig.tsbuildinfo
 reports
 coverage
-.dockerignore
+legal
