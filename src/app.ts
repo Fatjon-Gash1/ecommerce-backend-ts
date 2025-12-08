@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import indexRoutes from '@/routes';
@@ -9,6 +10,7 @@ import type { Request, Response } from 'express';
 
 const app = express();
 
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
