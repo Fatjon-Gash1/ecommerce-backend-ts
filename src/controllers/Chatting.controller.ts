@@ -23,7 +23,7 @@ export class ChattingController {
             const { chatrooms, total } =
                 await this.chattingService.getUserChatroomsByType(
                     userId,
-                    type?.toString()
+                    String(type)
                 );
 
             res.status(200).json({ chatrooms, total });
@@ -45,9 +45,7 @@ export class ChattingController {
             const messages = await this.chattingService.getChatroomMessages(
                 userId,
                 chatroomId,
-                lastMessageDate
-                    ? new Date(lastMessageDate.toString())
-                    : undefined
+                lastMessageDate ? new Date(String(lastMessageDate)) : undefined
             );
 
             res.status(200).json({ messages });

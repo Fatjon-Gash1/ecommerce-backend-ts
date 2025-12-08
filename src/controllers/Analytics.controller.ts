@@ -79,8 +79,8 @@ export class AnalyticsController {
 
             res.status(201).json({
                 message:
-                    (type as string).charAt(0).toUpperCase() +
-                    (type as string).slice(1) +
+                    String(type).charAt(0).toUpperCase() +
+                    String(type).slice(1) +
                     ' Report generated successfully',
             });
 

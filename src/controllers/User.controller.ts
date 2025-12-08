@@ -52,8 +52,11 @@ export class UserController {
             res.status(201)
                 .cookie('refreshToken', refreshToken, {
                     httpOnly: true,
-                    secure: false,
-                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite:
+                        process.env.NODE_ENV === 'production'
+                            ? 'strict'
+                            : 'lax',
                     maxAge: 24 * 60 * 60 * 1000,
                 })
                 .json({
@@ -87,8 +90,11 @@ export class UserController {
                 .status(200)
                 .cookie('refreshToken', refreshToken, {
                     httpOnly: true,
-                    secure: false,
-                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite:
+                        process.env.NODE_ENV === 'production'
+                            ? 'strict'
+                            : 'lax',
                     maxAge: 24 * 60 * 60 * 1000,
                 })
                 .json({
@@ -122,8 +128,11 @@ export class UserController {
                 .status(200)
                 .cookie('refreshToken', refreshToken, {
                     httpOnly: true,
-                    secure: false,
-                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite:
+                        process.env.NODE_ENV === 'production'
+                            ? 'strict'
+                            : 'lax',
                     maxAge: 24 * 60 * 60 * 1000,
                 })
                 .json({ accessToken });
@@ -146,8 +155,11 @@ export class UserController {
                 .status(200)
                 .clearCookie('refreshToken', {
                     httpOnly: true,
-                    secure: false,
-                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite:
+                        process.env.NODE_ENV === 'production'
+                            ? 'strict'
+                            : 'lax',
                     path: '/',
                 })
                 .json({ message: 'Refresh token deleted successfully' });
