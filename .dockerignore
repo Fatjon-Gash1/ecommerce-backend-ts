@@ -4,4 +4,13 @@ dist
 tsconfig.tsbuildinfo
 reports
 coverage
+docs
+legal
 .git
+.husky
+.github
+.env.example
+.env.test.example
+.gitignore
+.snyk
+CHANGELOG.md
