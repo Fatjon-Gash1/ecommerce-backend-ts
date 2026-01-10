@@ -45,7 +45,7 @@
         "ioredis": "^5.4.2",
         "jsonwebtoken": "^9.0.2",
         "module-alias": "^2.2.3",
-        "mongoose": "^8.6.0",
+        "mongoose": "^8.20.4",
         "mysql2": "^3.11.0",
         "nodemailer": "^7.0.11",
         "pdfkit-table": "^0.1.99",
