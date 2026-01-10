@@ -46,7 +46,7 @@
         "jsonwebtoken": "^9.0.2",
         "module-alias": "^2.2.3",
         "mongoose": "^8.6.0",
-        "mysql2": "^3.11.0",
+        "mysql2": "^3.16.0",
         "nodemailer": "^7.0.11",
         "pdfkit-table": "^0.1.99",
         "sequelize": "^6.37.3",
